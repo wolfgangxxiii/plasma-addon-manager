@@ -1,0 +1,12 @@
+# CMake and Qt
+/build/
+/cmake-build-*/
+/CMakeUserPresets.json
+/.cache/
+
+# Rust
+/backend/target/
+
+# Editor artifacts
+*.swp
+*~
