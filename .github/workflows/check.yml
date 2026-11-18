@@ -31,9 +31,9 @@ jobs:
           dnf install -y
           gcc-c++ cmake ninja-build rust cargo
           extra-cmake-modules
-          qt6-qtdeclarative-devel
+          qt6-qtbase-devel qt6-qtdeclarative-devel
           kf6-kirigami-devel
-          kf6-qqc2-desktop-style-devel
+          kf6-qqc2-desktop-style
       - name: Configure
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
       - name: Build
