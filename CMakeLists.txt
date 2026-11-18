@@ -56,3 +56,19 @@ install(FILES assets/io.github.wolfgangxxiii.PlasmaAddonManager.svg
     DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps)
 install(FILES packaging/io.github.wolfgangxxiii.PlasmaAddonManager.metainfo.xml
     DESTINATION ${CMAKE_INSTALL_DATADIR}/metainfo)
+
+# Shared install rules also drive DEB generation. QML modules are loaded at
+# runtime and therefore require explicit dependencies beyond dpkg-shlibdeps.
+set(CPACK_GENERATOR "DEB")
+set(CPACK_PACKAGE_NAME "plasma-addon-manager")
+set(CPACK_PACKAGE_VENDOR "wolfgangxxiii")
+set(CPACK_PACKAGE_CONTACT "wolfgangxxiii <120312275+wolfgangxxiii@users.noreply.github.com>")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Read-only KDE Plasma add-on manager")
+set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/wolfgangxxiii/plasma-addon-manager")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "wolfgangxxiii")
+set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+set(CPACK_DEBIAN_PACKAGE_DEPENDS
+    "qml6-module-org-kde-kirigami, qml6-module-org-kde-desktop, qml6-module-qtquick-controls, qml6-module-qtquick-layouts")
+set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+include(CPack)

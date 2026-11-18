@@ -93,10 +93,16 @@ pub fn detect_distribution(input: &str) -> Distribution {
 }
 
 pub fn read_distribution() -> Distribution {
-    let content = fs::read_to_string("/etc/os-release")
+    // Flatpak's /etc/os-release describes the SDK rather than the host OS.
+    let content = fs::read_to_string("/run/host/os-release")
+        .or_else(|_| fs::read_to_string("/etc/os-release"))
         .or_else(|_| fs::read_to_string("/usr/lib/os-release"))
         .unwrap_or_default();
     detect_distribution(&content)
+}
+
+pub fn in_flatpak() -> bool {
+    env::var_os("FLATPAK_ID").is_some() || Path::new("/.flatpak-info").is_file()
 }
 
 pub fn is_plasma_session() -> bool {

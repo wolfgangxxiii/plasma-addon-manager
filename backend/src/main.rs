@@ -1,7 +1,7 @@
 //! Strict allow-list of non-mutating commands invoked by the Qt frontend.
 
 use plasma_addon_helper::{
-    executable_on_path, find_plasmoid_updater, is_plasma_session, read_distribution,
+    executable_on_path, find_plasmoid_updater, in_flatpak, is_plasma_session, read_distribution,
 };
 use std::env;
 use std::io::{self, Write};
@@ -23,6 +23,20 @@ fn run(program: &str, args: &[&str]) -> Result<(), String> {
         Ok(())
     } else {
         Err(format!("{program} exited with status {}", output.status))
+    }
+}
+
+fn run_on_host(program: &str, args: &[&str]) -> Result<(), String> {
+    if in_flatpak() {
+        // The manifest does not grant host-spawn permissions: users must opt
+        // in explicitly. Only allow-listed read-only actions can reach here.
+        let mut host_args = vec!["--host", program];
+        host_args.extend_from_slice(args);
+        run("flatpak-spawn", &host_args).map_err(|error| {
+            format!("Host read-only access failed: {error}. An optional Flatpak host bridge requires explicit permission; see README.")
+        })
+    } else {
+        run(program, args)
     }
 }
 
@@ -54,10 +68,17 @@ fn diagnose() {
     }
     println!(
         "plasmoid-updater: {}",
-        find_plasmoid_updater()
-            .map(|path| path.display().to_string())
-            .unwrap_or_else(|| "not installed".into())
+        if in_flatpak() {
+            "host CLI (optional flatpak-spawn bridge)".into()
+        } else {
+            find_plasmoid_updater()
+                .map(|path| path.display().to_string())
+                .unwrap_or_else(|| "not installed".into())
+        }
     );
+    if in_flatpak() {
+        println!("Flatpak: host command access is disabled by default; explicit opt-in required");
+    }
     println!("Mode: read-only foundation; installation is not enabled yet");
 }
 
@@ -68,21 +89,25 @@ fn execute(action: &str) -> Result<(), String> {
             Ok(())
         }
         "inventory" | "check" => {
-            let updater = find_plasmoid_updater().ok_or(
-                "plasmoid-updater not found. Installation is coming in a later milestone.",
-            )?;
             let command = if action == "inventory" {
                 "list-installed"
             } else {
                 "check"
             };
-            run(&updater.to_string_lossy(), &[command])
+            if in_flatpak() {
+                run_on_host("plasmoid-updater", &[command])
+            } else {
+                let updater = find_plasmoid_updater().ok_or(
+                    "plasmoid-updater not found. Installation is coming in a later milestone.",
+                )?;
+                run(&updater.to_string_lossy(), &[command])
+            }
         }
-        "timer" => run(
+        "timer" => run_on_host(
             "systemctl",
             &["--user", "status", "plasmoid-updater.timer", "--no-pager"],
         ),
-        "journal" => run(
+        "journal" => run_on_host(
             "journalctl",
             &[
                 "--user",
