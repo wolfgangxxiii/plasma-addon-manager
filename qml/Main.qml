@@ -95,7 +95,7 @@ Kirigami.ApplicationWindow {
                     id: languageSelector
                     model: ["Auto", "Polski", "English"]
                     implicitWidth: 115
-                    accessible.name: window.loc("Język interfejsu", "Interface language")
+                    Accessible.name: window.loc("Język interfejsu", "Interface language")
                     onActivated: function(index) {
                         window.languageChoice = ["auto", "pl", "en"][index]
                     }
