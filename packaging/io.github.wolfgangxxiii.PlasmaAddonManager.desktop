@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Plasma Addon Manager
+Name[pl]=Menedżer dodatków Plasma
+Comment=Manage KDE Plasma 6 add-on updates across Linux distributions
+Comment[pl]=Zarządzaj aktualizacjami dodatków KDE Plasma 6 w wielu dystrybucjach
+Exec=plasma-addon-manager
+Icon=io.github.wolfgangxxiii.PlasmaAddonManager
+Terminal=false
+Categories=Qt;KDE;Utility;Settings;
+Keywords=plasma;addons;updater;widgets;KDE;

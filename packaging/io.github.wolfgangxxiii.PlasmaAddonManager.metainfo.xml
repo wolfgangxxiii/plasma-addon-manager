@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.wolfgangxxiii.PlasmaAddonManager</id>
+  <name>Plasma Addon Manager</name>
+  <summary>Manage and update KDE Plasma add-ons on many Linux distributions</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <launchable type="desktop-id">io.github.wolfgangxxiii.PlasmaAddonManager.desktop</launchable>
+  <url type="homepage">https://github.com/wolfgangxxiii/plasma-addon-manager</url>
+  <description>
+    <p>A distribution-aware, native Qt6 and Kirigami companion for plasmoid-updater.</p>
+    <p>Version 0.1.0 is a read-only development preview.</p>
+  </description>
+</component>

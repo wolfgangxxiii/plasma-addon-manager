@@ -1,0 +1,40 @@
+name: Check foundation
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  rust-backend:
+    name: Rust backend and formatting
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Rust formatting
+        run: cargo fmt --manifest-path backend/Cargo.toml --all -- --check
+      - name: Rust unit tests
+        run: cargo test --manifest-path backend/Cargo.toml
+      - name: Clippy
+        run: cargo clippy --manifest-path backend/Cargo.toml --all-targets -- -D warnings
+
+  qt-kirigami:
+    name: Qt6 / Kirigami build on Fedora
+    runs-on: ubuntu-24.04
+    container: fedora:44
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install development packages
+        run: >-
+          dnf install -y
+          gcc-c++ cmake ninja-build rust cargo
+          extra-cmake-modules
+          qt6-qtbase-devel qt6-qtdeclarative-devel
+          kf6-kirigami-devel
+          kf6-qqc2-desktop-style
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --parallel 2

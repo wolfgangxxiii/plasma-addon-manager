@@ -1,0 +1,14 @@
+[package]
+name = "plasma-addon-helper"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "Distribution-aware, read-only backend for Plasma Addon Manager"
+
+[lib]
+name = "plasma_addon_helper"
+path = "src/lib.rs"
+
+[[bin]]
+name = "plasma-addon-helper"
+path = "src/main.rs"
