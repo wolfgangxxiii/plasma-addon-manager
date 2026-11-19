@@ -23,8 +23,8 @@ CachyOS, openSUSE and other Linux distributions.
 > [!IMPORTANT]
 > **Version 0.1.0 is an initial, read-only development foundation, not a full replacement**
 > for the existing Bazzite and Debian/Ubuntu applications. It cannot install the
-> updater, edit schedules or update add-ons yet. DEB, AppImage and Flatpak
-> packages built from this milestone are **development previews**.
+> updater, edit schedules or update add-ons yet. The AppImage is a
+> **development preview**.
 
 ### Implemented in this milestone
 
@@ -75,53 +75,28 @@ Building and installing from source **only installs this application**, not
 `plasmoid-updater` or a background agent. The Rust helper requires no root
 privileges to inspect its supported resources.
 
-### Preview packages: DEB, AppImage and Flatpak
+### AppImage only — direct download
 
-Download all three formats from the
-[GitHub Releases page](https://github.com/wolfgangxxiii/plasma-addon-manager/releases)
-once the `v0.1.0-preview.1` pre-release has been published. The
-[Build preview packages](https://github.com/wolfgangxxiii/plasma-addon-manager/actions/workflows/packages.yml)
-workflow also offers downloadable files in each successful run's **Artifacts**
-section. The pre-release is created only after all three builds succeed on `main`.
+Download `Plasma-Addon-Manager-v0.1.0-x86_64.AppImage` directly from
+[GitHub Releases](https://github.com/wolfgangxxiii/plasma-addon-manager/releases).
+It is a standalone `.AppImage` download, **not a ZIP archive**. The
+[AppImage build workflow](https://github.com/wolfgangxxiii/plasma-addon-manager/actions/workflows/appimage.yml)
+smoke-tests the Qt/Kirigami window and publishes the file to Releases after a
+successful build on `main`. The project no longer creates DEB or Flatpak
+packages.
 
-| Format | Build command | Install / run |
-|---|---|---|
-| Debian 13 DEB | `bash scripts/build-deb.sh` | `sudo apt install ./plasma-addon-manager_0.1.0_amd64.deb` |
-| Qt6 AppImage | `bash scripts/build-appimage.sh` | `chmod +x Plasma-Addon-Manager-v0.1.0-x86_64.AppImage && ./Plasma-Addon-Manager-v0.1.0-x86_64.AppImage` |
-| KDE Flatpak bundle | `bash scripts/build-flatpak.sh` | `flatpak install --user ./Plasma-Addon-Manager-v0.1.0-x86_64.flatpak` |
-
-Outputs are written to `dist/`. AppImage uses `linuxdeploy` with its Qt6
-plugin (downloaded tools verified with SHA-256). DEB uses CPack and
-`dpkg-shlibdeps`. Flatpak uses `org.kde.Platform//6.9` from Flathub.
-Cross-distribution runtime compatibility requires further testing.
-
-#### Flatpak sandbox and optional host integration
-
-**Flatpak runs sandboxed by default.** Access to the host's `plasmoid-updater`,
-`systemctl` and `journalctl` is therefore restricted. The Rust helper supports
-`flatpak-spawn --host` for its allow-listed, read-only actions, but the
-manifest does **not** automatically grant the broad permission needed for it.
-
-Users who trust the app and want host access may opt in explicitly:
+To run the AppImage on KDE Plasma (x86_64):
 
 ```bash
-flatpak override --user --talk-name=org.freedesktop.Flatpak \
-  io.github.wolfgangxxiii.PlasmaAddonManager
+chmod +x Plasma-Addon-Manager-v0.1.0-x86_64.AppImage
+./Plasma-Addon-Manager-v0.1.0-x86_64.AppImage
 ```
 
-**Security warning:** this grants a Flatpak application the ability to launch
-processes outside its sandbox. The permission itself is broader than read-only
-access, even though this version's Rust helper only offers read-only commands.
-Revoke it at any time:
-
-```bash
-flatpak override --user --no-talk-name=org.freedesktop.Flatpak \
-  io.github.wolfgangxxiii.PlasmaAddonManager
-```
-
-The experimental bridge expects `plasmoid-updater` to be on the host `PATH`.
-If it cannot find it, use AppImage or DEB to inspect your existing installation.
-The preview Flatpak is not published on Flathub.
+To build it from source, run `bash scripts/build-appimage.sh` on a Linux x86_64
+system with Qt6, Kirigami, Rust/Cargo and the documented build dependencies.
+The output is placed in `dist/`. `linuxdeploy` and its Qt6 plugin are checked
+against pinned SHA-256 values. Runtime behavior on different Plasma 6
+distributions still needs validation.
 
 ### Helper commands and tests
 
@@ -147,8 +122,8 @@ available in this release.
    `systemd --user` agent/timer, configuration, exclusions and notifications.
 4. **0.4.0 — Add-on updates:** update workflow, clear progress, rollback safeguards,
    recovery from KDE Store errors and UI/regression tests.
-5. **1.0.0 — Release:** verified AppImage, DEB and Flatpak, plus optional RPM/AUR distribution,
-   tests on multiple Plasma 6 systems, bilingual documentation.
+5. **1.0.0 — Release:** verified AppImage on multiple Plasma 6 distributions,
+   with bilingual documentation and runtime tests.
 
 ### Migration and safety
 
@@ -177,7 +152,7 @@ CachyOS, openSUSE i innych systemach korzystających z Plasma 6.
 > **Wersja 0.1.0 to wczesna wersja rozwojowa, wyłącznie do odczytu.** Nie jest
 > jeszcze zamiennikiem dotychczasowych aplikacji. Nie instaluje narzędzia,
 > nie zmienia harmonogramu i nie wykonuje aktualizacji dodatków.
-> Pakiety AppImage, DEB i Flatpak są obecnie wersjami **testowymi**.
+> AppImage jest obecnie wersją **testową**.
 
 ### Co już działa w kodzie?
 
@@ -206,29 +181,26 @@ Testy backendu:
 cargo test --manifest-path backend/Cargo.toml
 ```
 
-### Testowe pakiety instalacyjne
+### AppImage — bez archiwum ZIP
 
-Skrypty i [GitHub Actions](https://github.com/wolfgangxxiii/plasma-addon-manager/actions/workflows/packages.yml)
-budują trzy formaty:
-
-- **DEB:** `bash scripts/build-deb.sh` — Debian 13 i zgodne dystrybucje.
-- **AppImage:** `bash scripts/build-appimage.sh` — przenośna wersja Qt6/Kirigami.
-- **Flatpak:** `bash scripts/build-flatpak.sh` — środowisko KDE Runtime 6.9.
-
-Po zbudowaniu wszystkich trzech pakietów na gałęzi `main` są one publikowane
-jako **wydanie testowe** `v0.1.0-preview.1` w
+Projekt przygotowuje **wyłącznie AppImage** dla systemów KDE Plasma na x86_64.
+Pobierz gotowy plik `.AppImage` bezpośrednio z
 [GitHub Releases](https://github.com/wolfgangxxiii/plasma-addon-manager/releases).
-Pliki pozostają też dostępne w sekcji **Artifacts** udanego workflow.
+Nie trzeba pobierać archiwum ZIP z GitHub Actions.
 
-**Uwaga o Flatpaku:** domyślna izolacja blokuje dostęp do poleceń hosta.
-Opcjonalny most `flatpak-spawn --host` wymaga świadomego nadania szerokiego
-uprawnienia D-Bus. Szczegóły, polecenie włączające i cofnięcie zgody znajdują
-się w sekcji angielskiej powyżej. Do bezpośredniej integracji z narzędziami
-systemowymi polecam AppImage lub DEB.
+```bash
+chmod +x Plasma-Addon-Manager-v0.1.0-x86_64.AppImage
+./Plasma-Addon-Manager-v0.1.0-x86_64.AppImage
+```
+
+Wersję testową można samodzielnie zbudować przez
+`bash scripts/build-appimage.sh`. Po udanej kompilacji i teście uruchomienia
+[GitHub Actions](https://github.com/wolfgangxxiii/plasma-addon-manager/actions/workflows/appimage.yml)
+publikuje AppImage w Releases. Nie tworzymy już pakietów DEB ani Flatpak.
 
 Kolejne etapy obejmą instalację z SHA-256, bezpieczną migrację istniejącego
 agenta, harmonogram 6/12/24 godzin, powiadomienia, aktualizacje KDE Store,
-obsługę awarii sieci i pakiety dla wielu dystrybucji.
+obsługę awarii sieci i testy AppImage na wielu dystrybucjach.
 
 **Program nie jest menedżerem aktualizacji systemu operacyjnego.**
 
