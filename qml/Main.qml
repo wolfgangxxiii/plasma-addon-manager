@@ -482,7 +482,10 @@ Kirigami.ApplicationWindow {
                         delegate: Controls.Frame {
                             id: addonFrame
                             Layout.fillWidth: true
-                            readonly property var addon: window.addonView === 0 ? modelData : modelData.installed
+                            // Repeater may briefly reuse a delegate while tabs switch.
+                            // Resolve by data shape so its binding never dereferences undefined.
+                            readonly property var addon: modelData && modelData.installed
+                                                         ? modelData.installed : modelData
                             ColumnLayout {
                                 width: parent.width
                                 spacing: Kirigami.Units.smallSpacing
@@ -490,23 +493,23 @@ Kirigami.ApplicationWindow {
                                     Layout.fillWidth: true
                                     wrapMode: Text.WordWrap
                                     font.bold: true
-                                    text: addonFrame.addon.name
+                                    text: addonFrame.addon ? addonFrame.addon.name : ""
                                 }
                                 Controls.Label {
                                     Layout.fillWidth: true
                                     wrapMode: Text.WordWrap
                                     opacity: 0.75
-                                    text: addonFrame.addon.component_type
+                                    text: addonFrame.addon ? addonFrame.addon.component_type
                                           + (addonFrame.addon.is_system
                                              ? window.loc(" · Systemowy (tylko odczyt)", " · System (read-only)")
-                                             : window.loc(" · Użytkownik", " · User"))
+                                             : window.loc(" · Użytkownik", " · User")) : ""
                                 }
                                 Controls.Label {
                                     Layout.fillWidth: true
                                     wrapMode: Text.WordWrap
-                                    text: window.addonView === 0
+                                    text: !addonFrame.addon ? "" : window.addonView === 0
                                           ? window.loc("Wersja: ", "Version: ") + addonFrame.addon.version
-                                          : addonFrame.addon.version + "  →  " + modelData.latest_version
+                                          : addonFrame.addon.version + "  →  " + (modelData.latest_version || "—")
                                 }
                             }
                         }

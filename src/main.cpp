@@ -9,6 +9,8 @@
 #include <QQuickStyle>
 #include <QTimer>
 #include <QDebug>
+#include <QVariantList>
+#include <QVariantMap>
 
 int main(int argc, char *argv[]) {
     // AppImages combine bundled Qt with graphics drivers from the host. On
@@ -48,6 +50,20 @@ int main(int argc, char *argv[]) {
 
     BackendBridge backend;
     QQmlApplicationEngine engine;
+    bool qmlBindingError = false;
+    if (smokeTest) {
+        QObject::connect(&engine, &QQmlEngine::warnings, &app,
+                         [&qmlBindingError](const QList<QQmlError> &warnings) {
+            for (const QQmlError &warning : warnings) {
+                const QString message = warning.toString();
+                if (message.contains(QStringLiteral("ReferenceError"))
+                        || message.contains(QStringLiteral("TypeError"))) {
+                    qCritical() << "QML smoke test binding error:" << message;
+                    qmlBindingError = true;
+                }
+            }
+        });
+    }
     engine.rootContext()->setContextProperty(QStringLiteral("backend"), &backend);
     engine.load(QUrl(QStringLiteral("qrc:/qml/Main.qml")));
     if (engine.rootObjects().isEmpty()) {
@@ -56,6 +72,31 @@ int main(int argc, char *argv[]) {
     // Package smoke tests verify that all QML imports and the window load.
     // No host state is changed, and the diagnostic helper is not started.
     if (smokeTest) {
+        // Create the repeated add-on cards too; merely loading the initial
+        // empty window never instantiates their QML delegates.
+        QObject *root = engine.rootObjects().first();
+        QVariantMap addon;
+        addon.insert(QStringLiteral("name"), QStringLiteral("Test Plasma Widget"));
+        addon.insert(QStringLiteral("directory_name"), QStringLiteral("test-widget"));
+        addon.insert(QStringLiteral("version"), QStringLiteral("1.0"));
+        addon.insert(QStringLiteral("component_type"), QStringLiteral("Plasma Widget"));
+        addon.insert(QStringLiteral("is_system"), false);
+        QVariantMap update;
+        update.insert(QStringLiteral("installed"), addon);
+        update.insert(QStringLiteral("latest_version"), QStringLiteral("1.1"));
+        root->setProperty("installedAddons", QVariantList{addon});
+        root->setProperty("inventoryReady", true);
+        root->setProperty("section", 1);
+        QCoreApplication::processEvents();
+        root->setProperty("availableUpdates", QVariantList{update});
+        root->setProperty("updatesReady", true);
+        root->setProperty("addonView", 1);
+        QCoreApplication::processEvents();
+        root->setProperty("section", 2);
+        QCoreApplication::processEvents();
+        if (qmlBindingError) {
+            return 3;
+        }
         QTimer::singleShot(0, &app, &QCoreApplication::quit);
         return app.exec();
     }

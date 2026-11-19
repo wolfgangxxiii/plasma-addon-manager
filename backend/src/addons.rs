@@ -339,8 +339,8 @@ pub fn updates() -> Result<UpdateOverview> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::os::unix::process::ExitStatusExt;
     use std::os::unix::fs::PermissionsExt;
+    use std::os::unix::process::ExitStatusExt;
 
     #[test]
     fn legacy_tables_with_multiword_addon_names() {
