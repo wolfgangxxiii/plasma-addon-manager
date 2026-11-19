@@ -176,6 +176,12 @@ int main(int argc, char *argv[]) {
         QCoreApplication::processEvents();
         root->setProperty("section", 2);
         QCoreApplication::processEvents();
+        root->setProperty("section", 3);
+        QCoreApplication::processEvents();
+        root->setProperty("section", 4);
+        QCoreApplication::processEvents();
+        root->setProperty("section", 0);
+        QCoreApplication::processEvents();
         if (qmlBindingError) {
             return 3;
         }
