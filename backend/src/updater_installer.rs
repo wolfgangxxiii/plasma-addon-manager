@@ -35,10 +35,23 @@ fn progress(message: &str) {
 fn download(url: &str, destination: &Path) -> Result<(), String> {
     let output = Command::new("curl")
         .args([
-            "--fail", "--location", "--silent", "--show-error", "--retry", "2",
-            "--connect-timeout", "15", "--max-time", "180",
-            "--proto", "=https", "--proto-redir", "=https",
-            "--user-agent", "PlasmaAddonManager/0.2.0", "--output",
+            "--fail",
+            "--location",
+            "--silent",
+            "--show-error",
+            "--retry",
+            "2",
+            "--connect-timeout",
+            "15",
+            "--max-time",
+            "180",
+            "--proto",
+            "=https",
+            "--proto-redir",
+            "=https",
+            "--user-agent",
+            "PlasmaAddonManager/0.2.0",
+            "--output",
         ])
         .arg(destination)
         .arg(url)
@@ -140,8 +153,11 @@ fn stage_and_install(binary: &Path, target: &Path) -> Result<(), String> {
     let parent = target.parent().ok_or("Invalid install path")?;
     fs::create_dir_all(parent).map_err(|error| error.to_string())?;
     let mut staged = tempfile::NamedTempFile::new_in(parent).map_err(|error| error.to_string())?;
-    io::copy(&mut File::open(binary).map_err(|error| error.to_string())?, &mut staged)
-        .map_err(|error| error.to_string())?;
+    io::copy(
+        &mut File::open(binary).map_err(|error| error.to_string())?,
+        &mut staged,
+    )
+    .map_err(|error| error.to_string())?;
     staged
         .as_file()
         .set_permissions(fs::Permissions::from_mode(0o755))
@@ -167,10 +183,9 @@ pub fn install() -> Result<(), String> {
     let binary = temporary.path().join("plasmoid-updater-linux-x86_64");
     progress("Reading the latest plasmoid-updater release from GitHub…");
     download(RELEASE_API, &metadata)?;
-    let release: GitHubRelease = serde_json::from_slice(
-        &fs::read(&metadata).map_err(|error| error.to_string())?,
-    )
-    .map_err(|error| format!("Invalid GitHub release metadata: {error}"))?;
+    let release: GitHubRelease =
+        serde_json::from_slice(&fs::read(&metadata).map_err(|error| error.to_string())?)
+            .map_err(|error| format!("Invalid GitHub release metadata: {error}"))?;
 
     let existing = find_plasmoid_updater();
     let installed_version = existing.as_deref().and_then(version_of);
@@ -183,7 +198,10 @@ pub fn install() -> Result<(), String> {
     }
 
     let (url, checksum) = verified_asset(&release)?;
-    progress(&format!("Downloading verified updater {}…", release.tag_name));
+    progress(&format!(
+        "Downloading verified updater {}…",
+        release.tag_name
+    ));
     download(url, &binary)?;
     verify_checksum(&binary, checksum)?;
     progress("SHA-256 verified. Installing into ~/.local/bin…");
@@ -202,7 +220,9 @@ mod tests {
             tag_name: "v0.2.1".into(),
             assets: vec![GitHubAsset {
                 name: "plasmoid-updater-linux-x64".into(),
-                browser_download_url: format!("{UPSTREAM}/releases/download/v0.2.1/plasmoid-updater-linux-x64"),
+                browser_download_url: format!(
+                    "{UPSTREAM}/releases/download/v0.2.1/plasmoid-updater-linux-x64"
+                ),
                 digest: Some(format!("sha256:{}", "a".repeat(64))),
             }],
         };
