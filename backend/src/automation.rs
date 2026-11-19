@@ -263,6 +263,7 @@ pub fn update_lock() -> Result<File> {
         .read(true)
         .write(true)
         .create(true)
+        .truncate(false)
         .open(path)?;
     file.try_lock_exclusive()
         .context("Another Plasma Addon Manager update is already running")?;
