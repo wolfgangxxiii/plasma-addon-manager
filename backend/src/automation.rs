@@ -689,7 +689,12 @@ fn host_archive_package(family: DistributionFamily) -> Option<HostArchivePackage
         }),
         DistributionFamily::Debian => Some(HostArchivePackage {
             manager: "/usr/bin/apt-get",
-            arguments: &["install", "--yes", "--no-install-recommends", "libarchive-tools"],
+            arguments: &[
+                "install",
+                "--yes",
+                "--no-install-recommends",
+                "libarchive-tools",
+            ],
             package: "libarchive-tools",
         }),
         DistributionFamily::Fedora => Some(HostArchivePackage {
@@ -1041,7 +1046,11 @@ mod tests {
     fn bsdtar_packages_match_supported_distributions() {
         for (family, name, manager) in [
             (DistributionFamily::OpenSuse, "bsdtar", "/usr/bin/zypper"),
-            (DistributionFamily::Debian, "libarchive-tools", "/usr/bin/apt-get"),
+            (
+                DistributionFamily::Debian,
+                "libarchive-tools",
+                "/usr/bin/apt-get",
+            ),
             (DistributionFamily::Fedora, "bsdtar", "/usr/bin/dnf"),
             (DistributionFamily::Arch, "libarchive", "/usr/bin/pacman"),
         ] {
