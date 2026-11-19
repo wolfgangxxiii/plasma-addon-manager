@@ -1,7 +1,6 @@
 # CMake and Qt
 /build/
 /dist/
-/.flatpak-builder/
 /cmake-build-*/
 /CMakeUserPresets.json
 /.cache/

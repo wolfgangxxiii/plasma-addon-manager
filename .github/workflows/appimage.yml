@@ -1,0 +1,53 @@
+name: Build and release AppImage
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  appimage:
+    name: KDE Plasma AppImage x86_64
+    runs-on: ubuntu-24.04
+    container: debian:trixie
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Qt6, Kirigami and build dependencies
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            ca-certificates curl cmake ninja-build g++ git gh \
+            rustc cargo patchelf file binutils \
+            extra-cmake-modules qt6-base-dev qt6-declarative-dev \
+            qt6-wayland qt6-base-dev-tools \
+            libkirigami-dev libkf6qqc2desktopstyle-dev \
+            qml6-module-org-kde-kirigami qml6-module-org-kde-desktop \
+            qml6-module-qtquick-controls qml6-module-qtquick-layouts
+      - name: Build and smoke-test AppImage
+        run: bash scripts/build-appimage.sh
+      - name: Verify binary and checksum
+        run: |
+          test -s dist/Plasma-Addon-Manager-v0.1.0-x86_64.AppImage
+          sha256sum dist/Plasma-Addon-Manager-v0.1.0-x86_64.AppImage
+      - name: Publish AppImage directly in Releases
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=v0.1.0-appimage-preview.1
+          appimage=dist/Plasma-Addon-Manager-v0.1.0-x86_64.AppImage
+          test -s "$appimage"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo 'Preview already published; leaving the existing download unchanged.'
+          else
+            gh release create "$tag" "$appimage" \
+              --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
+              --title 'Plasma Addon Manager 0.1.0 — AppImage preview' \
+              --notes 'Testowa wersja AppImage x86_64 dla KDE Plasma 6. Qt6/Kirigami + Rust. Wersja 0.1.0 oferuje diagnostykę i odczyt; instalowanie dodatków i automatyczne aktualizacje jeszcze nie działają. Plik .AppImage pobiera się bez archiwum ZIP.'
+          fi
