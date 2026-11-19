@@ -88,6 +88,7 @@ void BackendBridge::runAction(const QString &action) {
     static const QStringList allowedActions = {
         QStringLiteral("diagnose"), QStringLiteral("inventory"),
         QStringLiteral("check"), QStringLiteral("dry-run"), QStringLiteral("update"),
+        QStringLiteral("install"),
         QStringLiteral("timer"), QStringLiteral("journal")
     };
     if (running() || !allowedActions.contains(action)) {

@@ -51,24 +51,24 @@ jobs:
           }
           WAYLAND_DISPLAY=pam-wayland QT_QPA_PLATFORM=wayland QT_QUICK_BACKEND=software \
             APPIMAGE_EXTRACT_AND_RUN=1 \
-            dist/Plasma-Addon-Manager-v0.1.1-x86_64.AppImage --self-test
+            dist/Plasma-Addon-Manager-v0.2.0-x86_64.AppImage --self-test
       - name: Verify binary and checksum
         run: |
-          test -s dist/Plasma-Addon-Manager-v0.1.1-x86_64.AppImage
-          sha256sum dist/Plasma-Addon-Manager-v0.1.1-x86_64.AppImage
+          test -s dist/Plasma-Addon-Manager-v0.2.0-x86_64.AppImage
+          sha256sum dist/Plasma-Addon-Manager-v0.2.0-x86_64.AppImage
       - name: Publish AppImage directly in Releases
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=v0.1.1-appimage-preview.1
-          appimage=dist/Plasma-Addon-Manager-v0.1.1-x86_64.AppImage
+          tag=v0.2.0-appimage-preview.1
+          appimage=dist/Plasma-Addon-Manager-v0.2.0-x86_64.AppImage
           test -s "$appimage"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo 'Preview already published; leaving the existing download unchanged.'
           else
             gh release create "$tag" "$appimage" \
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-              --title 'Plasma Addon Manager 0.1.1 — AppImage Bazzite fix' \
-              --notes 'Testowe wydanie AppImage x86_64 z poprawkami Kirigami, Qt Wayland EGL i domyślnym renderowaniem programowym na Bazzite. Dodano wyszukiwanie plasmoid-updater w Linuxbrew, symulację oraz ręczne aktualizacje po potwierdzeniu (bez restartu Plasma). Automatyczna instalacja i konfiguracja harmonogramu nie są jeszcze dostępne. Tylko bezpośredni plik .AppImage, bez ZIP.'
+              --title 'Plasma Addon Manager 0.2.0 — instalator GUI AppImage' \
+              --notes 'AppImage x86_64 dla KDE Plasma 6. W Bazzite otwórz pobrany plik w Gear Lever (z Bazaar), wybierz integrację i uruchom z menu aplikacji — bez terminala. Wewnątrz programu przycisk Instaluj pobiera plasmoid-updater z GitHub, sprawdza SHA-256 i instaluje do ~/.local/bin bez sudo. Kontrola i ręczne aktualizacje dodatków pozostają dostępne. Program nie modyfikuje obrazu systemu ani istniejącego harmonogramu. Tylko bezpośredni .AppImage, bez ZIP/DEB/Flatpak.'
           fi

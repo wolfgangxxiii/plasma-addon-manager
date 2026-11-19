@@ -2,7 +2,7 @@
 
 use plasma_addon_helper::{
     executable_on_path, find_plasmoid_updater, in_flatpak, is_plasma_session, read_distribution,
-    updater_path,
+    updater_installer, updater_path,
 };
 use std::env;
 use std::io::{self, Write};
@@ -98,7 +98,7 @@ fn diagnose() {
     if in_flatpak() {
         println!("Flatpak: host command access is disabled by default; explicit opt-in required");
     }
-    println!("Mode: inspection + confirmed manual updates; no installer or scheduler migration");
+    println!("Mode: verified user-local installer + manual add-on updates; no scheduler migration");
 }
 
 fn updater(action: &str) -> Result<(), String> {
@@ -171,6 +171,13 @@ fn execute(action: &str) -> Result<(), String> {
             }
         }
         "dry-run" | "update" => updater(action),
+        "install" => {
+            if in_flatpak() {
+                Err("Install from the standalone AppImage, not a Flatpak sandbox".into())
+            } else {
+                updater_installer::install()
+            }
+        }
         "timer" => run_on_host(
             "systemctl",
             &["--user", "status", "plasmoid-updater.timer", "--no-pager"],
@@ -187,8 +194,8 @@ fn execute(action: &str) -> Result<(), String> {
             ],
         ),
         "--help" | "help" => {
-            println!("Usage: plasma-addon-helper [diagnose|inventory|check|dry-run|update|timer|journal]");
-            println!("Only 'update' modifies user add-ons; GUI requires confirmation. No system packages or services are changed.");
+            println!("Usage: plasma-addon-helper [diagnose|inventory|check|dry-run|update|install|timer|journal]");
+            println!("'install' installs a SHA-256 verified updater into ~/.local/bin; 'update' modifies user add-ons. Both require GUI confirmation. No system packages or services are changed.");
             Ok(())
         }
         _ => Err(format!("Unknown action '{action}'. Use --help.")),
