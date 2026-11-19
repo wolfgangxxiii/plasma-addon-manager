@@ -166,9 +166,13 @@ void BackendBridge::saveSettings(const QString &json, bool migrateLegacy) {
 }
 
 void BackendBridge::startAction(const QString &action, const QStringList &arguments) {
-    m_output.clear();
+    // Automatic health refresh must not erase the operation log before the
+    // user can read an installer/update error or its final result.
+    if (action != QStringLiteral("status-json")) {
+        m_output.clear();
+        emit outputChanged();
+    }
     m_jsonOutput.clear();
-    emit outputChanged();
     const QString helper = helperPath();
     if (helper.isEmpty()) {
         appendOutput(QStringLiteral("Backend helper is missing. Reinstall the complete application.\n"));

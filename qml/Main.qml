@@ -453,15 +453,18 @@ Kirigami.ApplicationWindow {
                             onClicked: confirmUpdate.open()
                         }
                     }
-                    Controls.TabBar {
+                    RowLayout {
                         Layout.fillWidth: true
-                        currentIndex: window.addonView
-                        Controls.TabButton {
+                        Controls.Button {
                             text: window.loc("Zainstalowane", "Installed")
+                            checkable: true
+                            checked: window.addonView === 0
                             onClicked: window.addonView = 0
                         }
-                        Controls.TabButton {
+                        Controls.Button {
                             text: window.loc("Aktualizacje", "Updates")
+                            checkable: true
+                            checked: window.addonView === 1
                             onClicked: window.addonView = 1
                         }
                     }
