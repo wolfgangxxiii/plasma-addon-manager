@@ -1,10 +1,11 @@
 //! System discovery for Plasma Addon Manager.
-//! Installation and systemd unit migration remain explicitly out of scope.
+//! User-owned installation and guarded systemd timer migration are supported.
 
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+pub mod automation;
 pub mod updater_installer;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

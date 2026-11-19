@@ -3,6 +3,8 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
+#include <QJsonDocument>
+#include <QJsonParseError>
 #include <QStandardPaths>
 #include <QStringList>
 #include <QTimer>
@@ -28,9 +30,17 @@ BackendBridge::BackendBridge(QObject *parent) : QObject(parent) {
             [this](int exitCode, QProcess::ExitStatus exitStatus) {
                 appendOutput(QString::fromUtf8(m_process.readAllStandardOutput()));
                 appendOutput(QString::fromUtf8(m_process.readAllStandardError()));
-                setStatus(exitStatus == QProcess::NormalExit && exitCode == 0
+                const bool success = exitStatus == QProcess::NormalExit && exitCode == 0;
+                if (success && m_pendingAction == QStringLiteral("settings-show")) {
+                    emit settingsLoaded(m_output.trimmed());
+                }
+                if (success && m_pendingAction == QStringLiteral("settings-save")) {
+                    emit settingsSaved();
+                }
+                setStatus(success
                               ? QStringLiteral("Completed")
                               : QStringLiteral("Failed (exit %1)").arg(exitCode));
+                m_pendingAction.clear();
                 emit runningChanged();
             });
     connect(&m_process, &QProcess::errorOccurred, this, [this](QProcess::ProcessError error) {
@@ -88,12 +98,33 @@ void BackendBridge::runAction(const QString &action) {
     static const QStringList allowedActions = {
         QStringLiteral("diagnose"), QStringLiteral("inventory"),
         QStringLiteral("check"), QStringLiteral("dry-run"), QStringLiteral("update"),
-        QStringLiteral("install"),
-        QStringLiteral("timer"), QStringLiteral("journal")
+        QStringLiteral("install"), QStringLiteral("settings-show"),
+        QStringLiteral("timer"), QStringLiteral("journal"),
+        QStringLiteral("repair-agent"), QStringLiteral("run-service")
     };
     if (running() || !allowedActions.contains(action)) {
         return;
     }
+    startAction(action, {action});
+}
+
+void BackendBridge::saveSettings(const QString &json, bool migrateLegacy) {
+    if (running() || json.size() > 16000) {
+        return;
+    }
+    QJsonParseError error;
+    const QJsonDocument document = QJsonDocument::fromJson(json.toUtf8(), &error);
+    if (error.error != QJsonParseError::NoError || !document.isObject()) {
+        appendOutput(QStringLiteral("Invalid automation settings: %1\n").arg(error.errorString()));
+        setStatus(QStringLiteral("Invalid settings"));
+        return;
+    }
+    startAction(QStringLiteral("settings-save"),
+                {QStringLiteral("settings-save"), json,
+                 migrateLegacy ? QStringLiteral("migrate") : QStringLiteral("keep")});
+}
+
+void BackendBridge::startAction(const QString &action, const QStringList &arguments) {
     m_output.clear();
     emit outputChanged();
     const QString helper = helperPath();
@@ -103,8 +134,9 @@ void BackendBridge::runAction(const QString &action) {
         return;
     }
     setStatus(QStringLiteral("Running %1…").arg(action));
+    m_pendingAction = action;
     m_process.setProgram(helper);
-    m_process.setArguments({action});
+    m_process.setArguments(arguments);
     m_process.start();
     emit runningChanged();
 }

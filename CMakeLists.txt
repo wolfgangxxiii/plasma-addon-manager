@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(PlasmaAddonManager VERSION 0.2.0 LANGUAGES CXX)
+project(PlasmaAddonManager VERSION 0.3.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -32,6 +32,7 @@ target_link_libraries(plasma-addon-manager PRIVATE
 find_program(CARGO_EXECUTABLE cargo REQUIRED)
 set(BACKEND_MANIFEST "${CMAKE_SOURCE_DIR}/backend/Cargo.toml")
 set(BACKEND_OUTPUT "${CMAKE_BINARY_DIR}/bin/plasma-addon-helper")
+set(AGENT_OUTPUT "${CMAKE_BINARY_DIR}/bin/plasma-addon-manager-agent")
 
 add_custom_target(plasma-addon-helper-build ALL
     COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bin"
@@ -41,6 +42,9 @@ add_custom_target(plasma-addon-helper-build ALL
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${CMAKE_BINARY_DIR}/cargo-target/release/plasma-addon-helper"
         "${BACKEND_OUTPUT}"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_BINARY_DIR}/cargo-target/release/plasma-addon-manager-agent"
+        "${AGENT_OUTPUT}"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     COMMENT "Building the Rust helper"
     VERBATIM
@@ -49,6 +53,8 @@ add_dependencies(plasma-addon-manager plasma-addon-helper-build)
 
 install(TARGETS plasma-addon-manager RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(PROGRAMS "${BACKEND_OUTPUT}"
+    DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/plasma-addon-manager")
+install(PROGRAMS "${AGENT_OUTPUT}"
     DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/plasma-addon-manager")
 install(FILES packaging/io.github.wolfgangxxiii.PlasmaAddonManager.desktop
     DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)

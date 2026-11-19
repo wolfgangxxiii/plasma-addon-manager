@@ -1,8 +1,9 @@
 //! Explicit allow-list of commands invoked by the Qt frontend.
 
 use plasma_addon_helper::{
+    automation::{self, Settings},
     executable_on_path, find_plasmoid_updater, in_flatpak, is_plasma_session, read_distribution,
-    updater_installer, updater_path,
+    updater_installer, updater_path, DistributionFamily,
 };
 use std::env;
 use std::io::{self, Write};
@@ -98,7 +99,7 @@ fn diagnose() {
     if in_flatpak() {
         println!("Flatpak: host command access is disabled by default; explicit opt-in required");
     }
-    println!("Mode: verified user-local installer + manual add-on updates; no scheduler migration");
+    println!("Mode: verified installer, manual updates and systemd --user automation");
 }
 
 fn updater(action: &str) -> Result<(), String> {
@@ -144,6 +145,7 @@ fn updater(action: &str) -> Result<(), String> {
             }
         }
         "update" => {
+            let _lock = automation::update_lock().map_err(|error| format!("{error:#}"))?;
             println!("Applying KDE Store add-on updates; Plasma will not restart automatically.");
             io::stdout().flush().map_err(|error| error.to_string())?;
             run_command(&mut command, MANUAL_UPDATE_ARGS, false)
@@ -152,7 +154,7 @@ fn updater(action: &str) -> Result<(), String> {
     }
 }
 
-fn execute(action: &str) -> Result<(), String> {
+fn execute(action: &str, extra: &[String]) -> Result<(), String> {
     match action {
         "diagnose" => {
             diagnose();
@@ -175,27 +177,49 @@ fn execute(action: &str) -> Result<(), String> {
             if in_flatpak() {
                 Err("Install from the standalone AppImage, not a Flatpak sandbox".into())
             } else {
-                updater_installer::install()
+                updater_installer::install()?;
+                if read_distribution().family == DistributionFamily::AtomicFedora {
+                    automation::prepare_bazzite_dependencies()
+                        .map_err(|error| format!("Bazzite prerequisites: {error:#}"))?;
+                }
+                Ok(())
             }
         }
-        "timer" => run_on_host(
-            "systemctl",
-            &["--user", "status", "plasmoid-updater.timer", "--no-pager"],
-        ),
-        "journal" => run_on_host(
-            "journalctl",
-            &[
-                "--user",
-                "-u",
-                "plasmoid-updater.service",
-                "-n",
-                "80",
-                "--no-pager",
-            ],
-        ),
+        "settings-show" => {
+            let settings = Settings::load(&automation::home().map_err(|error| error.to_string())?)
+                .map_err(|error| error.to_string())?;
+            println!(
+                "{}",
+                serde_json::to_string(&settings).map_err(|error| error.to_string())?
+            );
+            Ok(())
+        }
+        "settings-save" => {
+            if in_flatpak() {
+                return Err("Automation changes require the AppImage, not Flatpak".into());
+            }
+            if extra.len() != 2 {
+                return Err("Expected settings JSON and migration choice".into());
+            }
+            let settings: Settings = serde_json::from_str(&extra[0])
+                .map_err(|error| format!("Invalid settings: {error}"))?;
+            let takeover = match extra[1].as_str() {
+                "migrate" => true,
+                "keep" => false,
+                _ => return Err("Unknown migration choice".into()),
+            };
+            automation::configure(settings, takeover).map_err(|error| format!("{error:#}"))
+        }
+        "timer" => {
+            automation::status();
+            Ok(())
+        }
+        "journal" => automation::journal().map_err(|error| format!("{error:#}")),
+        "repair-agent" => automation::repair_agent().map_err(|error| format!("{error:#}")),
+        "run-service" => automation::start_service().map_err(|error| format!("{error:#}")),
         "--help" | "help" => {
-            println!("Usage: plasma-addon-helper [diagnose|inventory|check|dry-run|update|install|timer|journal]");
-            println!("'install' installs a SHA-256 verified updater into ~/.local/bin; 'update' modifies user add-ons. Both require GUI confirmation. No system packages or services are changed.");
+            println!("Usage: plasma-addon-helper [diagnose|inventory|check|dry-run|update|install|settings-show|settings-save|timer|journal|repair-agent|run-service]");
+            println!("Modifying actions require explicit GUI confirmation. Only user-owned KDE add-ons and systemd --user settings are touched; the OS image is never changed.");
             Ok(())
         }
         _ => Err(format!("Unknown action '{action}'. Use --help.")),
@@ -203,8 +227,9 @@ fn execute(action: &str) -> Result<(), String> {
 }
 
 fn main() {
-    let action = env::args().nth(1).unwrap_or_else(|| "diagnose".into());
-    if let Err(error) = execute(&action) {
+    let args: Vec<String> = env::args().skip(1).collect();
+    let action = args.first().map(String::as_str).unwrap_or("diagnose");
+    if let Err(error) = execute(action, args.get(1..).unwrap_or(&[])) {
         eprintln!("Error: {error}");
         std::process::exit(1);
     }

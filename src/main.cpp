@@ -59,6 +59,6 @@ int main(int argc, char *argv[]) {
         QTimer::singleShot(0, &app, &QCoreApplication::quit);
         return app.exec();
     }
-    QTimer::singleShot(0, &backend, [&backend] { backend.runAction(QStringLiteral("diagnose")); });
+    QTimer::singleShot(0, &backend, [&backend] { backend.runAction(QStringLiteral("settings-show")); });
     return app.exec();
 }

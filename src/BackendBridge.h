@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QProcess>
 #include <QString>
+#include <QStringList>
 
 class BackendBridge final : public QObject {
     Q_OBJECT
@@ -18,19 +19,24 @@ public:
     bool running() const { return m_process.state() != QProcess::NotRunning; }
 
     Q_INVOKABLE void runAction(const QString &action);
+    Q_INVOKABLE void saveSettings(const QString &json, bool migrateLegacy);
     Q_INVOKABLE void cancel();
 
 signals:
     void outputChanged();
     void statusChanged();
     void runningChanged();
+    void settingsLoaded(const QString &json);
+    void settingsSaved();
 
 private:
     QString helperPath() const;
     void appendOutput(const QString &text);
     void setStatus(const QString &text);
+    void startAction(const QString &action, const QStringList &arguments);
 
     QProcess m_process;
     QString m_output;
     QString m_status = QStringLiteral("Ready");
+    QString m_pendingAction;
 };
