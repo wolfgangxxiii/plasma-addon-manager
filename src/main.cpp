@@ -67,10 +67,13 @@ static int sessionLogTest() {
         return !timedOut && !backend.running();
     };
     if (!run(QStringLiteral("diagnose")) || !backend.lastOperationSucceeded()
+            || backend.progressDetail() != QStringLiteral("diagnostic output")
             || !run(QStringLiteral("check")) || backend.lastOperationSucceeded()
+            || backend.progressDetail() != QStringLiteral("network unavailable")
             || !backend.lastOperationError().contains(QStringLiteral("network unavailable"))
-            || !run(QStringLiteral("timer")) || !backend.lastOperationSucceeded()) {
-        qCritical() << "Session log test: operation status did not follow success/failure";
+            || !run(QStringLiteral("timer")) || !backend.lastOperationSucceeded()
+            || backend.progressDetail() != QStringLiteral("timer output")) {
+        qCritical() << "Session log test: status or live progress did not follow the action";
         return 4;
     }
     const QString log = backend.output();

@@ -5,10 +5,10 @@ import org.kde.kirigami as Kirigami
 
 Kirigami.ApplicationWindow {
     id: window
-    width: 1080
-    height: 740
-    minimumWidth: 640
-    minimumHeight: 500
+    width: 1180
+    height: 780
+    minimumWidth: 690
+    minimumHeight: 540
     title: "Plasma Addon Manager"
 
     property int section: 0
@@ -32,11 +32,43 @@ Kirigami.ApplicationWindow {
     property int addonView: 0
     property bool inventoryReady: false
     property bool updatesReady: false
+    property var notifications: []
+    property int notificationSequence: 0
+    property int elapsedSeconds: 0
+    readonly property bool showNotificationSidebar: width >= 980
     readonly property bool bsdtarMissing: dashboard.bsdtar_available === false
     readonly property bool polish: languageChoice === "pl"
                                    || (languageChoice === "auto"
                                        && Qt.locale().name.toLowerCase().startsWith("pl"))
     function loc(pl, en) { return polish ? pl : en }
+    function noticeColor(kind) {
+        if (kind === "success") return Kirigami.Theme.positiveTextColor
+        if (kind === "error") return Kirigami.Theme.negativeTextColor
+        if (kind === "warning") return Kirigami.Theme.neutralTextColor
+        return Kirigami.Theme.highlightColor
+    }
+    function noticeBackground(kind) {
+        const base = noticeColor(kind)
+        return Qt.rgba(base.r, base.g, base.b, 0.10)
+    }
+    function addNotification(kind, heading, detail) {
+        const next = notifications.slice()
+        next.unshift({
+            key: ++notificationSequence,
+            kind: kind,
+            heading: heading,
+            detail: detail,
+            time: Qt.formatTime(new Date(), "HH:mm:ss")
+        })
+        // Notifications are short-lived UI summaries. The session journal
+        // remains complete and is never cleared by this panel.
+        notifications = next.slice(0, 20)
+    }
+    function elapsedLabel() {
+        const minutes = Math.floor(elapsedSeconds / 60)
+        const seconds = elapsedSeconds % 60
+        return minutes + ":" + (seconds < 10 ? "0" : "") + seconds
+    }
     function actionName(action) {
         switch (action) {
         case "diagnose": return loc("Diagnostyka środowiska", "Environment diagnostics")
@@ -88,6 +120,20 @@ Kirigami.ApplicationWindow {
 
     Connections {
         target: backend
+        function onRunningChanged() {
+            if (backend.running) window.elapsedSeconds = 0
+        }
+        function onOperationResultChanged() {
+            if (!backend.lastOperation.length) return
+            const ok = backend.lastOperationSucceeded
+            window.addNotification(
+                ok ? "success" : "error",
+                (ok ? window.loc("Zakończono", "Completed") : window.loc("Błąd działania", "Action failed"))
+                    + " · " + window.actionName(backend.lastOperation),
+                ok ? window.loc("Operacja zakończona pomyślnie.", "The operation finished successfully.")
+                   : (backend.lastOperationError || window.loc("Szczegóły znajdziesz w dzienniku sesji.",
+                                                              "See the session journal for details.")))
+        }
         function onDashboardLoaded(json) {
             try { window.dashboard = JSON.parse(json) }
             catch (error) { console.warn("Invalid dashboard data:", error) }
@@ -99,6 +145,12 @@ Kirigami.ApplicationWindow {
                 window.inventoryWarning = response.system_warning || ""
                 window.inventoryReady = true
                 window.addonView = 0
+                if (window.inventoryWarning.length > 0) {
+                    window.addNotification("warning",
+                        window.loc("Niepełna lista systemowa", "Partial system inventory"),
+                        window.loc("Dodatki użytkownika są dostępne; odczyt dodatków systemowych pominięto.",
+                                   "User add-ons are available; system-wide add-ons were omitted."))
+                }
             } catch (error) { console.warn("Invalid inventory data:", error) }
         }
         function onUpdatesLoaded(json) {
@@ -110,6 +162,10 @@ Kirigami.ApplicationWindow {
                 window.unmatchedUpdates = response.unmatched
                 window.updatesReady = true
                 window.addonView = 1
+                if (window.updateIssues.length > 0) {
+                    window.addNotification("warning", window.loc("Niektóre dodatki wymagają uwagi", "Some add-ons need attention"),
+                        window.loc("Szczegóły znajdziesz na karcie Dodatki Plasma.", "See the Plasma add-ons page for details."))
+                }
             } catch (error) { console.warn("Invalid updates data:", error) }
         }
         function onSettingsLoaded(json) {
@@ -131,6 +187,13 @@ Kirigami.ApplicationWindow {
         function onSettingsSaved() {
             migrationConsent.checked = false
         }
+    }
+
+    Timer {
+        interval: 1000
+        repeat: true
+        running: backend.running
+        onTriggered: window.elapsedSeconds += 1
     }
 
     Controls.Dialog {
@@ -169,6 +232,245 @@ Kirigami.ApplicationWindow {
         }
     }
 
+    // One reusable notification center: a fixed right column on desktop,
+    // and a right-side drawer when the window is narrow.
+    Component {
+        id: notificationPanelContent
+        ColumnLayout {
+            spacing: Kirigami.Units.largeSpacing
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Kirigami.Units.smallSpacing
+                Kirigami.Icon {
+                    source: "dialog-information"
+                    Layout.preferredWidth: 24
+                    Layout.preferredHeight: 24
+                }
+                Kirigami.Heading {
+                    level: 2
+                    Layout.fillWidth: true
+                    text: window.loc("Powiadomienia", "Notifications")
+                }
+                Controls.ToolButton {
+                    icon.name: "edit-clear"
+                    enabled: window.notifications.length > 0
+                    display: Controls.AbstractButton.IconOnly
+                    Controls.ToolTip.visible: hovered
+                    Controls.ToolTip.text: window.loc("Wyczyść powiadomienia (dziennik zostanie zachowany)",
+                                                      "Clear notifications (keep the journal)")
+                    Accessible.name: window.loc("Wyczyść powiadomienia", "Clear notifications")
+                    onClicked: window.notifications = []
+                }
+            }
+
+            Controls.Label {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                opacity: 0.7
+                font.pixelSize: 12
+                text: window.loc("Wyniki działań pojawiają się tutaj. Pełna historia pozostaje w dzienniku.",
+                                 "Action results appear here. The complete history stays in the journal.")
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 1
+                color: Kirigami.Theme.textColor
+                opacity: 0.12
+            }
+
+            ListView {
+                id: notificationList
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                spacing: Kirigami.Units.smallSpacing
+                boundsBehavior: Flickable.StopAtBounds
+                model: window.notifications
+
+                Controls.Label {
+                    anchors.centerIn: parent
+                    width: parent.width - 24
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                    opacity: 0.65
+                    visible: window.notifications.length === 0
+                    text: window.loc("Na razie brak powiadomień. Uruchom dowolne działanie.",
+                                     "No notifications yet. Start any action.")
+                }
+
+                delegate: Rectangle {
+                    required property var modelData
+                    width: notificationList.width - 10
+                    height: Math.max(76, notificationBody.implicitHeight + 22)
+                    radius: 10
+                    color: window.noticeBackground(modelData.kind)
+                    border.color: window.noticeColor(modelData.kind)
+                    border.width: 1
+
+                    RowLayout {
+                        id: notificationBody
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.margins: 11
+                        spacing: Kirigami.Units.smallSpacing
+
+                        Kirigami.Icon {
+                            source: modelData.kind === "success" ? "dialog-ok-apply"
+                                    : modelData.kind === "error" ? "dialog-error"
+                                    : modelData.kind === "warning" ? "dialog-warning" : "dialog-information"
+                            Layout.preferredWidth: 22
+                            Layout.preferredHeight: 22
+                            Layout.alignment: Qt.AlignTop
+                        }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 4
+                            Controls.Label {
+                                Layout.fillWidth: true
+                                font.bold: true
+                                wrapMode: Text.WordWrap
+                                textFormat: Text.PlainText
+                                color: window.noticeColor(modelData.kind)
+                                text: modelData.heading
+                            }
+                            Controls.Label {
+                                Layout.fillWidth: true
+                                wrapMode: Text.WordWrap
+                                textFormat: Text.PlainText
+                                font.pixelSize: 12
+                                text: modelData.detail
+                            }
+                            Controls.Label {
+                                Layout.fillWidth: true
+                                horizontalAlignment: Text.AlignRight
+                                font.pixelSize: 11
+                                opacity: 0.6
+                                text: modelData.time
+                            }
+                        }
+                    }
+                }
+            }
+
+            Controls.Button {
+                Layout.fillWidth: true
+                icon.name: "view-list-text"
+                text: window.loc("Otwórz pełny dziennik", "Open full journal")
+                onClicked: {
+                    window.section = 3
+                    notificationDrawer.close()
+                }
+            }
+        }
+    }
+
+    Controls.Drawer {
+        id: notificationDrawer
+        parent: Controls.Overlay.overlay
+        edge: Qt.RightEdge
+        width: Math.min(window.width - 40, 340)
+        height: window.height
+        modal: true
+        Loader {
+            anchors.fill: parent
+            anchors.margins: Kirigami.Units.largeSpacing
+            sourceComponent: notificationPanelContent
+        }
+    }
+
+    footer: Controls.ToolBar {
+        padding: Kirigami.Units.smallSpacing
+        contentItem: ColumnLayout {
+            spacing: Kirigami.Units.smallSpacing
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Kirigami.Units.largeSpacing
+
+                Rectangle {
+                    Layout.preferredWidth: 4
+                    Layout.preferredHeight: 36
+                    radius: 2
+                    color: backend.running ? Kirigami.Theme.highlightColor
+                           : !backend.lastOperation.length ? Kirigami.Theme.textColor
+                           : backend.lastOperationSucceeded ? Kirigami.Theme.positiveTextColor
+                           : Kirigami.Theme.negativeTextColor
+                }
+
+                Controls.BusyIndicator {
+                    running: backend.running
+                    visible: running
+                    Layout.preferredWidth: 30
+                    Layout.preferredHeight: 30
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 1
+                    Controls.Label {
+                        Layout.fillWidth: true
+                        font.bold: true
+                        elide: Text.ElideRight
+                        text: backend.running
+                              ? window.loc("Trwa: ", "Running: ") + window.actionName(backend.currentAction)
+                              : !backend.lastOperation.length
+                                ? window.loc("Gotowy do pracy", "Ready to go")
+                                : (backend.lastOperationSucceeded
+                                   ? window.loc("✓ Zakończono: ", "✓ Completed: ")
+                                   : window.loc("✗ Błąd: ", "✗ Failed: "))
+                                   + window.actionName(backend.lastOperation)
+                    }
+                    Controls.Label {
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                        opacity: 0.75
+                        font.pixelSize: 12
+                        text: backend.running
+                              ? (backend.progressDetail.length > 0 ? backend.progressDetail
+                                 : window.loc("Czekaj, operacja jest wykonywana…", "Please wait, the action is running…"))
+                                + "  ·  " + window.elapsedLabel()
+                              : window.loc("Szczegóły i wszystkie działania znajdziesz w dzienniku sesji.",
+                                           "Details and all actions are available in the session journal.")
+                    }
+                }
+
+                Controls.Button {
+                    visible: backend.running
+                    icon.name: "process-stop"
+                    text: window.loc("Anuluj", "Cancel")
+                    onClicked: backend.cancel()
+                }
+                Controls.Button {
+                    visible: !backend.running && backend.lastOperation.length > 0
+                    icon.name: "view-list-text"
+                    text: window.loc("Dziennik", "Journal")
+                    onClicked: window.section = 3
+                }
+            }
+
+            Controls.ProgressBar {
+                id: operationProgress
+                Layout.fillWidth: true
+                Layout.preferredHeight: 9
+                from: 0
+                to: 1
+                // The helper does not publish percentages. Animate while
+                // running and show completion only after its exit status.
+                indeterminate: backend.running
+                value: backend.running ? 0 : (backend.lastOperation.length > 0 ? 1 : 0)
+                palette.highlight: backend.running ? Kirigami.Theme.highlightColor
+                                   : backend.lastOperationSucceeded ? Kirigami.Theme.positiveTextColor
+                                   : Kirigami.Theme.negativeTextColor
+                Accessible.name: backend.running
+                                 ? window.loc("Trwa operacja", "Operation in progress")
+                                 : window.loc("Stan ostatniego działania", "Last action status")
+            }
+        }
+    }
+
     globalDrawer: Kirigami.GlobalDrawer {
         title: "Plasma Addon Manager"
         titleIcon: "preferences-desktop-plasma"
@@ -201,12 +503,29 @@ Kirigami.ApplicationWindow {
         ]
     }
 
-    pageStack.initialPage: Kirigami.ScrollablePage {
+    pageStack.initialPage: Kirigami.Page {
         title: window.currentSection
+        padding: 0
 
-        ColumnLayout {
-            width: parent.width
-            spacing: Kirigami.Units.largeSpacing
+        RowLayout {
+            anchors.fill: parent
+            spacing: 0
+
+            Controls.ScrollView {
+                id: mainScroll
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.minimumWidth: 380
+                clip: true
+                leftPadding: Kirigami.Units.largeSpacing
+                rightPadding: Kirigami.Units.largeSpacing
+                topPadding: Kirigami.Units.largeSpacing
+                bottomPadding: Kirigami.Units.largeSpacing
+                Controls.ScrollBar.horizontal.policy: Controls.ScrollBar.AlwaysOff
+
+                ColumnLayout {
+                    width: mainScroll.availableWidth
+                    spacing: Kirigami.Units.largeSpacing
 
             RowLayout {
                 Layout.fillWidth: true
@@ -242,28 +561,22 @@ Kirigami.ApplicationWindow {
                         window.languageChoice = ["auto", "pl", "en"][index]
                     }
                 }
+                Controls.ToolButton {
+                    visible: !window.showNotificationSidebar
+                    icon.name: "dialog-information"
+                    text: window.notifications.length > 0 ? "(" + window.notifications.length + ")" : ""
+                    display: Controls.AbstractButton.TextBesideIcon
+                    Accessible.name: window.loc("Pokaż powiadomienia", "Show notifications")
+                    onClicked: notificationDrawer.open()
+                }
             }
 
-            Kirigami.InlineMessage {
+            Controls.Label {
                 Layout.fillWidth: true
-                visible: true
-                type: Kirigami.MessageType.Information
-                text: window.loc(
-                    "Wersja 0.4.3: instalacja plasmoid-updater i brakujących zależności jedną operacją, bez wpisywania poleceń w terminalu.",
-                    "Version 0.4.3: install plasmoid-updater and missing prerequisites together, without terminal commands.")
-            }
-
-            Kirigami.InlineMessage {
-                Layout.fillWidth: true
-                visible: window.section !== 4 && backend.lastOperation.length > 0
-                type: backend.lastOperationSucceeded
-                      ? Kirigami.MessageType.Positive : Kirigami.MessageType.Error
-                text: (backend.lastOperationSucceeded
-                       ? window.loc("✓ Wykonano: ", "✓ Completed: ")
-                       : window.loc("✗ Niepowodzenie: ", "✗ Failed: "))
-                      + window.actionName(backend.lastOperation)
-                      + (!backend.lastOperationSucceeded && backend.lastOperationError.length > 0
-                         ? "\n" + backend.lastOperationError : "")
+                opacity: 0.65
+                font.pixelSize: 12
+                text: window.loc("Wersja 0.4.4  ·  KDE Plasma 6  ·  Bez terminala",
+                                 "Version 0.4.4  ·  KDE Plasma 6  ·  No terminal needed")
             }
 
             Kirigami.InlineMessage {
@@ -272,6 +585,71 @@ Kirigami.ApplicationWindow {
                 type: Kirigami.MessageType.Warning
                 text: window.loc("Brakuje bsdtar. Przejdź do Pulpitu i kliknij «Zainstaluj / sprawdź wersję». Program doinstaluje potrzebną zależność razem z aktualizatorem; na niektórych dystrybucjach poprosi o autoryzację administratora.",
                                  "bsdtar is missing. Open Dashboard and choose Install / check version. The app will install the required utility as part of the same action; some distributions require graphical administrator authorization.")
+            }
+
+            Controls.Frame {
+                visible: window.section === 0
+                Layout.fillWidth: true
+                padding: Kirigami.Units.largeSpacing
+                background: Rectangle {
+                    color: window.noticeBackground("info")
+                    border.color: Kirigami.Theme.highlightColor
+                    border.width: 1
+                    radius: 12
+                }
+
+                ColumnLayout {
+                    width: parent.width
+                    spacing: Kirigami.Units.largeSpacing
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Kirigami.Units.largeSpacing
+                        Kirigami.Icon {
+                            source: window.dashboard.updater_version && !window.bsdtarMissing
+                                    ? "security-high" : "software-update-available"
+                            Layout.preferredWidth: 36
+                            Layout.preferredHeight: 36
+                        }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 3
+                            Kirigami.Heading {
+                                level: 2
+                                Layout.fillWidth: true
+                                text: window.dashboard.updater_version && !window.bsdtarMissing
+                                      ? window.loc("Wszystko gotowe do aktualizacji", "Ready to check for updates")
+                                      : window.loc("Przygotuj menedżer dodatków", "Set up the add-on manager")
+                            }
+                            Controls.Label {
+                                Layout.fillWidth: true
+                                wrapMode: Text.WordWrap
+                                text: window.dashboard.updater_version && !window.bsdtarMissing
+                                      ? window.loc("Twoje narzędzia są gotowe. Sprawdź nowe wersje dodatków KDE Store.",
+                                                   "Your tools are ready. Check KDE Store add-ons for new versions.")
+                                      : window.loc("Jednym przyciskiem przygotujesz plasmoid-updater i potrzebne zależności.",
+                                                   "Prepare plasmoid-updater and its prerequisites in one step.")
+                            }
+                        }
+                    }
+                    Controls.Button {
+                        highlighted: true
+                        enabled: !backend.running
+                        icon.name: window.dashboard.updater_version && !window.bsdtarMissing
+                                   ? "view-refresh" : "download"
+                        text: window.dashboard.updater_version && !window.bsdtarMissing
+                              ? window.loc("Sprawdź aktualizacje", "Check for updates")
+                              : window.loc("Przygotuj narzędzia…", "Set up tools…")
+                        onClicked: {
+                            if (window.dashboard.updater_version && !window.bsdtarMissing) {
+                                window.section = 1
+                                backend.runAction("updates-json")
+                            } else {
+                                confirmInstall.open()
+                            }
+                        }
+                    }
+                }
             }
 
             GridLayout {
@@ -284,7 +662,10 @@ Kirigami.ApplicationWindow {
                 Controls.Frame {
                     Layout.fillWidth: true
                     ColumnLayout {
-                        Kirigami.Heading { level: 3; text: window.loc("System", "System") }
+                        RowLayout {
+                            Kirigami.Icon { source: "computer"; Layout.preferredWidth: 20; Layout.preferredHeight: 20 }
+                            Kirigami.Heading { level: 3; text: window.loc("System", "System") }
+                        }
                         Controls.Label {
                             Layout.fillWidth: true
                             wrapMode: Text.WordWrap
@@ -295,7 +676,10 @@ Kirigami.ApplicationWindow {
                 Controls.Frame {
                     Layout.fillWidth: true
                     ColumnLayout {
-                        Kirigami.Heading { level: 3; text: "plasmoid-updater" }
+                        RowLayout {
+                            Kirigami.Icon { source: "download"; Layout.preferredWidth: 20; Layout.preferredHeight: 20 }
+                            Kirigami.Heading { level: 3; text: "plasmoid-updater" }
+                        }
                         Controls.Label {
                             Layout.fillWidth: true
                             wrapMode: Text.WordWrap
@@ -310,7 +694,10 @@ Kirigami.ApplicationWindow {
                 Controls.Frame {
                     Layout.fillWidth: true
                     ColumnLayout {
-                        Kirigami.Heading { level: 3; text: window.loc("Agent", "Agent") }
+                        RowLayout {
+                            Kirigami.Icon { source: "system-run"; Layout.preferredWidth: 20; Layout.preferredHeight: 20 }
+                            Kirigami.Heading { level: 3; text: window.loc("Agent", "Agent") }
+                        }
                         Controls.Label {
                             Layout.fillWidth: true
                             wrapMode: Text.WordWrap
@@ -327,7 +714,10 @@ Kirigami.ApplicationWindow {
                 Controls.Frame {
                     Layout.fillWidth: true
                     ColumnLayout {
-                        Kirigami.Heading { level: 3; text: window.loc("Harmonogram", "Schedule") }
+                        RowLayout {
+                            Kirigami.Icon { source: "chronometer"; Layout.preferredWidth: 20; Layout.preferredHeight: 20 }
+                            Kirigami.Heading { level: 3; text: window.loc("Harmonogram", "Schedule") }
+                        }
                         Controls.Label {
                             Layout.fillWidth: true
                             wrapMode: Text.WordWrap
@@ -766,7 +1156,7 @@ Kirigami.ApplicationWindow {
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.smallSpacing
-                    Kirigami.Heading { text: "Plasma Addon Manager 0.4.3"; level: 2 }
+                    Kirigami.Heading { text: "Plasma Addon Manager 0.4.4"; level: 2 }
                     Controls.Label {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap
@@ -787,29 +1177,28 @@ Kirigami.ApplicationWindow {
                 }
             }
 
-            RowLayout {
-                visible: window.section !== 4
-                Layout.fillWidth: true
-                spacing: Kirigami.Units.smallSpacing
-                Controls.BusyIndicator {
-                    running: backend.running
-                    visible: running
-                    implicitWidth: 26
-                    implicitHeight: 26
-                }
-                Controls.Label {
-                    text: backend.status
-                    elide: Text.ElideRight
-                    Layout.fillWidth: true
-                }
-                Controls.Button {
-                    text: window.loc("Anuluj", "Cancel")
-                    icon.name: "process-stop"
-                    enabled: backend.running
-                    onClicked: backend.cancel()
                 }
             }
 
+            Rectangle {
+                visible: window.showNotificationSidebar
+                Layout.fillHeight: true
+                Layout.preferredWidth: 1
+                color: Kirigami.Theme.textColor
+                opacity: 0.12
+            }
+
+            Controls.Frame {
+                visible: window.showNotificationSidebar
+                Layout.preferredWidth: 304
+                Layout.fillHeight: true
+                Layout.margins: Kirigami.Units.smallSpacing
+                padding: Kirigami.Units.largeSpacing
+                Loader {
+                    anchors.fill: parent
+                    sourceComponent: notificationPanelContent
+                }
+            }
         }
     }
 }
