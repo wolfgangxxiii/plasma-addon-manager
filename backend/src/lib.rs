@@ -6,6 +6,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 pub mod automation;
+pub mod addons;
 pub mod updater_installer;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

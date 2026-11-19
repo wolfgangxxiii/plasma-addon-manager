@@ -21,20 +21,50 @@ BackendBridge::BackendBridge(QObject *parent) : QObject(parent) {
     m_process.setChildProcessModifier([] { ::setpgid(0, 0); });
 #endif
     connect(&m_process, &QProcess::readyReadStandardOutput, this, [this] {
-        appendOutput(QString::fromUtf8(m_process.readAllStandardOutput()));
+        const QString chunk = QString::fromUtf8(m_process.readAllStandardOutput());
+        if (m_pendingAction.endsWith(QStringLiteral("-json"))
+                || m_pendingAction == QStringLiteral("settings-show")) {
+            m_jsonOutput += chunk;
+        } else {
+            appendOutput(chunk);
+        }
     });
     connect(&m_process, &QProcess::readyReadStandardError, this, [this] {
         appendOutput(QString::fromUtf8(m_process.readAllStandardError()));
     });
     connect(&m_process, &QProcess::finished, this,
             [this](int exitCode, QProcess::ExitStatus exitStatus) {
-                appendOutput(QString::fromUtf8(m_process.readAllStandardOutput()));
-                appendOutput(QString::fromUtf8(m_process.readAllStandardError()));
-                const bool success = exitStatus == QProcess::NormalExit && exitCode == 0;
-                if (success && m_pendingAction == QStringLiteral("settings-show")) {
-                    emit settingsLoaded(m_output.trimmed());
+                const QString tail = QString::fromUtf8(m_process.readAllStandardOutput());
+                const QString action = m_pendingAction;
+                const bool structured = action.endsWith(QStringLiteral("-json"))
+                        || action == QStringLiteral("settings-show");
+                if (structured) {
+                    m_jsonOutput += tail;
+                } else {
+                    appendOutput(tail);
                 }
-                if (success && m_pendingAction == QStringLiteral("settings-save")) {
+                appendOutput(QString::fromUtf8(m_process.readAllStandardError()));
+                bool success = exitStatus == QProcess::NormalExit && exitCode == 0;
+                if (success && structured) {
+                    QJsonParseError error;
+                    const QJsonDocument document = QJsonDocument::fromJson(m_jsonOutput.toUtf8(), &error);
+                    if (error.error != QJsonParseError::NoError || document.isNull()) {
+                        success = false;
+                        appendOutput(QStringLiteral("Invalid backend JSON: %1\n").arg(error.errorString()));
+                    } else if (action == QStringLiteral("settings-show") && document.isObject()) {
+                        emit settingsLoaded(m_jsonOutput.trimmed());
+                    } else if (action == QStringLiteral("status-json") && document.isObject()) {
+                        emit dashboardLoaded(m_jsonOutput.trimmed());
+                    } else if (action == QStringLiteral("inventory-json") && document.isArray()) {
+                        emit inventoryLoaded(m_jsonOutput.trimmed());
+                    } else if (action == QStringLiteral("updates-json") && document.isObject()) {
+                        emit updatesLoaded(m_jsonOutput.trimmed());
+                    } else {
+                        success = false;
+                        appendOutput(QStringLiteral("Unexpected backend data structure.\n"));
+                    }
+                }
+                if (success && action == QStringLiteral("settings-save")) {
                     emit settingsSaved();
                 }
                 setStatus(success
@@ -42,6 +72,15 @@ BackendBridge::BackendBridge(QObject *parent) : QObject(parent) {
                               : QStringLiteral("Failed (exit %1)").arg(exitCode));
                 m_pendingAction.clear();
                 emit runningChanged();
+                if (action == QStringLiteral("settings-show")
+                        || action == QStringLiteral("settings-save")
+                        || action == QStringLiteral("install")
+                        || action == QStringLiteral("update")
+                        || action == QStringLiteral("repair-agent")
+                        || action == QStringLiteral("run-service")
+                        || action == QStringLiteral("test-config")) {
+                    QTimer::singleShot(0, this, [this] { runAction(QStringLiteral("status-json")); });
+                }
             });
     connect(&m_process, &QProcess::errorOccurred, this, [this](QProcess::ProcessError error) {
         if (error == QProcess::FailedToStart) {
@@ -99,6 +138,8 @@ void BackendBridge::runAction(const QString &action) {
         QStringLiteral("diagnose"), QStringLiteral("inventory"),
         QStringLiteral("check"), QStringLiteral("dry-run"), QStringLiteral("update"),
         QStringLiteral("install"), QStringLiteral("settings-show"),
+        QStringLiteral("status-json"), QStringLiteral("inventory-json"),
+        QStringLiteral("updates-json"), QStringLiteral("test-config"),
         QStringLiteral("timer"), QStringLiteral("journal"),
         QStringLiteral("repair-agent"), QStringLiteral("run-service")
     };
@@ -126,6 +167,7 @@ void BackendBridge::saveSettings(const QString &json, bool migrateLegacy) {
 
 void BackendBridge::startAction(const QString &action, const QStringList &arguments) {
     m_output.clear();
+    m_jsonOutput.clear();
     emit outputChanged();
     const QString helper = helperPath();
     if (helper.isEmpty()) {

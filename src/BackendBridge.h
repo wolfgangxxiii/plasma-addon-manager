@@ -28,6 +28,9 @@ signals:
     void runningChanged();
     void settingsLoaded(const QString &json);
     void settingsSaved();
+    void dashboardLoaded(const QString &json);
+    void inventoryLoaded(const QString &json);
+    void updatesLoaded(const QString &json);
 
 private:
     QString helperPath() const;
@@ -37,6 +40,7 @@ private:
 
     QProcess m_process;
     QString m_output;
+    QString m_jsonOutput;
     QString m_status = QStringLiteral("Ready");
     QString m_pendingAction;
 };

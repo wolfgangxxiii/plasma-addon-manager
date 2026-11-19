@@ -1,7 +1,7 @@
 //! Explicit allow-list of commands invoked by the Qt frontend.
 
 use plasma_addon_helper::{
-    automation::{self, Settings},
+    addons, automation::{self, Settings},
     executable_on_path, find_plasmoid_updater, in_flatpak, is_plasma_session, read_distribution,
     updater_installer, updater_path, DistributionFamily,
 };
@@ -24,25 +24,20 @@ fn run(program: &str, args: &[&str]) -> Result<(), String> {
 
 fn run_command(command: &mut Command, args: &[&str], check: bool) -> Result<(), String> {
     let description = format!("{:?}", command.get_program());
-    let output = command
+    // The child inherits this helper's stdout/stderr, which are already piped
+    // to QProcess. Show progress while updates run instead of after they end.
+    let status = command
         .args(args)
         .stdin(Stdio::null())
-        .output()
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .status()
         .map_err(|error| format!("Cannot execute {description}: {error}"))?;
-    io::stdout()
-        .write_all(&output.stdout)
-        .map_err(|error| error.to_string())?;
-    io::stderr()
-        .write_all(&output.stderr)
-        .map_err(|error| error.to_string())?;
     // `plasmoid-updater check` returns 100 when it finds available updates.
-    if output.status.success() || (check && output.status.code() == Some(100)) {
+    if status.success() || (check && status.code() == Some(100)) {
         Ok(())
     } else {
-        Err(format!(
-            "{description} exited with status {}",
-            output.status
-        ))
+        Err(format!("{description} exited with status {status}"))
     }
 }
 
@@ -107,7 +102,7 @@ fn updater(action: &str) -> Result<(), String> {
         return Err("Updating host add-ons is available only from the AppImage or native application, not a Flatpak sandbox".into());
     }
     let binary = find_plasmoid_updater()
-        .ok_or("No working plasmoid-updater found. Install it using your existing Bazzite/Debian updater GUI first.")?;
+        .ok_or("No working plasmoid-updater found. Choose Install / check version in the dashboard first.")?;
     let mut command = Command::new(binary);
     command.env("PATH", updater_path());
     match action {
@@ -194,6 +189,21 @@ fn execute(action: &str, extra: &[String]) -> Result<(), String> {
             );
             Ok(())
         }
+        "status-json" => {
+            let data = automation::dashboard_state().map_err(|error| format!("{error:#}"))?;
+            println!("{}", serde_json::to_string(&data).map_err(|error| error.to_string())?);
+            Ok(())
+        }
+        "inventory-json" => {
+            let data = addons::inventory().map_err(|error| format!("{error:#}"))?;
+            println!("{}", serde_json::to_string(&data).map_err(|error| error.to_string())?);
+            Ok(())
+        }
+        "updates-json" => {
+            let data = addons::updates().map_err(|error| format!("{error:#}"))?;
+            println!("{}", serde_json::to_string(&data).map_err(|error| error.to_string())?);
+            Ok(())
+        }
         "settings-save" => {
             if in_flatpak() {
                 return Err("Automation changes require the AppImage, not Flatpak".into());
@@ -214,11 +224,12 @@ fn execute(action: &str, extra: &[String]) -> Result<(), String> {
             automation::status();
             Ok(())
         }
+        "test-config" => automation::test_configuration().map_err(|error| format!("{error:#}")),
         "journal" => automation::journal().map_err(|error| format!("{error:#}")),
         "repair-agent" => automation::repair_agent().map_err(|error| format!("{error:#}")),
         "run-service" => automation::start_service().map_err(|error| format!("{error:#}")),
         "--help" | "help" => {
-            println!("Usage: plasma-addon-helper [diagnose|inventory|check|dry-run|update|install|settings-show|settings-save|timer|journal|repair-agent|run-service]");
+            println!("Usage: plasma-addon-helper [diagnose|inventory|check|inventory-json|updates-json|status-json|dry-run|update|install|settings-show|settings-save|test-config|timer|journal|repair-agent|run-service]");
             println!("Modifying actions require explicit GUI confirmation. Only user-owned KDE add-ons and systemd --user settings are touched; the OS image is never changed.");
             Ok(())
         }
