@@ -206,7 +206,11 @@ fn parse_version(raw: &str, prefix: &str) -> Option<String> {
     // plasmoid-updater 0.2.1 prints its GPL licensing text after the first
     // line. Only the version token belongs on the dashboard's small card.
     raw.lines().find_map(|line| {
-        let version = line.trim().strip_prefix(prefix)?.split_whitespace().next()?;
+        let version = line
+            .trim()
+            .strip_prefix(prefix)?
+            .split_whitespace()
+            .next()?;
         version
             .trim_start_matches('v')
             .chars()
@@ -946,8 +950,11 @@ mod tests {
             Some("0.2.1")
         );
         assert_eq!(
-            parse_version("plasma-addon-manager-agent 0.4.2\n", "plasma-addon-manager-agent ")
-                .as_deref(),
+            parse_version(
+                "plasma-addon-manager-agent 0.4.2\n",
+                "plasma-addon-manager-agent "
+            )
+            .as_deref(),
             Some("0.4.2")
         );
         assert_eq!(parse_version("Unknown binary", "plasmoid-updater "), None);

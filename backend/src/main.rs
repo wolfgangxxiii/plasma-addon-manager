@@ -104,14 +104,16 @@ fn diagnose() -> Result<(), String> {
     if missing.is_empty() {
         Ok(())
     } else {
-        let hint = if distribution.family == DistributionFamily::OpenSuse
-            && missing.contains(&"bsdtar")
-        {
-            "On openSUSE install the 'bsdtar' package in YaST Software Management or Discover."
-        } else {
-            "Install the missing dependencies using your distribution's software manager."
-        };
-        Err(format!("Missing required dependencies: {}. {hint}", missing.join(", ")))
+        let hint =
+            if distribution.family == DistributionFamily::OpenSuse && missing.contains(&"bsdtar") {
+                "On openSUSE install the 'bsdtar' package in YaST Software Management or Discover."
+            } else {
+                "Install the missing dependencies using your distribution's software manager."
+            };
+        Err(format!(
+            "Missing required dependencies: {}. {hint}",
+            missing.join(", ")
+        ))
     }
 }
 
@@ -193,11 +195,15 @@ fn execute(action: &str, extra: &[String]) -> Result<(), String> {
                     automation::prepare_bazzite_dependencies()
                         .map_err(|error| format!("Bazzite prerequisites: {error:#}"))?;
                 } else if executable_on_path("bsdtar").is_none() {
-                    println!("The updater binary is installed, but KDE Store updates require bsdtar.");
+                    println!(
+                        "The updater binary is installed, but KDE Store updates require bsdtar."
+                    );
                     if read_distribution().family == DistributionFamily::OpenSuse {
                         println!("On openSUSE install the 'bsdtar' package in YaST or Discover.");
                     } else {
-                        println!("Install the libarchive/bsdtar utility with your software manager.");
+                        println!(
+                            "Install the libarchive/bsdtar utility with your software manager."
+                        );
                     }
                 }
                 Ok(())
