@@ -423,10 +423,20 @@ fn service_bsdtar_exists(home: &Path) -> bool {
 }
 
 fn link_bsdtar_for_service(home: &Path, source: &Path) -> Result<()> {
-    ensure!(is_executable(source), "bsdtar at {} is not executable", source.display());
-    let source = source.canonicalize().context("Cannot resolve bsdtar executable")?;
+    ensure!(
+        is_executable(source),
+        "bsdtar at {} is not executable",
+        source.display()
+    );
+    let source = source
+        .canonicalize()
+        .context("Cannot resolve bsdtar executable")?;
     let target = home.join(".local/bin/bsdtar");
-    ensure!(fs::symlink_metadata(&target).is_err(), "Existing {} cannot be replaced", target.display());
+    ensure!(
+        fs::symlink_metadata(&target).is_err(),
+        "Existing {} cannot be replaced",
+        target.display()
+    );
     fs::create_dir_all(target.parent().context("Invalid bsdtar destination")?)?;
     symlink(&source, &target)?;
     println!("Made existing bsdtar available to the background service.");
@@ -436,10 +446,15 @@ fn link_bsdtar_for_service(home: &Path, source: &Path) -> Result<()> {
 /// Bazzite's working updater GUI provisions libarchive in *user* Homebrew.
 /// The GUI asks for consent before calling this; no root or rpm-ostree changes.
 pub fn prepare_bazzite_dependencies() -> Result<()> {
-    ensure!(read_distribution().family == DistributionFamily::AtomicFedora,
-        "Homebrew preparation is only for Fedora Atomic / Bazzite");
-    ensure!(executable_on_path("kpackagetool6").is_some() || is_executable(Path::new("/usr/bin/kpackagetool6")),
-        "kpackagetool6 is missing from KDE Plasma; cannot replace this OS component with Homebrew");
+    ensure!(
+        read_distribution().family == DistributionFamily::AtomicFedora,
+        "Homebrew preparation is only for Fedora Atomic / Bazzite"
+    );
+    ensure!(
+        executable_on_path("kpackagetool6").is_some()
+            || is_executable(Path::new("/usr/bin/kpackagetool6")),
+        "kpackagetool6 is missing from KDE Plasma; cannot replace this OS component with Homebrew"
+    );
     let home = home()?;
     if service_bsdtar_exists(&home) {
         println!("✓ bsdtar is already available to the background service.");
@@ -459,7 +474,10 @@ pub fn prepare_bazzite_dependencies() -> Result<()> {
     let prefix = output(Command::new(&brew).args(["--prefix", "libarchive"]))?;
     let source = PathBuf::from(String::from_utf8(prefix.stdout)?.trim()).join("bin/bsdtar");
     link_bsdtar_for_service(&home, &source)?;
-    ensure!(service_bsdtar_exists(&home), "bsdtar is still unavailable to the service");
+    ensure!(
+        service_bsdtar_exists(&home),
+        "bsdtar is still unavailable to the service"
+    );
     Ok(())
 }
 
@@ -764,7 +782,11 @@ mod tests {
         let path = units_dir(dir.path()).join(TIMER);
         atomic_write(&path, b"[Timer]\nOnCalendar=daily\n").unwrap();
         assert!(!unit_is_managed(&path));
-        atomic_write(&path, format!("[Timer]\n# unrelated\n{MANAGED}\n").as_bytes()).unwrap();
+        atomic_write(
+            &path,
+            format!("[Timer]\n# unrelated\n{MANAGED}\n").as_bytes(),
+        )
+        .unwrap();
         assert!(!unit_is_managed(&path));
         assert!(!unit_is_managed(&units_dir(dir.path()).join(SERVICE)));
     }
@@ -773,13 +795,32 @@ mod tests {
     fn migration_backup_keeps_both_legacy_unit_files() {
         let dir = tempfile::tempdir().unwrap();
         let home = dir.path();
-        atomic_write(&units_dir(home).join("plasmoid-updater.timer"), b"old timer").unwrap();
-        atomic_write(&units_dir(home).join("plasmoid-updater.service"), b"old service").unwrap();
+        atomic_write(
+            &units_dir(home).join("plasmoid-updater.timer"),
+            b"old timer",
+        )
+        .unwrap();
+        atomic_write(
+            &units_dir(home).join("plasmoid-updater.service"),
+            b"old service",
+        )
+        .unwrap();
         back_up_legacy_units(home, &["plasmoid-updater.timer"]).unwrap();
         let backups = home.join(".config/plasma-addon-manager/backups");
-        let backup = fs::read_dir(backups).unwrap().next().unwrap().unwrap().path();
-        assert_eq!(fs::read(backup.join("plasmoid-updater.timer")).unwrap(), b"old timer");
-        assert_eq!(fs::read(backup.join("plasmoid-updater.service")).unwrap(), b"old service");
+        let backup = fs::read_dir(backups)
+            .unwrap()
+            .next()
+            .unwrap()
+            .unwrap()
+            .path();
+        assert_eq!(
+            fs::read(backup.join("plasmoid-updater.timer")).unwrap(),
+            b"old timer"
+        );
+        assert_eq!(
+            fs::read(backup.join("plasmoid-updater.service")).unwrap(),
+            b"old service"
+        );
     }
 
     #[test]
