@@ -165,12 +165,11 @@ pub fn valid_updater_version(path: &Path) -> bool {
         .stdin(std::process::Stdio::null())
         .output();
     output.is_ok_and(|result| {
-        result.status.success()
-            && {
-                let text = String::from_utf8_lossy(&result.stdout);
-                let mut parts = text.split_whitespace();
-                parts.next() == Some("plasmoid-updater") && parts.next().is_some()
-            }
+        result.status.success() && {
+            let text = String::from_utf8_lossy(&result.stdout);
+            let mut parts = text.split_whitespace();
+            parts.next() == Some("plasmoid-updater") && parts.next().is_some()
+        }
     })
 }
 
@@ -179,7 +178,9 @@ pub fn updater_path() -> String {
     if let Some(home) = env::var_os("HOME") {
         segments.push(PathBuf::from(home).join(".local/bin"));
     }
-    segments.push(PathBuf::from("/home/linuxbrew/.linuxbrew/opt/libarchive/bin"));
+    segments.push(PathBuf::from(
+        "/home/linuxbrew/.linuxbrew/opt/libarchive/bin",
+    ));
     segments.push(PathBuf::from("/home/linuxbrew/.linuxbrew/bin"));
     if let Some(path) = env::var_os("PATH") {
         segments.extend(env::split_paths(&path));
