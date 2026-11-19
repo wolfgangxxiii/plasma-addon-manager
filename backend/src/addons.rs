@@ -291,9 +291,12 @@ fn inventory_in(binary: &std::path::Path, system: bool) -> Result<Vec<InstalledA
 pub fn inventory() -> Result<Vec<InstalledAddon>> {
     let binary = find_plasmoid_updater().context("Install plasmoid-updater first")?;
     let mut addons = inventory_in(&binary, false)?;
-    // System-installed entries are visible, but never modified by this app.
-    let mut system = inventory_in(&binary, true)?;
-    addons.append(&mut system);
+    // System-installed entries are optional, read-only information. Missing
+    // permissions or support must not hide the user's own installed add-ons.
+    match inventory_in(&binary, true) {
+        Ok(mut system) => addons.append(&mut system),
+        Err(error) => eprintln!("System add-ons could not be listed: {error:#}"),
+    }
     Ok(addons)
 }
 
