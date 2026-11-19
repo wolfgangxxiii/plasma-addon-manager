@@ -15,6 +15,8 @@ done
 cmake -S "$pam_root" -B "$pam_build" -G Ninja \
     -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
 cmake --build "$pam_build" --parallel 2
+QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+    "$pam_build/bin/plasma-addon-manager" --self-test
 mkdir -p "$pam_dist"
 cpack --config "$pam_build/CPackConfig.cmake" -G DEB -B "$pam_dist"
 

@@ -108,3 +108,4 @@ jobs:
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
               --title 'Plasma Addon Manager v0.1.0 preview' \
               --notes 'Testowe pakiety x86_64 dla KDE Plasma: DEB (Debian 13), AppImage i Flatpak. Wersja 0.1.0 oferuje tylko diagnostykę/odczyt; nie instaluje jeszcze aktualizacji dodatków. Flatpak ma ograniczony dostęp do hosta. Nie jest to stabilne wydanie produkcyjne.'
+          fi

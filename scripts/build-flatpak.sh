@@ -22,6 +22,9 @@ test "$(uname -m)" = x86_64 || {
 mkdir -p "$pam_dist"
 flatpak-builder --user --install-deps-from=flathub --force-clean \
     --repo="$pam_repo" "$pam_build" "$pam_manifest"
+flatpak-builder --run "$pam_build" "$pam_manifest" \
+    env QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+    plasma-addon-manager --self-test
 flatpak build-bundle "$pam_repo" "$pam_bundle" \
     io.github.wolfgangxxiii.PlasmaAddonManager stable
 test -s "$pam_bundle"
