@@ -45,6 +45,24 @@ Kirigami.ApplicationWindow {
         }
     }
 
+    Controls.Dialog {
+        id: confirmInstall
+        parent: Controls.Overlay.overlay
+        anchors.centerIn: parent
+        width: Math.min(parent.width - 32, 480)
+        modal: true
+        focus: true
+        title: window.loc("Zainstalować plasmoid-updater?", "Install plasmoid-updater?")
+        standardButtons: Controls.Dialog.Ok | Controls.Dialog.Cancel
+        onAccepted: backend.runAction("install")
+        contentItem: Controls.Label {
+            wrapMode: Text.WordWrap
+            text: window.loc(
+                "Program pobierze oryginalny plasmoid-updater z GitHub, zweryfikuje SHA-256 i zainstaluje go wyłącznie w Twoim katalogu ~/.local/bin. Istniejąca aktualna instalacja zostanie zachowana. Obraz Bazzite i harmonogram systemd pozostaną bez zmian.",
+                "The app will download the upstream plasmoid-updater from GitHub, verify its SHA-256 checksum and install it only into ~/.local/bin. A current installation is preserved. The Bazzite image and systemd schedule remain unchanged.")
+        }
+    }
+
     globalDrawer: Kirigami.GlobalDrawer {
         title: "Plasma Addon Manager"
         titleIcon: "preferences-desktop-plasma"
@@ -125,8 +143,8 @@ Kirigami.ApplicationWindow {
                 visible: true
                 type: Kirigami.MessageType.Information
                 text: window.loc(
-                    "Wersja testowa 0.1.1: odczyt, symulacja i ręczna aktualizacja dodatków po potwierdzeniu. Instalator i harmonogram pozostają bez zmian.",
-                    "Preview 0.1.1: inspection, preview and confirmed manual updates. Installer and schedule management are not yet available.")
+                    "Wersja 0.2.0: instalacja plasmoid-updater bez terminala, kontrola i ręczne aktualizacje dodatków. Zarządzanie harmonogramem w przygotowaniu.",
+                    "Version 0.2.0: install plasmoid-updater without a terminal, inspect and manually update add-ons. Schedule management is coming later.")
             }
 
             GridLayout {
@@ -178,6 +196,31 @@ Kirigami.ApplicationWindow {
                             enabled: !backend.running
                             onClicked: backend.runAction("check")
                         }
+                    }
+                }
+            }
+
+            Controls.Frame {
+                visible: window.section === 0
+                Layout.fillWidth: true
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: Kirigami.Units.smallSpacing
+                    Kirigami.Heading {
+                        text: window.loc("Instalacja narzędzia", "Install the updater")
+                        level: 2
+                    }
+                    Controls.Label {
+                        text: window.loc("Pobierz i zainstaluj plasmoid-updater do swojego katalogu użytkownika. Bez terminala, sudo i modyfikacji Bazzite.",
+                                         "Download and install plasmoid-updater in your user directory. No terminal, sudo or Bazzite image changes.")
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
+                    }
+                    Controls.Button {
+                        text: window.loc("Zainstaluj / sprawdź wersję…", "Install / check version…")
+                        icon.name: "download"
+                        enabled: !backend.running
+                        onClicked: confirmInstall.open()
                     }
                 }
             }
@@ -279,7 +322,7 @@ Kirigami.ApplicationWindow {
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.smallSpacing
-                    Kirigami.Heading { text: "Plasma Addon Manager 0.1.1"; level: 2 }
+                    Kirigami.Heading { text: "Plasma Addon Manager 0.2.0"; level: 2 }
                     Controls.Label {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap

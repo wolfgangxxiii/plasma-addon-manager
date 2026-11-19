@@ -64,7 +64,7 @@ else
 fi
 export QML_SOURCES_PATHS="${pam_root}/qml"
 export APPIMAGE_EXTRACT_AND_RUN=1
-export OUTPUT="${pam_dist}/Plasma-Addon-Manager-v0.1.1-x86_64.AppImage"
+export OUTPUT="${pam_dist}/Plasma-Addon-Manager-v0.2.0-x86_64.AppImage"
 
 # linuxdeploy's QML scanner sees the Kirigami import, but the KDE Quick
 # Controls style is selected at runtime in C++ and is otherwise skipped.
