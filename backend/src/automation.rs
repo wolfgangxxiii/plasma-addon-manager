@@ -1072,11 +1072,11 @@ mod tests {
         );
         assert_eq!(
             parse_version(
-                "plasma-addon-manager-agent 0.4.4\n",
+                "plasma-addon-manager-agent 0.4.5\n",
                 "plasma-addon-manager-agent "
             )
             .as_deref(),
-            Some("0.4.4")
+            Some("0.4.5")
         );
         assert_eq!(parse_version("Unknown binary", "plasmoid-updater "), None);
     }

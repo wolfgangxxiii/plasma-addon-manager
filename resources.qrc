@@ -1,5 +1,9 @@
 <RCC>
     <qresource prefix="/qml">
         <file alias="Main.qml">qml/Main.qml</file>
+        <file alias="AboutPage.qml">qml/AboutPage.qml</file>
+    </qresource>
+    <qresource prefix="/images">
+        <file alias="app.svg">assets/io.github.wolfgangxxiii.PlasmaAddonManager.svg</file>
     </qresource>
 </RCC>

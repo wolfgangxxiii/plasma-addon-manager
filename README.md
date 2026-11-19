@@ -8,7 +8,7 @@
 **Jeden menedżer dodatków KDE Plasma 6 dla wielu dystrybucji.**
 
 [![License: GPLv3+](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
-![Stage](https://img.shields.io/badge/stage-0.4.4%20AppImage%20preview-orange)
+![Stage](https://img.shields.io/badge/stage-0.4.5%20AppImage%20preview-orange)
 ![Stack](https://img.shields.io/badge/GUI-Qt6%20%2B%20Kirigami-3577c1)
 
 </div>
@@ -21,7 +21,7 @@ application for KDE Plasma 6 on Bazzite, Fedora KDE, Debian, Kubuntu, KDE neon, 
 CachyOS, openSUSE and other Linux distributions.
 
 > [!IMPORTANT]
-> **Version 0.4.4 is a development preview with an opt-in background updater.**
+> **Version 0.4.5 is a development preview with an opt-in background updater.**
 > It installs `plasmoid-updater`, checks and manually updates add-ons, and now
 > configures its own systemd user timer. Any existing Bazzite/Debian schedule is
 > left intact until the user explicitly consents to migration.
@@ -44,6 +44,8 @@ CachyOS, openSUSE and other Linux distributions.
   backend step; it remains indeterminate when the CLI cannot report percentages.
 - A dedicated right-side notification center with color-coded success, errors
   and warnings, accessible as a right-side drawer in narrower windows.
+- The About page follows the Bazzite GUI's structure: app identity and logo,
+  theme-accented repository/download/help/license links, author and upstream credits.
 - Full read-only automation configuration test (service/timer/agent, settings,
   prerequisites and KDE Store availability), separate from update preview.
 - Live GUI process output during manual updates, with transient network retries
@@ -124,7 +126,7 @@ in Automation.
 
 ### AppImage only — direct download
 
-Download `Plasma-Addon-Manager-v0.4.4-x86_64.AppImage` directly from
+Download `Plasma-Addon-Manager-v0.4.5-x86_64.AppImage` directly from
 [GitHub Releases](https://github.com/wolfgangxxiii/plasma-addon-manager/releases).
 It is a standalone `.AppImage` download, **not a ZIP archive**. The
 [AppImage build workflow](https://github.com/wolfgangxxiii/plasma-addon-manager/actions/workflows/appimage.yml)
@@ -154,8 +156,8 @@ an AppImage cannot override this security rule before being launched.
 Developers may also launch the AppImage on KDE Plasma (x86_64) via terminal:
 
 ```bash
-chmod +x Plasma-Addon-Manager-v0.4.4-x86_64.AppImage
-./Plasma-Addon-Manager-v0.4.4-x86_64.AppImage
+chmod +x Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
+./Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
 ```
 
 To build it from source, run `bash scripts/build-appimage.sh` on a Linux x86_64
@@ -212,6 +214,8 @@ manages only the app-owned systemd **user** units. No system packages are update
    package managers with graphical authentication as part of the updater setup.
    **0.4.4 — Interface clarity:** fixed progress footer, colored right-side
    notifications, responsive drawer and a guided dashboard action.
+   **0.4.5 — About page:** Bazzite-inspired identity card, theme-colored links,
+   author, upstream attribution and license information.
 5. **0.5.0 — Reliability:** extended rollback/systemd integration tests, runtime
    recovery from KDE Store errors and UI regression tests.
 6. **1.0.0 — Release:** verified AppImage on multiple Plasma 6 distributions,
@@ -246,7 +250,7 @@ Docelowo ma działać na Bazzite, Fedora KDE, Debianie, Kubuntu, KDE neon, Arch,
 CachyOS, openSUSE i innych systemach korzystających z Plasma 6.
 
 > [!IMPORTANT]
-> **Wersja 0.4.4 nadal jest testowa — ma automatyzację, przegląd dodatków, pełny dziennik sesji, wspólną instalację zależności i czytelniejszy interfejs.**
+> **Wersja 0.4.5 nadal jest testowa — ma automatyzację, przegląd dodatków, pełny dziennik sesji, wspólną instalację zależności, czytelniejszy interfejs i nową kartę „O programie”.**
 > Pobiera `plasmoid-updater` z GitHub, weryfikuje SHA-256, instaluje go
 > w katalogu użytkownika i pozwala kontrolować oraz ręcznie aktualizować dodatki.
 > Tworzy własny harmonogram `systemd --user`; wcześniejszych harmonogramów
@@ -269,6 +273,8 @@ CachyOS, openSUSE i innych systemach korzystających z Plasma 6.
   procentów (animacja podczas działania).
 - Osobny panel powiadomień po prawej: sukcesy na zielono, błędy na czerwono,
   ostrzeżenia w innym kolorze. Przy wąskim oknie otwiera się jako boczna szuflada.
+- Karta „O programie” w stylu wersji Bazzite: logo, nazwa i wersja aplikacji,
+  przyciski do repozytorium, wydań, pomocy i licencji oraz autor i źródło narzędzia.
 - Pełny test zapisanej konfiguracji automatyzacji: zależności, agent, timer,
   usługa, ustawienia i test odczytu KDE Store bez instalowania dodatków.
 - Bieżące komunikaty podczas operacji oraz ponawianie błędów sieciowych podczas
@@ -345,8 +351,8 @@ Odczyt listy dodatków użytkownika nadal nie wymaga hasła administratora.
 Wyłącznie dla osób preferujących terminal istnieje również możliwość:
 
 ```bash
-chmod +x Plasma-Addon-Manager-v0.4.4-x86_64.AppImage
-./Plasma-Addon-Manager-v0.4.4-x86_64.AppImage
+chmod +x Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
+./Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
 ```
 
 Wersję testową można samodzielnie zbudować przez
