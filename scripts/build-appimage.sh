@@ -66,14 +66,32 @@ export QML_SOURCES_PATHS="${pam_root}/qml"
 export APPIMAGE_EXTRACT_AND_RUN=1
 export OUTPUT="${pam_dist}/Plasma-Addon-Manager-v0.1.0-x86_64.AppImage"
 
+# linuxdeploy's QML scanner sees the Kirigami import, but the KDE Quick
+# Controls style is selected at runtime in C++ and is otherwise skipped.
+pam_qml_dir="$("$QMAKE" -query QT_INSTALL_QML)"
+test -d "${pam_qml_dir}/org/kde/desktop" || {
+    echo "Missing org.kde.desktop QML style; install qml6-module-org-kde-desktop." >&2
+    exit 1
+}
+mkdir -p "${pam_appdir}/usr/qml/org/kde"
+cp -a "${pam_qml_dir}/org/kde/desktop" "${pam_appdir}/usr/qml/org/kde/"
+
 pam_platforms="$("$QMAKE" -query QT_INSTALL_PLUGINS)/platforms"
-if test -f "${pam_platforms}/libqwayland.so"; then
-    export EXTRA_PLATFORM_PLUGINS="libqwayland.so"
-elif test -f "${pam_platforms}/libqwayland-egl.so"; then
-    export EXTRA_PLATFORM_PLUGINS="libqwayland-egl.so;libqwayland-generic.so"
+pam_extra_platforms=""
+if test -f "${pam_platforms}/libqoffscreen.so"; then
+    pam_extra_platforms="libqoffscreen.so"
 fi
+if test -f "${pam_platforms}/libqwayland.so"; then
+    pam_extra_platforms="${pam_extra_platforms:+${pam_extra_platforms};}libqwayland.so"
+elif test -f "${pam_platforms}/libqwayland-egl.so"; then
+    pam_extra_platforms="${pam_extra_platforms:+${pam_extra_platforms};}libqwayland-egl.so;libqwayland-generic.so"
+fi
+export EXTRA_PLATFORM_PLUGINS="$pam_extra_platforms"
 
 "$pam_linuxdeploy" --appdir "$pam_appdir" --plugin qt --output appimage
 test -s "$OUTPUT"
+test -f "${pam_appdir}/usr/qml/org/kde/desktop/Button.qml"
+QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+    "$OUTPUT" --self-test
 sha256sum "$OUTPUT"
 echo "AppImage ready: $OUTPUT"
