@@ -29,12 +29,14 @@ BackendBridge::BackendBridge(QObject *parent) : QObject(parent) {
                 || m_pendingAction == QStringLiteral("settings-show")) {
             m_jsonOutput += chunk;
         } else {
+            readProgressDetail(chunk);
             appendOutput(chunk);
         }
     });
     connect(&m_process, &QProcess::readyReadStandardError, this, [this] {
         const QString chunk = QString::fromUtf8(m_process.readAllStandardError());
         m_pendingError += chunk;
+        readProgressDetail(chunk);
         appendOutput(chunk);
     });
     connect(&m_process, &QProcess::finished, this,
@@ -92,6 +94,7 @@ BackendBridge::BackendBridge(QObject *parent) : QObject(parent) {
                 }
                 m_pendingAction.clear();
                 m_pendingError.clear();
+                emit currentActionChanged();
                 emit runningChanged();
                 if (action == QStringLiteral("settings-show")
                         || action == QStringLiteral("settings-save")
@@ -120,6 +123,7 @@ BackendBridge::BackendBridge(QObject *parent) : QObject(parent) {
             }
             m_pendingAction.clear();
             m_pendingError.clear();
+            emit currentActionChanged();
             setStatus(QStringLiteral("Cannot start backend"));
             emit runningChanged();
         }
@@ -172,6 +176,27 @@ void BackendBridge::setStatus(const QString &text) {
     emit statusChanged();
 }
 
+void BackendBridge::setProgressDetail(const QString &text) {
+    if (m_progressDetail == text) {
+        return;
+    }
+    m_progressDetail = text;
+    emit progressDetailChanged();
+}
+
+void BackendBridge::readProgressDetail(const QString &chunk) {
+    // The CLI has no reliable percentage API. Show its latest readable step
+    // without inventing a completion percentage.
+    const QStringList lines = chunk.split(QLatin1Char('\n'));
+    for (auto it = lines.crbegin(); it != lines.crend(); ++it) {
+        const QString line = it->trimmed();
+        if (line.size() >= 5 && !line.startsWith(QLatin1Char('['))) {
+            setProgressDetail(line.left(170));
+            break;
+        }
+    }
+}
+
 void BackendBridge::runAction(const QString &action) {
     static const QStringList allowedActions = {
         QStringLiteral("diagnose"), QStringLiteral("inventory"),
@@ -219,6 +244,7 @@ void BackendBridge::startAction(const QString &action, const QStringList &argume
                      .arg(QDateTime::currentDateTime().toString(QStringLiteral("HH:mm:ss")), action));
     m_jsonOutput.clear();
     m_pendingError.clear();
+    setProgressDetail(QString());
     m_pendingSilent = silent || action == QStringLiteral("settings-show");
     m_cancelRequested = false;
     const QString helper = helperPath();
@@ -235,6 +261,7 @@ void BackendBridge::startAction(const QString &action, const QStringList &argume
     }
     setStatus(QStringLiteral("Running %1…").arg(action));
     m_pendingAction = action;
+    emit currentActionChanged();
     m_process.setProgram(helper);
     m_process.setArguments(arguments);
     m_process.start();

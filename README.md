@@ -8,7 +8,7 @@
 **Jeden menedżer dodatków KDE Plasma 6 dla wielu dystrybucji.**
 
 [![License: GPLv3+](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
-![Stage](https://img.shields.io/badge/stage-0.4.3%20AppImage%20preview-orange)
+![Stage](https://img.shields.io/badge/stage-0.4.4%20AppImage%20preview-orange)
 ![Stack](https://img.shields.io/badge/GUI-Qt6%20%2B%20Kirigami-3577c1)
 
 </div>
@@ -21,7 +21,7 @@ application for KDE Plasma 6 on Bazzite, Fedora KDE, Debian, Kubuntu, KDE neon, 
 CachyOS, openSUSE and other Linux distributions.
 
 > [!IMPORTANT]
-> **Version 0.4.3 is a development preview with an opt-in background updater.**
+> **Version 0.4.4 is a development preview with an opt-in background updater.**
 > It installs `plasmoid-updater`, checks and manually updates add-ons, and now
 > configures its own systemd user timer. Any existing Bazzite/Debian schedule is
 > left intact until the user explicitly consents to migration.
@@ -39,14 +39,20 @@ CachyOS, openSUSE and other Linux distributions.
   and future JSON output.
 - Dashboard showing updater/agent versions, agent repair needs, timer health,
   previous service result and next scheduled update.
+- A guided dashboard action for preparing missing tools or checking updates.
+- A persistent bottom progress bar with elapsed time and the latest readable
+  backend step; it remains indeterminate when the CLI cannot report percentages.
+- A dedicated right-side notification center with color-coded success, errors
+  and warnings, accessible as a right-side drawer in narrower windows.
 - Full read-only automation configuration test (service/timer/agent, settings,
   prerequisites and KDE Store availability), separate from update preview.
 - Live GUI process output during manual updates, with transient network retries
   for read-only inventory and update checks.
 - A complete session-wide action log, including time-stamped starts, failures,
   successes and CLI output. It is kept until the app closes; only the Journal
-  screen shows the full text. Other screens show a compact green/red result,
-  which automatic status refreshes never overwrite.
+  screen shows the full text. A separate right panel shows compact colored
+  notices, which automatic status refreshes never overwrite. Clearing the
+  notices does not erase the session journal.
 - openSUSE-specific `bsdtar` package guidance, missing-prerequisite diagnostics,
   compact updater versions without license text, and optional system inventory
   without requesting an interactive `sudo` password.
@@ -118,7 +124,7 @@ in Automation.
 
 ### AppImage only — direct download
 
-Download `Plasma-Addon-Manager-v0.4.3-x86_64.AppImage` directly from
+Download `Plasma-Addon-Manager-v0.4.4-x86_64.AppImage` directly from
 [GitHub Releases](https://github.com/wolfgangxxiii/plasma-addon-manager/releases).
 It is a standalone `.AppImage` download, **not a ZIP archive**. The
 [AppImage build workflow](https://github.com/wolfgangxxiii/plasma-addon-manager/actions/workflows/appimage.yml)
@@ -148,8 +154,8 @@ an AppImage cannot override this security rule before being launched.
 Developers may also launch the AppImage on KDE Plasma (x86_64) via terminal:
 
 ```bash
-chmod +x Plasma-Addon-Manager-v0.4.3-x86_64.AppImage
-./Plasma-Addon-Manager-v0.4.3-x86_64.AppImage
+chmod +x Plasma-Addon-Manager-v0.4.4-x86_64.AppImage
+./Plasma-Addon-Manager-v0.4.4-x86_64.AppImage
 ```
 
 To build it from source, run `bash scripts/build-appimage.sh` on a Linux x86_64
@@ -204,6 +210,8 @@ manages only the app-owned systemd **user** units. No system packages are update
    properly formatted updater version.
    **0.4.3 — Unified prerequisites:** install `bsdtar` through supported distro
    package managers with graphical authentication as part of the updater setup.
+   **0.4.4 — Interface clarity:** fixed progress footer, colored right-side
+   notifications, responsive drawer and a guided dashboard action.
 5. **0.5.0 — Reliability:** extended rollback/systemd integration tests, runtime
    recovery from KDE Store errors and UI regression tests.
 6. **1.0.0 — Release:** verified AppImage on multiple Plasma 6 distributions,
@@ -238,7 +246,7 @@ Docelowo ma działać na Bazzite, Fedora KDE, Debianie, Kubuntu, KDE neon, Arch,
 CachyOS, openSUSE i innych systemach korzystających z Plasma 6.
 
 > [!IMPORTANT]
-> **Wersja 0.4.3 nadal jest testowa — ma automatyzację, przegląd dodatków, pełny dziennik sesji i wspólną instalację zależności.**
+> **Wersja 0.4.4 nadal jest testowa — ma automatyzację, przegląd dodatków, pełny dziennik sesji, wspólną instalację zależności i czytelniejszy interfejs.**
 > Pobiera `plasmoid-updater` z GitHub, weryfikuje SHA-256, instaluje go
 > w katalogu użytkownika i pozwala kontrolować oraz ręcznie aktualizować dodatki.
 > Tworzy własny harmonogram `systemd --user`; wcześniejszych harmonogramów
@@ -256,14 +264,20 @@ CachyOS, openSUSE i innych systemach korzystających z Plasma 6.
 - Obsługa aktualnego wyjścia tekstowego `plasmoid-updater 0.2.1` i nowszego JSON.
 - Pulpit z wersją programu i agenta, stanem timera, wynikiem ostatniej usługi
   oraz ostrzeżeniem o wymaganej naprawie.
+- Pulpit z wyraźnym następnym krokiem: przygotuj narzędzia albo sprawdź aktualizacje.
+- Stały pasek postępu na dole okna: czas operacji i bieżący krok, bez zmyślonych
+  procentów (animacja podczas działania).
+- Osobny panel powiadomień po prawej: sukcesy na zielono, błędy na czerwono,
+  ostrzeżenia w innym kolorze. Przy wąskim oknie otwiera się jako boczna szuflada.
 - Pełny test zapisanej konfiguracji automatyzacji: zależności, agent, timer,
   usługa, ustawienia i test odczytu KDE Store bez instalowania dodatków.
 - Bieżące komunikaty podczas operacji oraz ponawianie błędów sieciowych podczas
   odczytu dodatków i sprawdzania aktualizacji.
 - Kompletny dziennik wszystkich operacji od uruchomienia programu, z czasem,
   komunikatami i wynikami. Tylko ekran Dziennik pokazuje pełny tekst;
-  pozostałe ekrany pokazują krótkie komunikaty zielone/czerwone. Automatyczne
-  odświeżenie stanu nie usuwa ostatniego wyniku. Dziennik sesji znika dopiero
+  panel po prawej pokazuje krótkie kolorowe komunikaty. Wyczyszczenie powiadomień
+  nie usuwa historii; automatyczne odświeżenie stanu nie usuwa ostatniego wyniku.
+  Dziennik sesji znika dopiero
   po zamknięciu programu (historia usługi systemd jest przechowywana osobno).
 - Wykrywanie brakującego `bsdtar`, podpowiedź instalacji pakietu openSUSE,
   prawidłowy czerwony wynik nieudanej diagnostyki, krótki numer wersji bez
@@ -331,8 +345,8 @@ Odczyt listy dodatków użytkownika nadal nie wymaga hasła administratora.
 Wyłącznie dla osób preferujących terminal istnieje również możliwość:
 
 ```bash
-chmod +x Plasma-Addon-Manager-v0.4.3-x86_64.AppImage
-./Plasma-Addon-Manager-v0.4.3-x86_64.AppImage
+chmod +x Plasma-Addon-Manager-v0.4.4-x86_64.AppImage
+./Plasma-Addon-Manager-v0.4.4-x86_64.AppImage
 ```
 
 Wersję testową można samodzielnie zbudować przez
