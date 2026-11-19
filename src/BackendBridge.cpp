@@ -1,6 +1,7 @@
 #include "BackendBridge.h"
 
 #include <QCoreApplication>
+#include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
 #include <QJsonDocument>
@@ -15,6 +16,8 @@
 #endif
 
 BackendBridge::BackendBridge(QObject *parent) : QObject(parent) {
+    appendOutput(QStringLiteral("[%1] Plasma Addon Manager — session started\n")
+                     .arg(QDateTime::currentDateTime().toString(QStringLiteral("yyyy-MM-dd HH:mm:ss"))));
 #ifdef Q_OS_UNIX
     // The Rust helper starts plasmoid-updater as a child. Put both in a
     // separate process group so Cancel cannot leave a background update alive.
@@ -30,7 +33,9 @@ BackendBridge::BackendBridge(QObject *parent) : QObject(parent) {
         }
     });
     connect(&m_process, &QProcess::readyReadStandardError, this, [this] {
-        appendOutput(QString::fromUtf8(m_process.readAllStandardError()));
+        const QString chunk = QString::fromUtf8(m_process.readAllStandardError());
+        m_pendingError += chunk;
+        appendOutput(chunk);
     });
     connect(&m_process, &QProcess::finished, this,
             [this](int exitCode, QProcess::ExitStatus exitStatus) {
@@ -43,14 +48,17 @@ BackendBridge::BackendBridge(QObject *parent) : QObject(parent) {
                 } else {
                     appendOutput(tail);
                 }
-                appendOutput(QString::fromUtf8(m_process.readAllStandardError()));
+                const QString errorTail = QString::fromUtf8(m_process.readAllStandardError());
+                m_pendingError += errorTail;
+                appendOutput(errorTail);
                 bool success = exitStatus == QProcess::NormalExit && exitCode == 0;
                 if (success && structured) {
                     QJsonParseError error;
                     const QJsonDocument document = QJsonDocument::fromJson(m_jsonOutput.toUtf8(), &error);
                     if (error.error != QJsonParseError::NoError || document.isNull()) {
                         success = false;
-                        appendOutput(QStringLiteral("Invalid backend JSON: %1\n").arg(error.errorString()));
+                        m_pendingError = QStringLiteral("Invalid backend JSON: %1").arg(error.errorString());
+                        appendOutput(m_pendingError + QLatin1Char('\n'));
                     } else if (action == QStringLiteral("settings-show") && document.isObject()) {
                         emit settingsLoaded(m_jsonOutput.trimmed());
                     } else if (action == QStringLiteral("status-json") && document.isObject()) {
@@ -61,16 +69,29 @@ BackendBridge::BackendBridge(QObject *parent) : QObject(parent) {
                         emit updatesLoaded(m_jsonOutput.trimmed());
                     } else {
                         success = false;
-                        appendOutput(QStringLiteral("Unexpected backend data structure.\n"));
+                        m_pendingError = QStringLiteral("Unexpected backend data structure.");
+                        appendOutput(m_pendingError + QLatin1Char('\n'));
                     }
                 }
+                success = success && !m_cancelRequested;
                 if (success && action == QStringLiteral("settings-save")) {
                     emit settingsSaved();
                 }
                 setStatus(success
                               ? QStringLiteral("Completed")
                               : QStringLiteral("Failed (exit %1)").arg(exitCode));
+                const QString error = m_cancelRequested
+                                          ? QStringLiteral("Cancelled by the user")
+                                          : m_pendingError.trimmed();
+                appendOutput(QStringLiteral("\n[%1] %2 %3 (exit %4)\n\n")
+                                 .arg(QDateTime::currentDateTime().toString(QStringLiteral("HH:mm:ss")),
+                                      success ? QStringLiteral("✓") : QStringLiteral("✗"),
+                                      action, QString::number(exitCode)));
+                if (!m_pendingSilent) {
+                    setOperationResult(action, success, error);
+                }
                 m_pendingAction.clear();
+                m_pendingError.clear();
                 emit runningChanged();
                 if (action == QStringLiteral("settings-show")
                         || action == QStringLiteral("settings-save")
@@ -79,12 +100,26 @@ BackendBridge::BackendBridge(QObject *parent) : QObject(parent) {
                         || action == QStringLiteral("repair-agent")
                         || action == QStringLiteral("run-service")
                         || action == QStringLiteral("test-config")) {
-                    QTimer::singleShot(0, this, [this] { runAction(QStringLiteral("status-json")); });
+                    QTimer::singleShot(0, this, [this] {
+                        if (!running()) {
+                            startAction(QStringLiteral("status-json"),
+                                        {QStringLiteral("status-json")}, true);
+                        }
+                    });
                 }
             });
     connect(&m_process, &QProcess::errorOccurred, this, [this](QProcess::ProcessError error) {
         if (error == QProcess::FailedToStart) {
-            appendOutput(m_process.errorString() + QLatin1Char('\n'));
+            const QString reason = m_process.errorString();
+            appendOutput(reason + QLatin1Char('\n'));
+            appendOutput(QStringLiteral("[%1] ✗ %2 (could not start)\n\n")
+                             .arg(QDateTime::currentDateTime().toString(QStringLiteral("HH:mm:ss")),
+                                  m_pendingAction));
+            if (!m_pendingSilent) {
+                setOperationResult(m_pendingAction, false, reason);
+            }
+            m_pendingAction.clear();
+            m_pendingError.clear();
             setStatus(QStringLiteral("Cannot start backend"));
             emit runningChanged();
         }
@@ -116,13 +151,17 @@ void BackendBridge::appendOutput(const QString &text) {
         return;
     }
     m_output += text;
-    // Avoid unbounded GUI memory usage when a CLI prints extensive logs.
-    constexpr int maxCharacters = 160000;
-    if (m_output.size() > maxCharacters) {
-        m_output = QStringLiteral("[… earlier output truncated …]\n")
-                       + m_output.right(maxCharacters - 36);
-    }
+    // Keep every entry for the lifetime of this application session.
+    // The log resets only when the application is launched again.
     emit outputChanged();
+}
+
+void BackendBridge::setOperationResult(const QString &action, bool succeeded, const QString &error) {
+    m_lastOperation = action;
+    m_lastOperationSucceeded = succeeded;
+    // Keep error banners brief; the full diagnostic remains in the session log.
+    m_lastOperationError = error.simplified().left(360);
+    emit operationResultChanged();
 }
 
 void BackendBridge::setStatus(const QString &text) {
@@ -150,7 +189,13 @@ void BackendBridge::runAction(const QString &action) {
 }
 
 void BackendBridge::saveSettings(const QString &json, bool migrateLegacy) {
-    if (running() || json.size() > 16000) {
+    if (running()) {
+        return;
+    }
+    if (json.size() > 16000) {
+        appendOutput(QStringLiteral("Settings are too large to save.\n"));
+        setOperationResult(QStringLiteral("settings-save"), false,
+                           QStringLiteral("Settings are too large to save"));
         return;
     }
     QJsonParseError error;
@@ -158,6 +203,8 @@ void BackendBridge::saveSettings(const QString &json, bool migrateLegacy) {
     if (error.error != QJsonParseError::NoError || !document.isObject()) {
         appendOutput(QStringLiteral("Invalid automation settings: %1\n").arg(error.errorString()));
         setStatus(QStringLiteral("Invalid settings"));
+        setOperationResult(QStringLiteral("settings-save"), false,
+                           QStringLiteral("Invalid automation settings: %1").arg(error.errorString()));
         return;
     }
     startAction(QStringLiteral("settings-save"),
@@ -165,17 +212,24 @@ void BackendBridge::saveSettings(const QString &json, bool migrateLegacy) {
                  migrateLegacy ? QStringLiteral("migrate") : QStringLiteral("keep")});
 }
 
-void BackendBridge::startAction(const QString &action, const QStringList &arguments) {
-    // Automatic health refresh must not erase the operation log before the
-    // user can read an installer/update error or its final result.
-    if (action != QStringLiteral("status-json")) {
-        m_output.clear();
-        emit outputChanged();
-    }
+void BackendBridge::startAction(const QString &action, const QStringList &arguments, bool silent) {
+    // Every action, including background refreshes, becomes a separate entry
+    // in the one session log. Nothing clears earlier operations.
+    appendOutput(QStringLiteral("\n[%1] ▶ %2\n")
+                     .arg(QDateTime::currentDateTime().toString(QStringLiteral("HH:mm:ss")), action));
     m_jsonOutput.clear();
+    m_pendingError.clear();
+    m_pendingSilent = silent || action == QStringLiteral("settings-show");
+    m_cancelRequested = false;
     const QString helper = helperPath();
     if (helper.isEmpty()) {
-        appendOutput(QStringLiteral("Backend helper is missing. Reinstall the complete application.\n"));
+        const QString reason = QStringLiteral("Backend helper is missing. Reinstall the complete application.");
+        appendOutput(reason + QLatin1Char('\n'));
+        appendOutput(QStringLiteral("[%1] ✗ %2 (helper missing)\n\n")
+                         .arg(QDateTime::currentDateTime().toString(QStringLiteral("HH:mm:ss")), action));
+        if (!m_pendingSilent) {
+            setOperationResult(action, false, reason);
+        }
         setStatus(QStringLiteral("Backend missing"));
         return;
     }
@@ -191,6 +245,10 @@ void BackendBridge::cancel() {
     if (!running()) {
         return;
     }
+    m_cancelRequested = true;
+    appendOutput(QStringLiteral("[%1] User requested cancellation of %2\n")
+                     .arg(QDateTime::currentDateTime().toString(QStringLiteral("HH:mm:ss")),
+                          m_pendingAction));
 #ifdef Q_OS_UNIX
     const qint64 pid = m_process.processId();
     if (pid > 1 && ::getpgid(static_cast<pid_t>(pid)) == pid) {

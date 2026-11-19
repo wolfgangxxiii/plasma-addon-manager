@@ -35,6 +35,27 @@ Kirigami.ApplicationWindow {
                                    || (languageChoice === "auto"
                                        && Qt.locale().name.toLowerCase().startsWith("pl"))
     function loc(pl, en) { return polish ? pl : en }
+    function actionName(action) {
+        switch (action) {
+        case "diagnose": return loc("Diagnostyka środowiska", "Environment diagnostics")
+        case "install": return loc("Instalacja aktualizatora", "Updater installation")
+        case "inventory":
+        case "inventory-json": return loc("Lista dodatków", "Add-on inventory")
+        case "check":
+        case "updates-json": return loc("Sprawdzanie aktualizacji", "Update check")
+        case "dry-run": return loc("Symulacja aktualizacji", "Update preview")
+        case "update": return loc("Aktualizacja dodatków", "Add-on update")
+        case "settings-show": return loc("Odczyt ustawień", "Load settings")
+        case "settings-save": return loc("Zapis automatyzacji", "Save automation")
+        case "status-json": return loc("Odświeżenie stanu", "Status refresh")
+        case "timer": return loc("Sprawdzenie harmonogramu", "Schedule status")
+        case "journal": return loc("Odczyt dziennika systemd", "Read systemd journal")
+        case "repair-agent": return loc("Naprawa agenta", "Repair agent")
+        case "run-service": return loc("Uruchomienie aktualizacji w tle", "Run background update")
+        case "test-config": return loc("Test konfiguracji", "Configuration test")
+        default: return action
+        }
+    }
     readonly property string currentSection: {
         switch (section) {
         case 0: return loc("Pulpit", "Dashboard")
@@ -224,8 +245,21 @@ Kirigami.ApplicationWindow {
                 visible: true
                 type: Kirigami.MessageType.Information
                 text: window.loc(
-                    "Wersja 0.4.0: przegląd dodatków i aktualizacji, stan agenta oraz kompleksowy test automatyzacji. Harmonogram działa niezależnie od otwartego programu.",
-                    "Version 0.4.0: add-on inventory, available updates, agent health and complete automation tests. The background schedule works without the GUI.")
+                    "Wersja 0.4.1: wspólny dziennik całej sesji i czytelne komunikaty o wyniku działania. Harmonogram działa niezależnie od otwartego programu.",
+                    "Version 0.4.1: a complete session log and clear operation results. The background schedule works without the GUI.")
+            }
+
+            Kirigami.InlineMessage {
+                Layout.fillWidth: true
+                visible: window.section !== 4 && backend.lastOperation.length > 0
+                type: backend.lastOperationSucceeded
+                      ? Kirigami.MessageType.Positive : Kirigami.MessageType.Error
+                text: (backend.lastOperationSucceeded
+                       ? window.loc("✓ Wykonano: ", "✓ Completed: ")
+                       : window.loc("✗ Niepowodzenie: ", "✗ Failed: "))
+                      + window.actionName(backend.lastOperation)
+                      + (!backend.lastOperationSucceeded && backend.lastOperationError.length > 0
+                         ? "\n" + backend.lastOperationError : "")
             }
 
             GridLayout {
@@ -675,14 +709,33 @@ Kirigami.ApplicationWindow {
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.largeSpacing
                     Kirigami.Heading {
-                        text: window.loc("Ostatnie uruchomienia", "Recent runs")
+                        text: window.loc("Dziennik bieżącej sesji", "Current session log")
                         level: 2
                     }
+                    Controls.Label {
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        text: window.loc(
+                            "Wszystkie operacje i ich wyniki od uruchomienia aplikacji. Wpisy pozostają na liście podczas przechodzenia między ekranami oraz wykonywania następnych działań.",
+                            "Every action and its result since the app was launched. Entries remain visible when switching pages and running new operations.")
+                    }
                     Controls.Button {
-                        text: window.loc("Odczytaj dziennik", "Read journal")
+                        text: window.loc("Dołącz historię agenta systemd", "Append systemd agent history")
                         icon.name: "view-list-text"
                         enabled: !backend.running
                         onClicked: backend.runAction("journal")
+                    }
+                    Controls.ScrollView {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 430
+                        Controls.TextArea {
+                            text: backend.output
+                            readOnly: true
+                            selectByMouse: true
+                            wrapMode: TextEdit.WrapAnywhere
+                            font.family: "monospace"
+                            font.pixelSize: 12
+                        }
                     }
                 }
             }
@@ -693,7 +746,7 @@ Kirigami.ApplicationWindow {
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.smallSpacing
-                    Kirigami.Heading { text: "Plasma Addon Manager 0.4.0"; level: 2 }
+                    Kirigami.Heading { text: "Plasma Addon Manager 0.4.1"; level: 2 }
                     Controls.Label {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap
@@ -737,21 +790,6 @@ Kirigami.ApplicationWindow {
                 }
             }
 
-            Controls.ScrollView {
-                visible: window.section !== 4
-                Layout.fillWidth: true
-                Layout.preferredHeight: 310
-                Controls.TextArea {
-                    text: backend.output.length > 0 ? backend.output
-                                                     : window.loc("Wybierz działanie, aby zobaczyć wynik.",
-                                                                  "Choose an action to see its output.")
-                    readOnly: true
-                    selectByMouse: true
-                    wrapMode: TextEdit.WrapAnywhere
-                    font.family: "monospace"
-                    font.pixelSize: 12
-                }
-            }
         }
     }
 }

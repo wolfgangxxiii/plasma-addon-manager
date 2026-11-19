@@ -51,24 +51,27 @@ jobs:
           }
           WAYLAND_DISPLAY=pam-wayland QT_QPA_PLATFORM=wayland QT_QUICK_BACKEND=software \
             APPIMAGE_EXTRACT_AND_RUN=1 \
-            dist/Plasma-Addon-Manager-v0.4.0-x86_64.AppImage --self-test
+            dist/Plasma-Addon-Manager-v0.4.1-x86_64.AppImage --self-test
+          WAYLAND_DISPLAY=pam-wayland QT_QPA_PLATFORM=wayland QT_QUICK_BACKEND=software \
+            APPIMAGE_EXTRACT_AND_RUN=1 \
+            dist/Plasma-Addon-Manager-v0.4.1-x86_64.AppImage --self-test-session-log
       - name: Verify binary and checksum
         run: |
-          test -s dist/Plasma-Addon-Manager-v0.4.0-x86_64.AppImage
-          sha256sum dist/Plasma-Addon-Manager-v0.4.0-x86_64.AppImage
+          test -s dist/Plasma-Addon-Manager-v0.4.1-x86_64.AppImage
+          sha256sum dist/Plasma-Addon-Manager-v0.4.1-x86_64.AppImage
       - name: Publish AppImage directly in Releases
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=v0.4.0-appimage-preview.1
-          appimage=dist/Plasma-Addon-Manager-v0.4.0-x86_64.AppImage
+          tag=v0.4.1-appimage-preview.1
+          appimage=dist/Plasma-Addon-Manager-v0.4.1-x86_64.AppImage
           test -s "$appimage"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo 'Preview already published; leaving the existing download unchanged.'
           else
             gh release create "$tag" "$appimage" \
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-              --title 'Plasma Addon Manager 0.4.0 — dodatki, diagnostyka i automatyzacja' \
-              --notes 'AppImage x86_64 dla KDE Plasma 6. Czytelna lista zainstalowanych dodatków (użytkownika i systemowych w trybie tylko do odczytu) oraz dostępnych aktualizacji; obsługa istniejącego plasmoid-updater 0.2.1 z tabelami tekstowymi i nowszego JSON; pulpit z wersją agenta, stanem harmonogramu i ostatnim wynikiem; pełny test konfiguracji systemd bez zmian w systemie; strumieniowanie postępu i lepsze raportowanie błędów GitHub. Automatyczne aktualizacje działają co 6/12/24 h z bezpieczną migracją starszych timerów Bazzite/Debian. Bazzite: uruchom przez Gear Lever w Bazaar. Tylko bezpośredni .AppImage, bez ZIP/DEB/Flatpak.'
+              --title 'Plasma Addon Manager 0.4.1 — dziennik sesji i komunikaty' \
+              --notes 'AppImage x86_64 dla KDE Plasma 6. Jeden dziennik bieżącej sesji: nie usuwa wcześniejszych operacji po rozpoczęciu następnej; zapisuje wszystkie akcje, postęp, błędy i wyniki z czasem wykonania. Pełny dziennik tylko na ekranie Dziennik; na pozostałych ekranach krótkie komunikaty zielone/czerwone. Automatyczne odświeżanie stanu nie nadpisuje komunikatów o błędach. Dodano regresyjny test trzech operacji i obsługi błędów. Pozostałe funkcje 0.4.0: dodatki KDE Store, instalacja plasmoid-updater, automatyzacja systemd --user co 6/12/24 h. Bazzite: uruchom przez Gear Lever w Bazaar. Tylko bezpośredni .AppImage, bez ZIP/DEB/Flatpak.'
           fi

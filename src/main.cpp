@@ -1,6 +1,8 @@
 #include "BackendBridge.h"
 
 #include <QDir>
+#include <QEventLoop>
+#include <QFile>
 #include <QFileInfo>
 #include <QGuiApplication>
 #include <QPluginLoader>
@@ -8,9 +10,86 @@
 #include <QQmlContext>
 #include <QQuickStyle>
 #include <QTimer>
+#include <QTemporaryDir>
 #include <QDebug>
 #include <QVariantList>
 #include <QVariantMap>
+
+// Exercise the real asynchronous bridge with a local fake helper. No system
+// settings or KDE add-ons are touched: this is a pure session-log regression test.
+static int sessionLogTest() {
+    QTemporaryDir directory;
+    if (!directory.isValid()) {
+        qCritical() << "Cannot create session log test directory";
+        return 4;
+    }
+    const QString helperPath = directory.filePath(QStringLiteral("fake-plasma-addon-helper"));
+    QFile helper(helperPath);
+    const QByteArray script =
+        "#!/bin/sh\n"
+        "case \"$1\" in\n"
+        "  diagnose) printf 'diagnostic output\\n' ;;\n"
+        "  check) printf 'network unavailable\\n' >&2; exit 23 ;;\n"
+        "  timer) printf 'timer output\\n' ;;\n"
+        "  *) exit 42 ;;\n"
+        "esac\n";
+    if (!helper.open(QIODevice::WriteOnly) || helper.write(script) != script.size()) {
+        qCritical() << "Cannot create fake helper";
+        return 4;
+    }
+    helper.close();
+    if (!helper.setPermissions(QFileDevice::ReadUser | QFileDevice::WriteUser
+                               | QFileDevice::ExeUser)) {
+        qCritical() << "Cannot make fake helper executable";
+        return 4;
+    }
+    qputenv("PLASMA_ADDON_HELPER", QFile::encodeName(helperPath));
+    BackendBridge backend;
+    const auto run = [&backend](const QString &action) {
+        QEventLoop loop;
+        QTimer timeout;
+        timeout.setSingleShot(true);
+        bool timedOut = false;
+        QObject::connect(&timeout, &QTimer::timeout, &loop, [&] {
+            timedOut = true;
+            loop.quit();
+        });
+        QObject::connect(&backend, &BackendBridge::runningChanged, &loop, [&] {
+            if (!backend.running()) {
+                loop.quit();
+            }
+        });
+        backend.runAction(action);
+        if (backend.running()) {
+            timeout.start(10000);
+            loop.exec();
+        }
+        return !timedOut && !backend.running();
+    };
+    if (!run(QStringLiteral("diagnose")) || !backend.lastOperationSucceeded()
+            || !run(QStringLiteral("check")) || backend.lastOperationSucceeded()
+            || !backend.lastOperationError().contains(QStringLiteral("network unavailable"))
+            || !run(QStringLiteral("timer")) || !backend.lastOperationSucceeded()) {
+        qCritical() << "Session log test: operation status did not follow success/failure";
+        return 4;
+    }
+    const QString log = backend.output();
+    const int first = log.indexOf(QStringLiteral("▶ diagnose"));
+    const int second = log.indexOf(QStringLiteral("▶ check"));
+    const int third = log.indexOf(QStringLiteral("▶ timer"));
+    if (first < 0 || second <= first || third <= second
+            || !log.contains(QStringLiteral("diagnostic output"))
+            || !log.contains(QStringLiteral("network unavailable"))
+            || !log.contains(QStringLiteral("timer output"))
+            || !log.contains(QStringLiteral("✓ diagnose"))
+            || !log.contains(QStringLiteral("✗ check"))
+            || !log.contains(QStringLiteral("✓ timer"))) {
+        qCritical() << "Session log test: earlier actions or their output went missing" << log;
+        return 4;
+    }
+    qInfo() << "Session log test passed: successful and failed actions are preserved";
+    return 0;
+}
 
 int main(int argc, char *argv[]) {
     // AppImages combine bundled Qt with graphics drivers from the host. On
@@ -37,6 +116,9 @@ int main(int argc, char *argv[]) {
     }
 
     const bool smokeTest = QCoreApplication::arguments().contains(QStringLiteral("--self-test"));
+    if (QCoreApplication::arguments().contains(QStringLiteral("--self-test-session-log"))) {
+        return sessionLogTest();
+    }
     const QString bundledKirigami = QDir(appPlugins).filePath(
         QStringLiteral("kf6/kirigami/platform/org.kde.desktop.so"));
     if (smokeTest && QFileInfo::exists(bundledKirigami)) {
