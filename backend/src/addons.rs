@@ -56,6 +56,12 @@ pub struct UpdateOverview {
     pub unmatched: usize,
 }
 
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct InventoryOverview {
+    pub addons: Vec<InstalledAddon>,
+    pub system_warning: Option<String>,
+}
+
 #[derive(Debug, Deserialize)]
 struct InstalledResponse {
     components: Vec<InstalledAddon>,
@@ -288,16 +294,41 @@ fn inventory_in(binary: &std::path::Path, system: bool) -> Result<Vec<InstalledA
     Ok(addons)
 }
 
-pub fn inventory() -> Result<Vec<InstalledAddon>> {
+fn can_scan_system_without_prompt() -> bool {
+    // Upstream's --system option internally invokes sudo. Never allow a GUI
+    // inventory scan to request a password from a non-interactive QProcess.
+    Command::new("sudo")
+        .args(["-n", "-v"])
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .is_ok_and(|status| status.success())
+}
+
+pub fn inventory() -> Result<InventoryOverview> {
     let binary = find_plasmoid_updater().context("Install plasmoid-updater first")?;
     let mut addons = inventory_in(&binary, false)?;
     // System-installed entries are optional, read-only information. Missing
     // permissions or support must not hide the user's own installed add-ons.
-    match inventory_in(&binary, true) {
-        Ok(mut system) => addons.append(&mut system),
-        Err(error) => eprintln!("System add-ons could not be listed: {error:#}"),
+    let system_warning = if can_scan_system_without_prompt() {
+        match inventory_in(&binary, true) {
+            Ok(mut system) => {
+                addons.append(&mut system);
+                None
+            }
+            Err(error) => Some(format!("System add-ons could not be listed: {error:#}")),
+        }
+    } else {
+        Some("System add-ons omitted: sudo access is unavailable without a password prompt".into())
+    };
+    if let Some(warning) = &system_warning {
+        eprintln!("{warning}");
     }
-    Ok(addons)
+    Ok(InventoryOverview {
+        addons,
+        system_warning,
+    })
 }
 
 fn updates_in(binary: &std::path::Path) -> Result<UpdateOverview> {
@@ -358,6 +389,17 @@ mod tests {
         .unwrap();
         assert_eq!(updates.available[0].latest_version, "1.4");
         assert_eq!(updates.available[0].installed.name, "Window List");
+    }
+
+    #[test]
+    fn inventory_overview_serializes_partial_system_status() {
+        let overview = InventoryOverview {
+            addons: Vec::new(),
+            system_warning: Some("System add-ons omitted".into()),
+        };
+        let value = serde_json::to_value(&overview).unwrap();
+        assert!(value["addons"].is_array());
+        assert_eq!(value["system_warning"], "System add-ons omitted");
     }
 
     #[test]

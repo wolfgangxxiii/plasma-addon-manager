@@ -12,7 +12,7 @@
     <p>Install the verified updater in your home directory and schedule automatic KDE Store add-on updates with a systemd user agent, without a terminal.</p>
   </description>
   <releases>
-    <release version="0.4.1" date="2026-11-19"/>
+    <release version="0.4.2" date="2026-11-19"/>
     <release version="0.3.0" date="2026-11-19"/>
   </releases>
 </component>

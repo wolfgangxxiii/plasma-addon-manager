@@ -188,6 +188,7 @@ fn unit_property(name: &str, property: &str) -> Option<String> {
 pub struct DashboardState {
     pub distribution: String,
     pub updater_version: Option<String>,
+    pub bsdtar_available: bool,
     pub agent_version: Option<String>,
     pub agent_needs_repair: bool,
     pub agent_managed: bool,
@@ -201,6 +202,20 @@ pub struct DashboardState {
     pub frequency_hours: u8,
 }
 
+fn parse_version(raw: &str, prefix: &str) -> Option<String> {
+    // plasmoid-updater 0.2.1 prints its GPL licensing text after the first
+    // line. Only the version token belongs on the dashboard's small card.
+    raw.lines().find_map(|line| {
+        let version = line.trim().strip_prefix(prefix)?.split_whitespace().next()?;
+        version
+            .trim_start_matches('v')
+            .chars()
+            .next()
+            .filter(char::is_ascii_digit)
+            .map(|_| version.trim_start_matches('v').to_owned())
+    })
+}
+
 fn version_of(path: &Path, prefix: &str) -> Option<String> {
     let output = Command::new(path)
         .arg("--version")
@@ -210,8 +225,7 @@ fn version_of(path: &Path, prefix: &str) -> Option<String> {
     if !output.status.success() {
         return None;
     }
-    let raw = String::from_utf8(output.stdout).ok()?;
-    raw.trim().strip_prefix(prefix).map(str::to_owned)
+    parse_version(&String::from_utf8(output.stdout).ok()?, prefix)
 }
 
 fn service_result_failed(result: &str) -> bool {
@@ -233,6 +247,7 @@ pub fn dashboard_state() -> Result<DashboardState> {
     Ok(DashboardState {
         distribution: read_distribution().pretty_name,
         updater_version,
+        bsdtar_available: service_bsdtar_exists(&home),
         agent_needs_repair: agent_managed
             && agent_version.as_deref() != Some(env!("CARGO_PKG_VERSION")),
         agent_version,
@@ -670,7 +685,7 @@ pub fn configure(settings: Settings, migrate_legacy: bool) -> Result<()> {
             "Install plasmoid-updater first using the Install button"
         );
         ensure!(service_bsdtar_exists(&home) || executable_on_path("bsdtar").is_some(),
-            "bsdtar is missing. On Bazzite click Install / check version to prepare Homebrew; on other distributions install the libarchive tools using the software manager");
+            "bsdtar is missing. On openSUSE install the 'bsdtar' package with YaST/Discover; on Bazzite click Install / check version to prepare Homebrew. Other distributions may call the package 'libarchive-tools'");
     }
     let unit_dir = units_dir(&home);
     let service = unit_dir.join(SERVICE);
@@ -923,6 +938,20 @@ mod tests {
     use super::*;
     use std::os::unix::process::ExitStatusExt;
 
+    #[test]
+    fn dashboard_version_ignores_updater_license_text() {
+        let output = "plasmoid-updater 0.2.1\nCopyright (c) 2025 uwuclxdy\nLicense GPLv3+\n";
+        assert_eq!(
+            parse_version(output, "plasmoid-updater ").as_deref(),
+            Some("0.2.1")
+        );
+        assert_eq!(
+            parse_version("plasma-addon-manager-agent 0.4.2\n", "plasma-addon-manager-agent ")
+                .as_deref(),
+            Some("0.4.2")
+        );
+        assert_eq!(parse_version("Unknown binary", "plasmoid-updater "), None);
+    }
     #[test]
     fn default_is_safe_and_intervals_match_working_guis() {
         let settings = Settings::default();
