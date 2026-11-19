@@ -63,7 +63,7 @@ BackendBridge::BackendBridge(QObject *parent) : QObject(parent) {
                         emit settingsLoaded(m_jsonOutput.trimmed());
                     } else if (action == QStringLiteral("status-json") && document.isObject()) {
                         emit dashboardLoaded(m_jsonOutput.trimmed());
-                    } else if (action == QStringLiteral("inventory-json") && document.isArray()) {
+                    } else if (action == QStringLiteral("inventory-json") && document.isObject()) {
                         emit inventoryLoaded(m_jsonOutput.trimmed());
                     } else if (action == QStringLiteral("updates-json") && document.isObject()) {
                         emit updatesLoaded(m_jsonOutput.trimmed());

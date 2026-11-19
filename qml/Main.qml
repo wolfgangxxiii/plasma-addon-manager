@@ -24,6 +24,7 @@ Kirigami.ApplicationWindow {
     property string excludedPackages: ""
     property var dashboard: ({})
     property var installedAddons: []
+    property string inventoryWarning: ""
     property var availableUpdates: []
     property var updateIssues: []
     property int skippedUpdates: 0
@@ -31,6 +32,10 @@ Kirigami.ApplicationWindow {
     property int addonView: 0
     property bool inventoryReady: false
     property bool updatesReady: false
+    readonly property bool bsdtarMissing: dashboard.bsdtar_available === false
+    function isOpenSuse() {
+        return (dashboard.distribution || "").toLowerCase().startsWith("opensuse")
+    }
     readonly property bool polish: languageChoice === "pl"
                                    || (languageChoice === "auto"
                                        && Qt.locale().name.toLowerCase().startsWith("pl"))
@@ -92,7 +97,9 @@ Kirigami.ApplicationWindow {
         }
         function onInventoryLoaded(json) {
             try {
-                window.installedAddons = JSON.parse(json)
+                const response = JSON.parse(json)
+                window.installedAddons = response.addons
+                window.inventoryWarning = response.system_warning || ""
                 window.inventoryReady = true
                 window.addonView = 0
             } catch (error) { console.warn("Invalid inventory data:", error) }
@@ -142,8 +149,8 @@ Kirigami.ApplicationWindow {
         contentItem: Controls.Label {
             wrapMode: Text.WordWrap
             text: window.loc(
-                "Zostaną zaktualizowane dodatki KDE Store bieżącego użytkownika przez plasmoid-updater. Nie zostanie zmodyfikowany system Bazzite ani uruchomiony ponownie pulpit Plasma. Operacja wymaga zainstalowanego plasmoid-updater.",
-                "plasmoid-updater will update KDE Store add-ons for your user. The Bazzite system image and Plasma session will not be restarted. A working plasmoid-updater installation is required.")
+                "Zostaną zaktualizowane dodatki KDE Store bieżącego użytkownika przez plasmoid-updater. Nie zostaną zmienione pakiety systemowe ani uruchomiony ponownie pulpit Plasma. Operacja wymaga zainstalowanego plasmoid-updater.",
+                "plasmoid-updater will update KDE Store add-ons for your user. System packages and the Plasma session will not be changed. A working plasmoid-updater installation is required.")
         }
     }
 
@@ -245,8 +252,8 @@ Kirigami.ApplicationWindow {
                 visible: true
                 type: Kirigami.MessageType.Information
                 text: window.loc(
-                    "Wersja 0.4.1: wspólny dziennik całej sesji i czytelne komunikaty o wyniku działania. Harmonogram działa niezależnie od otwartego programu.",
-                    "Version 0.4.1: a complete session log and clear operation results. The background schedule works without the GUI.")
+                    "Wersja 0.4.2: poprawki zgodności z openSUSE, diagnostyka brakujących narzędzi i bezpieczny odczyt dodatków systemowych.",
+                    "Version 0.4.2: openSUSE compatibility fixes, missing-prerequisite diagnostics and safe system add-on inventory.")
             }
 
             Kirigami.InlineMessage {
@@ -260,6 +267,30 @@ Kirigami.ApplicationWindow {
                       + window.actionName(backend.lastOperation)
                       + (!backend.lastOperationSucceeded && backend.lastOperationError.length > 0
                          ? "\n" + backend.lastOperationError : "")
+            }
+
+            Kirigami.InlineMessage {
+                Layout.fillWidth: true
+                visible: window.section <= 2 && window.bsdtarMissing
+                type: Kirigami.MessageType.Warning
+                text: window.isOpenSuse()
+                      ? window.loc("Brakuje narzędzia bsdtar. W openSUSE Tumbleweed zainstaluj pakiet «bsdtar» przez YaST lub Discover, a następnie kliknij «Odśwież stan». Do tego czasu sprawdzanie i aktualizacja dodatków są niedostępne.",
+                                   "bsdtar is missing. On openSUSE install the 'bsdtar' package using YaST or Discover, then refresh status. Update checks are unavailable until then.")
+                      : window.loc("Brakuje narzędzia bsdtar. Zainstaluj je przez menedżer oprogramowania swojej dystrybucji (na Bazzite użyj przycisku instalacji), a następnie odśwież stan.",
+                                   "bsdtar is missing. Install it through your distribution's software manager (on Bazzite use the installer), then refresh status.")
+            }
+            Controls.Button {
+                visible: window.section <= 2 && window.bsdtarMissing && window.isOpenSuse()
+                text: window.loc("Otwórz pakiet bsdtar dla openSUSE", "Open openSUSE bsdtar package")
+                icon.name: "download"
+                onClicked: Qt.openUrlExternally("https://software.opensuse.org/package/bsdtar")
+            }
+            Controls.Button {
+                visible: window.section <= 2 && window.bsdtarMissing
+                text: window.loc("Sprawdź ponownie zależności", "Check dependencies again")
+                icon.name: "view-refresh"
+                enabled: !backend.running
+                onClicked: backend.runAction("status-json")
             }
 
             GridLayout {
@@ -408,7 +439,7 @@ Kirigami.ApplicationWindow {
                         Controls.Button {
                             text: window.loc("Sprawdź dostępność", "Check availability")
                             icon.name: "view-refresh"
-                            enabled: !backend.running
+                            enabled: !backend.running && !window.bsdtarMissing
                             onClicked: {
                                 window.section = 1
                                 backend.runAction("updates-json")
@@ -429,8 +460,8 @@ Kirigami.ApplicationWindow {
                         level: 2
                     }
                     Controls.Label {
-                        text: window.loc("Pobierz i zainstaluj plasmoid-updater do swojego katalogu użytkownika. Bez terminala, sudo i modyfikacji Bazzite.",
-                                         "Download and install plasmoid-updater in your user directory. No terminal, sudo or Bazzite image changes.")
+                        text: window.loc("Pobierz i zainstaluj plasmoid-updater w katalogu użytkownika. Bez terminala, sudo i zmiany pakietów systemowych.",
+                                         "Download and install plasmoid-updater into your user directory. No terminal, sudo or system package changes.")
                         wrapMode: Text.WordWrap
                         Layout.fillWidth: true
                     }
@@ -471,19 +502,19 @@ Kirigami.ApplicationWindow {
                         Controls.Button {
                             text: window.loc("Dostępne aktualizacje", "Available updates")
                             icon.name: "view-refresh"
-                            enabled: !backend.running
+                            enabled: !backend.running && !window.bsdtarMissing
                             onClicked: backend.runAction("updates-json")
                         }
                         Controls.Button {
                             text: window.loc("Symulacja aktualizacji", "Preview update")
                             icon.name: "document-preview"
-                            enabled: !backend.running
+                            enabled: !backend.running && !window.bsdtarMissing
                             onClicked: backend.runAction("dry-run")
                         }
                         Controls.Button {
                             text: window.loc("Aktualizuj dodatki…", "Update add-ons…")
                             icon.name: "software-update-available"
-                            enabled: !backend.running
+                            enabled: !backend.running && !window.bsdtarMissing
                             onClicked: confirmUpdate.open()
                         }
                     }
@@ -513,6 +544,13 @@ Kirigami.ApplicationWindow {
                                 ? window.loc("Dostępne aktualizacje: ", "Available updates: ") + window.availableUpdates.length
                                   + window.loc(" · Pominięte: ", " · Skipped: ") + window.skippedUpdates
                                 : window.loc("Kliknij «Dostępne aktualizacje», aby sprawdzić KDE Store.", "Click Available updates to check KDE Store.")
+                    }
+                    Kirigami.InlineMessage {
+                        Layout.fillWidth: true
+                        visible: window.inventoryReady && window.inventoryWarning.length > 0 && window.addonView === 0
+                        type: Kirigami.MessageType.Information
+                        text: window.loc("Wyświetlono dodatki użytkownika. Dodatki systemowe pominięto, ponieważ nie można ich bezpiecznie odczytać bez dodatkowych uprawnień.",
+                                         "User add-ons are shown. System add-ons were omitted because they cannot be read safely without additional permissions.")
                     }
                     Repeater {
                         model: window.addonView === 0 ? window.installedAddons : window.availableUpdates
@@ -671,7 +709,7 @@ Kirigami.ApplicationWindow {
                         Controls.Button {
                             text: window.loc("Zapisz i zastosuj", "Save and apply")
                             icon.name: "document-save"
-                            enabled: window.automationConfigLoaded && !backend.running
+                            enabled: window.automationConfigLoaded && !backend.running && !window.bsdtarMissing
                             onClicked: window.saveAutomation()
                         }
                         Controls.Button {
@@ -683,19 +721,20 @@ Kirigami.ApplicationWindow {
                         Controls.Button {
                             text: window.loc("Uruchom teraz", "Run now")
                             icon.name: "media-playback-start"
-                            enabled: !backend.running
+                            enabled: !backend.running && window.dashboard.agent_managed === true
                             onClicked: backend.runAction("run-service")
                         }
                         Controls.Button {
                             text: window.loc("Napraw agenta", "Repair agent")
                             icon.name: "tools-wizard"
-                            enabled: !backend.running
+                            enabled: !backend.running && window.dashboard.agent_managed === true
                             onClicked: backend.runAction("repair-agent")
                         }
                         Controls.Button {
                             text: window.loc("Testuj zapisaną konfigurację", "Test saved configuration")
                             icon.name: "system-search"
-                            enabled: !backend.running
+                            enabled: !backend.running && window.dashboard.automatic_configured === true
+                                     && !window.bsdtarMissing
                             onClicked: backend.runAction("test-config")
                         }
                     }
@@ -746,7 +785,7 @@ Kirigami.ApplicationWindow {
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.smallSpacing
-                    Kirigami.Heading { text: "Plasma Addon Manager 0.4.1"; level: 2 }
+                    Kirigami.Heading { text: "Plasma Addon Manager 0.4.2"; level: 2 }
                     Controls.Label {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap

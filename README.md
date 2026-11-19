@@ -8,7 +8,7 @@
 **Jeden menedżer dodatków KDE Plasma 6 dla wielu dystrybucji.**
 
 [![License: GPLv3+](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
-![Stage](https://img.shields.io/badge/stage-0.4.1%20AppImage%20preview-orange)
+![Stage](https://img.shields.io/badge/stage-0.4.2%20AppImage%20preview-orange)
 ![Stack](https://img.shields.io/badge/GUI-Qt6%20%2B%20Kirigami-3577c1)
 
 </div>
@@ -21,7 +21,7 @@ application for KDE Plasma 6 on Bazzite, Fedora KDE, Debian, Kubuntu, KDE neon, 
 CachyOS, openSUSE and other Linux distributions.
 
 > [!IMPORTANT]
-> **Version 0.4.1 is a development preview with an opt-in background updater.**
+> **Version 0.4.2 is a development preview with an opt-in background updater.**
 > It installs `plasmoid-updater`, checks and manually updates add-ons, and now
 > configures its own systemd user timer. Any existing Bazzite/Debian schedule is
 > left intact until the user explicitly consents to migration.
@@ -47,6 +47,9 @@ CachyOS, openSUSE and other Linux distributions.
   successes and CLI output. It is kept until the app closes; only the Journal
   screen shows the full text. Other screens show a compact green/red result,
   which automatic status refreshes never overwrite.
+- openSUSE-specific `bsdtar` package guidance, missing-prerequisite diagnostics,
+  compact updater versions without license text, and optional system inventory
+  without requesting an interactive `sudo` password.
 - Read-only preview (`update --dry-run` where supported; otherwise `check`).
 - Confirmed manual updates with `update --yes --no-restart-plasma`.
 - One-click GUI installer for `plasmoid-updater`: verified upstream GitHub SHA-256,
@@ -108,7 +111,7 @@ in Automation.
 
 ### AppImage only — direct download
 
-Download `Plasma-Addon-Manager-v0.4.1-x86_64.AppImage` directly from
+Download `Plasma-Addon-Manager-v0.4.2-x86_64.AppImage` directly from
 [GitHub Releases](https://github.com/wolfgangxxiii/plasma-addon-manager/releases).
 It is a standalone `.AppImage` download, **not a ZIP archive**. The
 [AppImage build workflow](https://github.com/wolfgangxxiii/plasma-addon-manager/actions/workflows/appimage.yml)
@@ -138,8 +141,8 @@ an AppImage cannot override this security rule before being launched.
 Developers may also launch the AppImage on KDE Plasma (x86_64) via terminal:
 
 ```bash
-chmod +x Plasma-Addon-Manager-v0.4.1-x86_64.AppImage
-./Plasma-Addon-Manager-v0.4.1-x86_64.AppImage
+chmod +x Plasma-Addon-Manager-v0.4.2-x86_64.AppImage
+./Plasma-Addon-Manager-v0.4.2-x86_64.AppImage
 ```
 
 To build it from source, run `bash scripts/build-appimage.sh` on a Linux x86_64
@@ -147,6 +150,16 @@ system with Qt6, Kirigami, Rust/Cargo and the documented build dependencies.
 The output is placed in `dist/`. `linuxdeploy` and its Qt6 plugin are checked
 against pinned SHA-256 values. Runtime behavior on different Plasma 6
 distributions still needs validation.
+
+**On openSUSE Tumbleweed KDE:** the AppImage itself starts without installing
+additional system packages, but `plasmoid-updater` needs the **`bsdtar`**
+utility to check or apply KDE Store updates. If the dashboard warns about it,
+open **YaST Software Management** or **Discover**, search for the official
+`bsdtar` package and install it, then choose **Refresh status**. The app also
+links to [openSUSE's `bsdtar` package](https://software.opensuse.org/package/bsdtar).
+It does not install OS packages or request an interactive `sudo` password.
+System add-ons are omitted when a read-only scan needs admin rights; user
+add-ons are still displayed.
 
 ### Helper commands and tests
 
@@ -179,6 +192,8 @@ manages only the app-owned systemd **user** units. No system packages are update
    progress, agent health dashboard and saved configuration checks.
    **0.4.1 — Session logging:** retain all actions until exit, with compact
    success/error messages on each screen and a dedicated Journal view.
+   **0.4.2 — openSUSE:** dependency warnings, safe system inventory and a
+   properly formatted updater version.
 5. **0.5.0 — Reliability:** extended rollback/systemd integration tests, runtime
    recovery from KDE Store errors and UI regression tests.
 6. **1.0.0 — Release:** verified AppImage on multiple Plasma 6 distributions,
@@ -210,7 +225,7 @@ Docelowo ma działać na Bazzite, Fedora KDE, Debianie, Kubuntu, KDE neon, Arch,
 CachyOS, openSUSE i innych systemach korzystających z Plasma 6.
 
 > [!IMPORTANT]
-> **Wersja 0.4.1 nadal jest testowa — ma już automatyzację, przegląd dodatków i pełny dziennik sesji.**
+> **Wersja 0.4.2 nadal jest testowa — ma automatyzację, przegląd dodatków, pełny dziennik sesji oraz poprawki dla openSUSE.**
 > Pobiera `plasmoid-updater` z GitHub, weryfikuje SHA-256, instaluje go
 > w katalogu użytkownika i pozwala kontrolować oraz ręcznie aktualizować dodatki.
 > Tworzy własny harmonogram `systemd --user`; wcześniejszych harmonogramów
@@ -237,6 +252,9 @@ CachyOS, openSUSE i innych systemach korzystających z Plasma 6.
   pozostałe ekrany pokazują krótkie komunikaty zielone/czerwone. Automatyczne
   odświeżenie stanu nie usuwa ostatniego wyniku. Dziennik sesji znika dopiero
   po zamknięciu programu (historia usługi systemd jest przechowywana osobno).
+- Wykrywanie brakującego `bsdtar`, podpowiedź instalacji pakietu openSUSE,
+  prawidłowy czerwony wynik nieudanej diagnostyki, krótki numer wersji bez
+  licencji oraz bezpieczny odczyt dodatków bez żądania hasła `sudo`.
 - Podgląd stanu timera oraz ostatnich wpisów dziennika użytkownika.
 - Bezpieczne sprawdzenie aktualizacji (kod wyjścia 100 oznacza znalezione aktualizacje).
 - Symulacja (`--dry-run` lub `check`) i ręczna aktualizacja po zatwierdzeniu.
@@ -285,11 +303,22 @@ Można również bez Gear Lever: w Dolphin kliknij prawym przyciskiem plik,
 wybierz **Właściwości → Uprawnienia → Jest wykonywalny**, a następnie otwórz
 AppImage dwuklikiem. Jest to zabezpieczenie Linuksa, nie błąd aplikacji.
 
+**Na openSUSE Tumbleweed:** plik AppImage uruchamia się bez doinstalowywania
+pakietów, ale sam `plasmoid-updater` potrzebuje programu **`bsdtar`** do
+sprawdzania i instalowania aktualizacji. Jeśli pojawi się ostrzeżenie, otwórz
+**YaST → Zarządzanie oprogramowaniem** lub **Discover** i zainstaluj pakiet
+`bsdtar`, a następnie użyj **Odśwież stan** w Plasma Addon Manager.
+W aplikacji jest też przycisk otwierający
+[stronę pakietu bsdtar](https://software.opensuse.org/package/bsdtar).
+Program nie instaluje pakietów systemowych i nie prosi o hasło `sudo` przy
+odczycie listy dodatków; jeśli wpisy systemowe są niedostępne, pokazuje
+dodatki użytkownika z odpowiednią informacją.
+
 Wyłącznie dla osób preferujących terminal istnieje również możliwość:
 
 ```bash
-chmod +x Plasma-Addon-Manager-v0.4.1-x86_64.AppImage
-./Plasma-Addon-Manager-v0.4.1-x86_64.AppImage
+chmod +x Plasma-Addon-Manager-v0.4.2-x86_64.AppImage
+./Plasma-Addon-Manager-v0.4.2-x86_64.AppImage
 ```
 
 Wersję testową można samodzielnie zbudować przez

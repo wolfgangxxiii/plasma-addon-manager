@@ -56,7 +56,7 @@ fn run_on_host(program: &str, args: &[&str]) -> Result<(), String> {
     }
 }
 
-fn diagnose() {
+fn diagnose() -> Result<(), String> {
     let distribution = read_distribution();
     println!("Plasma Addon Manager — environment diagnosis");
     println!(
@@ -73,11 +73,16 @@ fn diagnose() {
             "not detected"
         }
     );
+    let mut missing = Vec::new();
     for binary in ["kpackagetool6", "curl", "bsdtar", "systemctl", "journalctl"] {
+        let executable = executable_on_path(binary);
+        if executable.is_none() && binary != "journalctl" {
+            missing.push(binary);
+        }
         println!(
             "{}: {}",
             binary,
-            executable_on_path(binary)
+            executable
                 .map(|path| path.display().to_string())
                 .unwrap_or_else(|| "missing".into())
         );
@@ -96,6 +101,20 @@ fn diagnose() {
         println!("Flatpak: host command access is disabled by default; explicit opt-in required");
     }
     println!("Mode: verified installer, manual updates and systemd --user automation");
+    if missing.is_empty() {
+        Ok(())
+    } else {
+        let hint =
+            if distribution.family == DistributionFamily::OpenSuse && missing.contains(&"bsdtar") {
+                "On openSUSE install the 'bsdtar' package in YaST Software Management or Discover."
+            } else {
+                "Install the missing dependencies using your distribution's software manager."
+            };
+        Err(format!(
+            "Missing required dependencies: {}. {hint}",
+            missing.join(", ")
+        ))
+    }
 }
 
 fn updater(action: &str) -> Result<(), String> {
@@ -153,10 +172,7 @@ fn updater(action: &str) -> Result<(), String> {
 
 fn execute(action: &str, extra: &[String]) -> Result<(), String> {
     match action {
-        "diagnose" => {
-            diagnose();
-            Ok(())
-        }
+        "diagnose" => diagnose(),
         "inventory" | "check" => {
             let command = if action == "inventory" {
                 "list-installed"
@@ -178,6 +194,17 @@ fn execute(action: &str, extra: &[String]) -> Result<(), String> {
                 if read_distribution().family == DistributionFamily::AtomicFedora {
                     automation::prepare_bazzite_dependencies()
                         .map_err(|error| format!("Bazzite prerequisites: {error:#}"))?;
+                } else if executable_on_path("bsdtar").is_none() {
+                    println!(
+                        "The updater binary is installed, but KDE Store updates require bsdtar."
+                    );
+                    if read_distribution().family == DistributionFamily::OpenSuse {
+                        println!("On openSUSE install the 'bsdtar' package in YaST or Discover.");
+                    } else {
+                        println!(
+                            "Install the libarchive/bsdtar utility with your software manager."
+                        );
+                    }
                 }
                 Ok(())
             }

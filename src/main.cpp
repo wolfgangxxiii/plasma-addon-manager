@@ -157,6 +157,19 @@ int main(int argc, char *argv[]) {
         // Create the repeated add-on cards too; merely loading the initial
         // empty window never instantiates their QML delegates.
         QObject *root = engine.rootObjects().first();
+        backend.dashboardLoaded(QStringLiteral(
+            "{\"distribution\":\"openSUSE Tumbleweed\",\"updater_version\":\"0.2.1\",\"bsdtar_available\":false}"));
+        backend.inventoryLoaded(QStringLiteral(
+            "{\"addons\":[{\"name\":\"Test Widget\",\"directory_name\":\"test\","
+            "\"version\":\"1.0\",\"component_type\":\"Plasma Widget\",\"is_system\":false}],"
+            "\"system_warning\":\"System inventory omitted\"}"));
+        QCoreApplication::processEvents();
+        if (!root->property("bsdtarMissing").toBool()
+                || !root->property("inventoryReady").toBool()
+                || root->property("inventoryWarning").toString().isEmpty()) {
+            qCritical() << "QML smoke test: openSUSE diagnostics or inventory contract failed";
+            return 3;
+        }
         QVariantMap addon;
         addon.insert(QStringLiteral("name"), QStringLiteral("Test Plasma Widget"));
         addon.insert(QStringLiteral("directory_name"), QStringLiteral("test-widget"));
@@ -175,6 +188,12 @@ int main(int argc, char *argv[]) {
         root->setProperty("addonView", 1);
         QCoreApplication::processEvents();
         root->setProperty("section", 2);
+        QCoreApplication::processEvents();
+        root->setProperty("section", 3);
+        QCoreApplication::processEvents();
+        root->setProperty("section", 4);
+        QCoreApplication::processEvents();
+        root->setProperty("section", 0);
         QCoreApplication::processEvents();
         if (qmlBindingError) {
             return 3;
