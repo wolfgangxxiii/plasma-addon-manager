@@ -1,7 +1,8 @@
 //! Explicit allow-list of commands invoked by the Qt frontend.
 
 use plasma_addon_helper::{
-    addons, automation::{self, Settings},
+    addons,
+    automation::{self, Settings},
     executable_on_path, find_plasmoid_updater, in_flatpak, is_plasma_session, read_distribution,
     updater_installer, updater_path, DistributionFamily,
 };
@@ -101,8 +102,9 @@ fn updater(action: &str) -> Result<(), String> {
     if in_flatpak() {
         return Err("Updating host add-ons is available only from the AppImage or native application, not a Flatpak sandbox".into());
     }
-    let binary = find_plasmoid_updater()
-        .ok_or("No working plasmoid-updater found. Choose Install / check version in the dashboard first.")?;
+    let binary = find_plasmoid_updater().ok_or(
+        "No working plasmoid-updater found. Choose Install / check version in the dashboard first.",
+    )?;
     let mut command = Command::new(binary);
     command.env("PATH", updater_path());
     match action {
@@ -191,17 +193,26 @@ fn execute(action: &str, extra: &[String]) -> Result<(), String> {
         }
         "status-json" => {
             let data = automation::dashboard_state().map_err(|error| format!("{error:#}"))?;
-            println!("{}", serde_json::to_string(&data).map_err(|error| error.to_string())?);
+            println!(
+                "{}",
+                serde_json::to_string(&data).map_err(|error| error.to_string())?
+            );
             Ok(())
         }
         "inventory-json" => {
             let data = addons::inventory().map_err(|error| format!("{error:#}"))?;
-            println!("{}", serde_json::to_string(&data).map_err(|error| error.to_string())?);
+            println!(
+                "{}",
+                serde_json::to_string(&data).map_err(|error| error.to_string())?
+            );
             Ok(())
         }
         "updates-json" => {
             let data = addons::updates().map_err(|error| format!("{error:#}"))?;
-            println!("{}", serde_json::to_string(&data).map_err(|error| error.to_string())?);
+            println!(
+                "{}",
+                serde_json::to_string(&data).map_err(|error| error.to_string())?
+            );
             Ok(())
         }
         "settings-save" => {
