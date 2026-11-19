@@ -9,9 +9,9 @@
   <url type="homepage">https://github.com/wolfgangxxiii/plasma-addon-manager</url>
   <description>
     <p>A distribution-aware, native Qt6 and Kirigami companion for plasmoid-updater.</p>
-    <p>Install the verified updater in your home directory and manually update KDE Store add-ons without a terminal.</p>
+    <p>Install the verified updater in your home directory and schedule automatic KDE Store add-on updates with a systemd user agent, without a terminal.</p>
   </description>
   <releases>
-    <release version="0.2.0" date="2026-11-19"/>
+    <release version="0.3.0" date="2026-11-19"/>
   </releases>
 </component>

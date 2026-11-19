@@ -50,7 +50,7 @@ fn download(url: &str, destination: &Path) -> Result<(), String> {
             "--proto-redir",
             "=https",
             "--user-agent",
-            "PlasmaAddonManager/0.2.0",
+            "PlasmaAddonManager/0.3.0",
             "--output",
         ])
         .arg(destination)

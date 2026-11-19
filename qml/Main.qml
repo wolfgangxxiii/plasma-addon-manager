@@ -13,6 +13,15 @@ Kirigami.ApplicationWindow {
 
     property int section: 0
     property string languageChoice: "auto"
+    property bool automationConfigLoaded: false
+    property string automationLoadError: ""
+    property bool automaticEnabled: true
+    property bool updateToolEnabled: true
+    property int updateFrequency: 24
+    property bool restartPlasma: false
+    property bool notifySuccess: false
+    property bool notifyError: true
+    property string excludedPackages: ""
     readonly property bool polish: languageChoice === "pl"
                                    || (languageChoice === "auto"
                                        && Qt.locale().name.toLowerCase().startsWith("pl"))
@@ -24,6 +33,47 @@ Kirigami.ApplicationWindow {
         case 2: return loc("Automatyzacja", "Automation")
         case 3: return loc("Dziennik", "Journal")
         default: return loc("O programie", "About")
+        }
+    }
+
+    function saveAutomation() {
+        const names = []
+        const raw = excludedPackages.split(",")
+        for (let i = 0; i < raw.length; i++) {
+            const name = raw[i].trim()
+            if (name.length > 0 && names.indexOf(name) === -1) names.push(name)
+        }
+        backend.saveSettings(JSON.stringify({
+            automatic: automaticEnabled,
+            auto_update_tool: updateToolEnabled,
+            frequency_hours: updateFrequency,
+            restart_plasma: restartPlasma,
+            notify_on_success: notifySuccess,
+            notify_on_error: notifyError,
+            excluded_packages: names
+        }), migrationConsent.checked)
+    }
+
+    Connections {
+        target: backend
+        function onSettingsLoaded(json) {
+            try {
+                const data = JSON.parse(json)
+                window.automaticEnabled = data.automatic
+                window.updateToolEnabled = data.auto_update_tool
+                window.updateFrequency = data.frequency_hours
+                window.restartPlasma = data.restart_plasma
+                window.notifySuccess = data.notify_on_success
+                window.notifyError = data.notify_on_error
+                window.excludedPackages = data.excluded_packages.join(", ")
+                window.automationConfigLoaded = true
+                window.automationLoadError = ""
+            } catch (error) {
+                window.automationLoadError = String(error)
+            }
+        }
+        function onSettingsSaved() {
+            migrationConsent.checked = false
         }
     }
 
@@ -143,8 +193,8 @@ Kirigami.ApplicationWindow {
                 visible: true
                 type: Kirigami.MessageType.Information
                 text: window.loc(
-                    "Wersja 0.2.0: instalacja plasmoid-updater bez terminala, kontrola i ręczne aktualizacje dodatków. Zarządzanie harmonogramem w przygotowaniu.",
-                    "Version 0.2.0: install plasmoid-updater without a terminal, inspect and manually update add-ons. Schedule management is coming later.")
+                    "Wersja 0.3.0: instalator i harmonogram automatycznych aktualizacji. Włącz go na karcie Automatyzacja, a w razie konfliktu świadomie przejmij wcześniejszy timer.",
+                    "Version 0.3.0: installer and scheduled automatic updates. Enable them in Automation; taking over an older timer requires explicit consent.")
             }
 
             GridLayout {
@@ -279,20 +329,124 @@ Kirigami.ApplicationWindow {
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.largeSpacing
                     Kirigami.Heading {
-                        text: window.loc("Harmonogram systemd", "systemd schedule")
+                        text: window.loc("Automatyczne aktualizacje", "Automatic updates")
                         level: 2
+                    }
+                    Kirigami.InlineMessage {
+                        Layout.fillWidth: true
+                        visible: !window.automationConfigLoaded
+                        type: Kirigami.MessageType.Warning
+                        text: window.automationLoadError.length > 0 ? window.automationLoadError
+                              : window.loc("Wczytywanie ustawień automatyzacji…", "Loading automation settings…")
                     }
                     Controls.Label {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap
-                        text: window.loc("Sprawdź istniejący timer. Zarządzanie interwałem i agentem zostanie dodane później.",
-                                         "Inspect the existing timer. Scheduler and agent management will be added later.")
+                        text: window.loc("Agent działa bez otwierania programu. Dodatki użytkownika są aktualizowane przez systemd --user, niezależnie od menedżera pakietów systemowych.",
+                                         "The background agent runs without opening the GUI. It updates your KDE Store add-ons through systemd --user, independently of OS package updates.")
                     }
-                    Controls.Button {
-                        text: window.loc("Pokaż stan timera", "Show timer status")
-                        icon.name: "chronometer"
-                        enabled: !backend.running
-                        onClicked: backend.runAction("timer")
+                    Controls.CheckBox {
+                        text: window.loc("Włącz automatyczne aktualizacje", "Enable automatic updates")
+                        checked: window.automaticEnabled
+                        enabled: window.automationConfigLoaded && !backend.running
+                        onToggled: window.automaticEnabled = checked
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Controls.Label { text: window.loc("Częstotliwość:", "Frequency:") }
+                        Controls.ComboBox {
+                            model: ["6 h", "12 h", "24 h"]
+                            currentIndex: [6, 12, 24].indexOf(window.updateFrequency)
+                            enabled: window.automationConfigLoaded && !backend.running && window.automaticEnabled
+                            onActivated: function(index) { window.updateFrequency = [6, 12, 24][index] }
+                        }
+                    }
+                    Controls.CheckBox {
+                        text: window.loc("Aktualizuj także plasmoid-updater", "Also update the plasmoid-updater tool")
+                        checked: window.updateToolEnabled
+                        enabled: window.automationConfigLoaded && !backend.running && window.automaticEnabled
+                        onToggled: window.updateToolEnabled = checked
+                    }
+                    Controls.CheckBox {
+                        text: window.loc("Restartuj Plasma po aktualizacji (opcjonalnie)", "Restart Plasma after updating (optional)")
+                        checked: window.restartPlasma
+                        enabled: window.automationConfigLoaded && !backend.running && window.automaticEnabled
+                        onToggled: window.restartPlasma = checked
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Kirigami.Units.largeSpacing
+                        Controls.CheckBox {
+                            text: window.loc("Powiadom o sukcesie", "Notify on success")
+                            checked: window.notifySuccess
+                            enabled: window.automationConfigLoaded && !backend.running
+                            onToggled: window.notifySuccess = checked
+                        }
+                        Controls.CheckBox {
+                            text: window.loc("Powiadom o błędzie", "Notify on error")
+                            checked: window.notifyError
+                            enabled: window.automationConfigLoaded && !backend.running
+                            onToggled: window.notifyError = checked
+                        }
+                    }
+                    Controls.Label {
+                        Layout.fillWidth: true
+                        text: window.loc("Wykluczone dodatki (oddziel przecinkami)", "Excluded add-ons (comma separated)")
+                    }
+                    Controls.TextField {
+                        Layout.fillWidth: true
+                        enabled: window.automationConfigLoaded && !backend.running
+                        placeholderText: "weather, clock"
+                        text: window.excludedPackages
+                        onTextChanged: window.excludedPackages = text
+                    }
+                    Kirigami.InlineMessage {
+                        Layout.fillWidth: true
+                        visible: true
+                        type: Kirigami.MessageType.Warning
+                        text: window.loc("Jeśli masz harmonogram z wcześniejszego programu Bazzite/Debian, domyślnie pozostanie nietknięty. Przejęcie wymaga zaznaczenia poniższej zgody; stare jednostki zostaną zachowane w kopii.",
+                                         "An older Bazzite/Debian schedule is preserved by default. Taking it over requires the checkbox below; existing unit files will be backed up.")
+                    }
+                    Controls.CheckBox {
+                        id: migrationConsent
+                        text: window.loc("Zgadzam się przejąć starszy harmonogram (z kopią zapasową)",
+                                         "I agree to migrate an older schedule (with backup)")
+                        checked: false
+                        enabled: window.automationConfigLoaded && !backend.running
+                    }
+                    Flow {
+                        Layout.fillWidth: true
+                        spacing: Kirigami.Units.smallSpacing
+                        Controls.Button {
+                            text: window.loc("Zapisz i zastosuj", "Save and apply")
+                            icon.name: "document-save"
+                            enabled: window.automationConfigLoaded && !backend.running
+                            onClicked: window.saveAutomation()
+                        }
+                        Controls.Button {
+                            text: window.loc("Pokaż stan timera", "Show timer status")
+                            icon.name: "chronometer"
+                            enabled: !backend.running
+                            onClicked: backend.runAction("timer")
+                        }
+                        Controls.Button {
+                            text: window.loc("Uruchom teraz", "Run now")
+                            icon.name: "media-playback-start"
+                            enabled: !backend.running
+                            onClicked: backend.runAction("run-service")
+                        }
+                        Controls.Button {
+                            text: window.loc("Napraw agenta", "Repair agent")
+                            icon.name: "tools-wizard"
+                            enabled: !backend.running
+                            onClicked: backend.runAction("repair-agent")
+                        }
+                        Controls.Button {
+                            text: window.loc("Test bez zmian", "Read-only test")
+                            icon.name: "system-search"
+                            enabled: !backend.running
+                            onClicked: backend.runAction("dry-run")
+                        }
                     }
                 }
             }
@@ -322,7 +476,7 @@ Kirigami.ApplicationWindow {
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.smallSpacing
-                    Kirigami.Heading { text: "Plasma Addon Manager 0.2.0"; level: 2 }
+                    Kirigami.Heading { text: "Plasma Addon Manager 0.3.0"; level: 2 }
                     Controls.Label {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap
