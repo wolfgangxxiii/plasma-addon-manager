@@ -22,7 +22,7 @@ jobs:
         run: |
           apt-get update
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-            ca-certificates curl cmake ninja-build g++ git gh \
+            ca-certificates curl cmake ninja-build g++ git gh weston \
             rustc cargo patchelf file binutils \
             extra-cmake-modules qt6-base-dev qt6-declarative-dev \
             qt6-wayland qt6-base-dev-tools \
@@ -30,24 +30,45 @@ jobs:
             qml6-module-org-kde-kirigami qml6-module-org-kde-desktop \
             qml6-module-qtquick-controls qml6-module-qtquick-layouts
       - name: Build and smoke-test AppImage
-        run: bash scripts/build-appimage.sh
+        run: |
+          cargo test --manifest-path backend/Cargo.toml
+          bash scripts/build-appimage.sh
+      - name: Test AppImage in a headless Wayland session
+        run: |
+          export XDG_RUNTIME_DIR="$(mktemp -d)"
+          chmod 700 "$XDG_RUNTIME_DIR"
+          weston --backend=headless --renderer=pixman --socket=pam-wayland --idle-time=0 --no-config \
+            >"$XDG_RUNTIME_DIR/weston.log" 2>&1 &
+          pam_weston_pid=$!
+          trap 'kill "$pam_weston_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 40); do
+            test -S "$XDG_RUNTIME_DIR/pam-wayland" && break
+            sleep 0.25
+          done
+          test -S "$XDG_RUNTIME_DIR/pam-wayland" || {
+            cat "$XDG_RUNTIME_DIR/weston.log"
+            exit 1
+          }
+          WAYLAND_DISPLAY=pam-wayland QT_QPA_PLATFORM=wayland QT_QUICK_BACKEND=software \
+            APPIMAGE_EXTRACT_AND_RUN=1 \
+            dist/Plasma-Addon-Manager-v0.1.1-x86_64.AppImage --self-test
       - name: Verify binary and checksum
         run: |
-          test -s dist/Plasma-Addon-Manager-v0.1.0-x86_64.AppImage
-          sha256sum dist/Plasma-Addon-Manager-v0.1.0-x86_64.AppImage
+          test -s dist/Plasma-Addon-Manager-v0.1.1-x86_64.AppImage
+          sha256sum dist/Plasma-Addon-Manager-v0.1.1-x86_64.AppImage
       - name: Publish AppImage directly in Releases
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=v0.1.0-appimage-preview.1
-          appimage=dist/Plasma-Addon-Manager-v0.1.0-x86_64.AppImage
+          tag=v0.1.1-appimage-preview.1
+          appimage=dist/Plasma-Addon-Manager-v0.1.1-x86_64.AppImage
           test -s "$appimage"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo 'Preview already published; leaving the existing download unchanged.'
           else
             gh release create "$tag" "$appimage" \
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-              --title 'Plasma Addon Manager 0.1.0 — AppImage preview' \
-              --notes 'Testowa wersja AppImage x86_64 dla KDE Plasma 6. Qt6/Kirigami + Rust. Wersja 0.1.0 oferuje diagnostykę i odczyt; instalowanie dodatków i automatyczne aktualizacje jeszcze nie działają. Plik .AppImage pobiera się bez archiwum ZIP.'
+              --title 'Plasma Addon Manager 0.1.1 — AppImage Bazzite fix' \
+              --notes 'Testowe wydanie AppImage x86_64 z poprawkami Kirigami, Qt Wayland EGL i domyślnym renderowaniem programowym na Bazzite. Dodano wyszukiwanie plasmoid-updater w Linuxbrew, symulację oraz ręczne aktualizacje po potwierdzeniu (bez restartu Plasma). Automatyczna instalacja i konfiguracja harmonogramu nie są jeszcze dostępne. Tylko bezpośredni plik .AppImage, bez ZIP.'
           fi
