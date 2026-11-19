@@ -1,8 +1,9 @@
 //! Explicit allow-list of commands invoked by the Qt frontend.
 
 use plasma_addon_helper::{
-    automation::{self, Settings}, executable_on_path, find_plasmoid_updater, in_flatpak,
-    is_plasma_session, read_distribution, updater_installer, updater_path,
+    automation::{self, Settings},
+    executable_on_path, find_plasmoid_updater, in_flatpak, is_plasma_session, read_distribution,
+    updater_installer, updater_path, DistributionFamily,
 };
 use std::env;
 use std::io::{self, Write};
@@ -176,18 +177,30 @@ fn execute(action: &str, extra: &[String]) -> Result<(), String> {
             if in_flatpak() {
                 Err("Install from the standalone AppImage, not a Flatpak sandbox".into())
             } else {
-                updater_installer::install()
+                updater_installer::install()?;
+                if read_distribution().family == DistributionFamily::AtomicFedora {
+                    automation::prepare_bazzite_dependencies()
+                        .map_err(|error| format!("Bazzite prerequisites: {error:#}"))?;
+                }
+                Ok(())
             }
         }
         "settings-show" => {
             let settings = Settings::load(&automation::home().map_err(|error| error.to_string())?)
                 .map_err(|error| error.to_string())?;
-            println!("{}", serde_json::to_string(&settings).map_err(|error| error.to_string())?);
+            println!(
+                "{}",
+                serde_json::to_string(&settings).map_err(|error| error.to_string())?
+            );
             Ok(())
         }
         "settings-save" => {
-            if in_flatpak() { return Err("Automation changes require the AppImage, not Flatpak".into()); }
-            if extra.len() != 2 { return Err("Expected settings JSON and migration choice".into()); }
+            if in_flatpak() {
+                return Err("Automation changes require the AppImage, not Flatpak".into());
+            }
+            if extra.len() != 2 {
+                return Err("Expected settings JSON and migration choice".into());
+            }
             let settings: Settings = serde_json::from_str(&extra[0])
                 .map_err(|error| format!("Invalid settings: {error}"))?;
             let takeover = match extra[1].as_str() {
@@ -197,7 +210,10 @@ fn execute(action: &str, extra: &[String]) -> Result<(), String> {
             };
             automation::configure(settings, takeover).map_err(|error| format!("{error:#}"))
         }
-        "timer" => { automation::status(); Ok(()) }
+        "timer" => {
+            automation::status();
+            Ok(())
+        }
         "journal" => automation::journal().map_err(|error| format!("{error:#}")),
         "repair-agent" => automation::repair_agent().map_err(|error| format!("{error:#}")),
         "run-service" => automation::start_service().map_err(|error| format!("{error:#}")),

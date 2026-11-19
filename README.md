@@ -38,6 +38,8 @@ CachyOS, openSUSE and other Linux distributions.
 - Confirmed manual updates with `update --yes --no-restart-plasma`.
 - One-click GUI installer for `plasmoid-updater`: verified upstream GitHub SHA-256,
   current-version preservation and atomic user-local installation without root.
+- Bazzite prerequisite setup in the same GUI action: reuse an existing `bsdtar`
+  or install `libarchive` through user-local Homebrew when missing (with consent).
 - Independent headless `plasma-addon-manager-agent` installed in `~/.local/bin`.
 - User-level schedule every 6, 12 or 24 hours, with optional Plasma restart,
   upstream updater check and desktop notifications on success or failure.

@@ -2,14 +2,17 @@
 //! This edition owns *different* systemd unit names, so existing schedules
 //! are never overwritten or disabled without explicit migration consent.
 
-use crate::{find_plasmoid_updater, is_executable, updater_installer, updater_path};
+use crate::{
+    executable_on_path, find_plasmoid_updater, is_executable, read_distribution, updater_installer,
+    updater_path, DistributionFamily,
+};
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use fs2::FileExt;
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs::{self, File, OpenOptions};
 use std::io::{self, Write};
-use std::os::unix::fs::PermissionsExt;
+use std::os::unix::fs::{symlink, PermissionsExt};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 use std::thread;
@@ -51,11 +54,23 @@ impl Default for Settings {
 
 impl Settings {
     pub fn validate(&self) -> Result<()> {
-        ensure!(matches!(self.frequency_hours, 6 | 12 | 24), "Choose 6, 12 or 24 hours");
-        ensure!(self.excluded_packages.len() <= 100, "Too many excluded packages (max 100)");
+        ensure!(
+            matches!(self.frequency_hours, 6 | 12 | 24),
+            "Choose 6, 12 or 24 hours"
+        );
+        ensure!(
+            self.excluded_packages.len() <= 100,
+            "Too many excluded packages (max 100)"
+        );
         for name in &self.excluded_packages {
-            ensure!(!name.trim().is_empty() && name.len() <= 120, "Invalid excluded package name");
-            ensure!(!name.chars().any(char::is_control), "Control characters are not allowed in exclusions");
+            ensure!(
+                !name.trim().is_empty() && name.len() <= 120,
+                "Invalid excluded package name"
+            );
+            ensure!(
+                !name.chars().any(char::is_control),
+                "Control characters are not allowed in exclusions"
+            );
         }
         Ok(())
     }
@@ -91,11 +106,22 @@ impl Settings {
             let config = upstream_config(home);
             if config.is_file() && settings.excluded_packages.is_empty() {
                 let text = fs::read_to_string(&config)?;
-                let doc: DocumentMut = text.parse().context("Invalid existing plasmoid-updater TOML")?;
-                if let Some(excludes) = doc.get("excluded_packages").and_then(|entry| entry.as_array()) {
-                    settings.excluded_packages = excludes.iter().map(|entry| {
-                        entry.as_str().map(str::to_owned).ok_or_else(|| anyhow!("Invalid excluded_packages entry"))
-                    }).collect::<Result<Vec<_>>>()?;
+                let doc: DocumentMut = text
+                    .parse()
+                    .context("Invalid existing plasmoid-updater TOML")?;
+                if let Some(excludes) = doc
+                    .get("excluded_packages")
+                    .and_then(|entry| entry.as_array())
+                {
+                    settings.excluded_packages = excludes
+                        .iter()
+                        .map(|entry| {
+                            entry
+                                .as_str()
+                                .map(str::to_owned)
+                                .ok_or_else(|| anyhow!("Invalid excluded_packages entry"))
+                        })
+                        .collect::<Result<Vec<_>>>()?;
                 }
             }
         }
@@ -152,7 +178,10 @@ fn unit_property(name: &str, property: &str) -> Option<String> {
         .stdin(Stdio::null())
         .output()
         .ok()?;
-    result.status.success().then(|| String::from_utf8_lossy(&result.stdout).trim().to_owned())
+    result
+        .status
+        .success()
+        .then(|| String::from_utf8_lossy(&result.stdout).trim().to_owned())
 }
 
 pub fn status() {
@@ -167,10 +196,26 @@ pub fn status() {
     println!("Timer: {TIMER}");
     println!("Enabled: {}", user_unit_state(TIMER, "is-enabled"));
     println!("Active: {}", user_unit_state(TIMER, "is-active"));
-    println!("Managed service: {}", unit_is_managed(&units_dir(&home).join(SERVICE)));
-    println!("Agent: {}", if is_executable(&agent_path(&home)) { "installed" } else { "missing" });
-    println!("Next run: {}", unit_property(TIMER, "NextElapseUSecRealtime").unwrap_or_else(|| "unknown".into()));
-    println!("Last result: {}", unit_property(SERVICE, "Result").unwrap_or_else(|| "unknown".into()));
+    println!(
+        "Managed service: {}",
+        unit_is_managed(&units_dir(&home).join(SERVICE))
+    );
+    println!(
+        "Agent: {}",
+        if is_executable(&agent_path(&home)) {
+            "installed"
+        } else {
+            "missing"
+        }
+    );
+    println!(
+        "Next run: {}",
+        unit_property(TIMER, "NextElapseUSecRealtime").unwrap_or_else(|| "unknown".into())
+    );
+    println!(
+        "Last result: {}",
+        unit_property(SERVICE, "Result").unwrap_or_else(|| "unknown".into())
+    );
     for name in LEGACY_TIMERS {
         if user_unit_state(name, "is-enabled") || user_unit_state(name, "is-active") {
             println!("! Older active timer: {name}. Migration consent required.");
@@ -179,8 +224,16 @@ pub fn status() {
 }
 
 fn output(command: &mut Command) -> Result<Output> {
-    let result = command.stdin(Stdio::null()).output().context("Unable to execute system command")?;
-    ensure!(result.status.success(), "{}: {}", result.status, String::from_utf8_lossy(&result.stderr).trim());
+    let result = command
+        .stdin(Stdio::null())
+        .output()
+        .context("Unable to execute system command")?;
+    ensure!(
+        result.status.success(),
+        "{}: {}",
+        result.status,
+        String::from_utf8_lossy(&result.stderr).trim()
+    );
     Ok(result)
 }
 
@@ -195,7 +248,9 @@ pub fn atomic_write(path: &Path, bytes: &[u8]) -> Result<()> {
     let mut staged = tempfile::NamedTempFile::new_in(dir)?;
     staged.write_all(bytes)?;
     staged.flush()?;
-    staged.persist(path).with_context(|| format!("Unable to write {}", path.display()))?;
+    staged
+        .persist(path)
+        .with_context(|| format!("Unable to write {}", path.display()))?;
     Ok(())
 }
 
@@ -204,8 +259,13 @@ pub fn atomic_write(path: &Path, bytes: &[u8]) -> Result<()> {
 pub fn update_lock() -> Result<File> {
     let path = home()?.join(".local/state/plasma-addon-manager/update.lock");
     fs::create_dir_all(path.parent().context("Invalid lock path")?)?;
-    let file = OpenOptions::new().read(true).write(true).create(true).open(path)?;
-    file.try_lock_exclusive().context("Another Plasma Addon Manager update is already running")?;
+    let file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .open(path)?;
+    file.try_lock_exclusive()
+        .context("Another Plasma Addon Manager update is already running")?;
     Ok(file)
 }
 
@@ -216,14 +276,22 @@ struct Snapshot {
 }
 
 fn snapshot_files(paths: &[PathBuf]) -> Result<Vec<Snapshot>> {
-    paths.iter().map(|path| {
-        let previous = if fs::symlink_metadata(path).is_ok() {
-            let bytes = fs::read(path)?;
-            let mode = fs::metadata(path)?.permissions().mode();
-            Some((bytes, mode))
-        } else { None };
-        Ok(Snapshot { path: path.clone(), previous })
-    }).collect()
+    paths
+        .iter()
+        .map(|path| {
+            let previous = if fs::symlink_metadata(path).is_ok() {
+                let bytes = fs::read(path)?;
+                let mode = fs::metadata(path)?.permissions().mode();
+                Some((bytes, mode))
+            } else {
+                None
+            };
+            Ok(Snapshot {
+                path: path.clone(),
+                previous,
+            })
+        })
+        .collect()
 }
 
 fn restore_files(snapshots: &[Snapshot]) {
@@ -256,29 +324,49 @@ fn timer_schedule(hours: u8) -> Result<&'static str> {
 }
 
 fn upstream_document(config: &Path, settings: &Settings) -> Result<DocumentMut> {
-    let old = if config.is_file() { fs::read_to_string(config)? } else { String::new() };
-    let mut doc: DocumentMut = old.parse().context("Cannot parse existing plasmoid-updater settings")?;
+    let old = if config.is_file() {
+        fs::read_to_string(config)?
+    } else {
+        String::new()
+    };
+    let mut doc: DocumentMut = old
+        .parse()
+        .context("Cannot parse existing plasmoid-updater settings")?;
     let mut excluded = Array::new();
-    for package in &settings.excluded_packages { excluded.push(package.as_str()); }
+    for package in &settings.excluded_packages {
+        excluded.push(package.as_str());
+    }
     // Keep all unrelated upstream settings untouched.
     doc["excluded_packages"] = value(excluded);
     Ok(doc)
 }
 
 fn install_agent(home: &Path) -> Result<()> {
-    let source = env::current_exe()?.parent().context("Cannot locate app helper")?.join(AGENT);
+    let source = env::current_exe()?
+        .parent()
+        .context("Cannot locate app helper")?
+        .join(AGENT);
     ensure!(source.is_file(), "Missing {AGENT} inside this AppImage");
     let target = agent_path(home);
     let dir = target.parent().context("Invalid agent path")?;
     fs::create_dir_all(dir)?;
     let mut staged = tempfile::NamedTempFile::new_in(dir)?;
     io::copy(&mut File::open(&source)?, &mut staged)?;
-    staged.as_file().set_permissions(fs::Permissions::from_mode(0o755))?;
+    staged
+        .as_file()
+        .set_permissions(fs::Permissions::from_mode(0o755))?;
     // Close the writer before verifying that the agent can execute.
     let staged = staged.into_temp_path();
     let staged_path: &Path = staged.as_ref();
-    let check = Command::new(staged_path).arg("--version").stdin(Stdio::null()).output()?;
-    ensure!(check.status.success() && String::from_utf8_lossy(&check.stdout).starts_with("plasma-addon-manager-agent "), "Bundled agent failed validation");
+    let check = Command::new(staged_path)
+        .arg("--version")
+        .stdin(Stdio::null())
+        .output()?;
+    ensure!(
+        check.status.success()
+            && String::from_utf8_lossy(&check.stdout).starts_with("plasma-addon-manager-agent "),
+        "Bundled agent failed validation"
+    );
     staged.persist(target)?;
     println!("✓ Agent installed in ~/.local/bin.");
     Ok(())
@@ -293,40 +381,96 @@ fn timer_text(hours: u8) -> Result<String> {
 }
 
 fn legacy_active() -> Vec<&'static str> {
-    LEGACY_TIMERS.iter().copied().filter(|timer| {
-        user_unit_state(timer, "is-enabled") || user_unit_state(timer, "is-active")
-    }).collect()
+    LEGACY_TIMERS
+        .iter()
+        .copied()
+        .filter(|timer| user_unit_state(timer, "is-enabled") || user_unit_state(timer, "is-active"))
+        .collect()
 }
 
 fn back_up_legacy_units(home: &Path, names: &[&str]) -> Result<()> {
-    if names.is_empty() { return Ok(()); }
+    if names.is_empty() {
+        return Ok(());
+    }
     let backup_dir = home.join(".config/plasma-addon-manager/backups");
     fs::create_dir_all(&backup_dir)?;
-    let backup = tempfile::Builder::new().prefix("migration-").tempdir_in(&backup_dir)?;
+    let backup = tempfile::Builder::new()
+        .prefix("migration-")
+        .tempdir_in(&backup_dir)?;
     for name in names {
-        let path = units_dir(home).join(name);
-        if path.is_file() {
-            fs::copy(&path, backup.path().join(name))?;
+        // Preserve both halves of the old timer/service pair. Old units stay
+        // in place; the backup allows manual recovery if the old app is used.
+        for unit in [name.to_string(), name.replace(".timer", ".service")] {
+            let path = units_dir(home).join(&unit);
+            if path.is_file() {
+                fs::copy(&path, backup.path().join(unit))?;
+            }
         }
     }
     println!("Backed up existing units: {}", backup.keep().display());
     Ok(())
 }
 
-fn bsdtar_available(home: &Path) -> bool {
+fn service_bsdtar_exists(home: &Path) -> bool {
     [
         home.join(".local/bin/bsdtar"),
         PathBuf::from("/usr/bin/bsdtar"),
         PathBuf::from("/usr/local/bin/bsdtar"),
         PathBuf::from("/home/linuxbrew/.linuxbrew/opt/libarchive/bin/bsdtar"),
-    ].iter().any(|path| is_executable(path)) || env::split_paths(&env::var_os("PATH").unwrap_or_default())
-        .any(|dir| is_executable(&dir.join("bsdtar")))
+    ]
+    .iter()
+    .any(|path| is_executable(path))
+}
+
+fn link_bsdtar_for_service(home: &Path, source: &Path) -> Result<()> {
+    ensure!(is_executable(source), "bsdtar at {} is not executable", source.display());
+    let source = source.canonicalize().context("Cannot resolve bsdtar executable")?;
+    let target = home.join(".local/bin/bsdtar");
+    ensure!(fs::symlink_metadata(&target).is_err(), "Existing {} cannot be replaced", target.display());
+    fs::create_dir_all(target.parent().context("Invalid bsdtar destination")?)?;
+    symlink(&source, &target)?;
+    println!("Made existing bsdtar available to the background service.");
+    Ok(())
+}
+
+/// Bazzite's working updater GUI provisions libarchive in *user* Homebrew.
+/// The GUI asks for consent before calling this; no root or rpm-ostree changes.
+pub fn prepare_bazzite_dependencies() -> Result<()> {
+    ensure!(read_distribution().family == DistributionFamily::AtomicFedora,
+        "Homebrew preparation is only for Fedora Atomic / Bazzite");
+    ensure!(executable_on_path("kpackagetool6").is_some() || is_executable(Path::new("/usr/bin/kpackagetool6")),
+        "kpackagetool6 is missing from KDE Plasma; cannot replace this OS component with Homebrew");
+    let home = home()?;
+    if service_bsdtar_exists(&home) {
+        println!("✓ bsdtar is already available to the background service.");
+        return Ok(());
+    }
+    if let Some(source) = executable_on_path("bsdtar") {
+        link_bsdtar_for_service(&home, &source)?;
+        return Ok(());
+    }
+    let brew = if is_executable(Path::new("/home/linuxbrew/.linuxbrew/bin/brew")) {
+        PathBuf::from("/home/linuxbrew/.linuxbrew/bin/brew")
+    } else {
+        executable_on_path("brew").context("Homebrew is not installed. Install Homebrew or libarchive from Bazzite's graphical software manager")?
+    };
+    println!("Preparing libarchive for KDE Store updates using user-local Homebrew…");
+    output(Command::new(&brew).args(["install", "libarchive"]))?;
+    let prefix = output(Command::new(&brew).args(["--prefix", "libarchive"]))?;
+    let source = PathBuf::from(String::from_utf8(prefix.stdout)?.trim()).join("bin/bsdtar");
+    link_bsdtar_for_service(&home, &source)?;
+    ensure!(service_bsdtar_exists(&home), "bsdtar is still unavailable to the service");
+    Ok(())
 }
 
 fn restore_old_timer_states(names: &[(&str, bool, bool)]) {
     for (timer, enabled, active) in names {
-        if *enabled { let _ = systemctl(&["enable", timer]); }
-        if *active { let _ = systemctl(&["start", timer]); }
+        if *enabled {
+            let _ = systemctl(&["enable", timer]);
+        }
+        if *active {
+            let _ = systemctl(&["start", timer]);
+        }
     }
 }
 
@@ -334,14 +478,22 @@ pub fn configure(settings: Settings, migrate_legacy: bool) -> Result<()> {
     settings.validate()?;
     let home = home()?;
     if settings.automatic {
-        ensure!(find_plasmoid_updater().is_some(), "Install plasmoid-updater first using the Install button");
-        ensure!(bsdtar_available(&home), "bsdtar is missing; install libarchive (Homebrew on Bazzite or your distribution's package manager)");
+        ensure!(
+            find_plasmoid_updater().is_some(),
+            "Install plasmoid-updater first using the Install button"
+        );
+        ensure!(service_bsdtar_exists(&home) || executable_on_path("bsdtar").is_some(),
+            "bsdtar is missing. On Bazzite click Install / check version to prepare Homebrew; on other distributions install the libarchive tools using the software manager");
     }
     let unit_dir = units_dir(&home);
     let service = unit_dir.join(SERVICE);
     let timer = unit_dir.join(TIMER);
     for target in [&service, &timer] {
-        ensure!(fs::symlink_metadata(target).is_err() || unit_is_managed(target), "Unmanaged unit exists at {}; refusing to overwrite", target.display());
+        ensure!(
+            fs::symlink_metadata(target).is_err() || unit_is_managed(target),
+            "Unmanaged unit exists at {}; refusing to overwrite",
+            target.display()
+        );
     }
     let old_timer_names = legacy_active();
     ensure!(!settings.automatic || old_timer_names.is_empty() || migrate_legacy,
@@ -349,24 +501,49 @@ pub fn configure(settings: Settings, migrate_legacy: bool) -> Result<()> {
 
     let upstream = upstream_config(&home);
     let updated_toml = upstream_document(&upstream, &settings)?;
-    let targets = [
-        service.clone(), timer.clone(), agent_path(&home), Settings::path(&home), upstream.clone(),
+    let needs_bsdtar_link = settings.automatic && !service_bsdtar_exists(&home);
+    let mut targets = vec![
+        service.clone(),
+        timer.clone(),
+        agent_path(&home),
+        Settings::path(&home),
+        upstream.clone(),
     ];
+    if needs_bsdtar_link {
+        targets.push(home.join(".local/bin/bsdtar"));
+    }
     for target in &targets {
         if let Ok(metadata) = fs::symlink_metadata(target) {
-            ensure!(!metadata.file_type().is_symlink(), "Refusing to replace symlink at {}", target.display());
+            ensure!(
+                !metadata.file_type().is_symlink(),
+                "Refusing to replace symlink at {}",
+                target.display()
+            );
         }
     }
     let saved = snapshot_files(&targets)?;
     let old_self_enabled = user_unit_state(TIMER, "is-enabled");
     let old_self_active = user_unit_state(TIMER, "is-active");
-    let old_states: Vec<_> = old_timer_names.iter().map(|timer| (
-        *timer, user_unit_state(timer, "is-enabled"), user_unit_state(timer, "is-active"),
-    )).collect();
+    let old_states: Vec<_> = old_timer_names
+        .iter()
+        .map(|timer| {
+            (
+                *timer,
+                user_unit_state(timer, "is-enabled"),
+                user_unit_state(timer, "is-active"),
+            )
+        })
+        .collect();
 
     // Every write and systemctl operation after this point is recoverable.
     let apply = (|| -> Result<()> {
-        if settings.automatic { install_agent(&home)?; }
+        if needs_bsdtar_link {
+            let source = executable_on_path("bsdtar").context("Cannot find bsdtar in PATH")?;
+            link_bsdtar_for_service(&home, &source)?;
+        }
+        if settings.automatic {
+            install_agent(&home)?;
+        }
         if settings.automatic && !old_timer_names.is_empty() && migrate_legacy {
             back_up_legacy_units(&home, &old_timer_names)?;
             for timer in &old_timer_names {
@@ -381,7 +558,10 @@ pub fn configure(settings: Settings, migrate_legacy: bool) -> Result<()> {
         systemctl(&["daemon-reload"])?;
         if settings.automatic {
             systemctl(&["enable", "--now", TIMER])?;
-            println!("✓ Scheduled updates enabled every {} hours.", settings.frequency_hours);
+            println!(
+                "✓ Scheduled updates enabled every {} hours.",
+                settings.frequency_hours
+            );
         } else {
             systemctl(&["disable", "--now", TIMER])?;
             println!("✓ Plasma Addon Manager scheduled updates disabled.");
@@ -395,8 +575,12 @@ pub fn configure(settings: Settings, migrate_legacy: bool) -> Result<()> {
         let _ = systemctl(&["disable", "--now", TIMER]);
         restore_files(&saved);
         let _ = systemctl(&["daemon-reload"]);
-        if old_self_enabled { let _ = systemctl(&["enable", TIMER]); }
-        if old_self_active { let _ = systemctl(&["start", TIMER]); }
+        if old_self_enabled {
+            let _ = systemctl(&["enable", TIMER]);
+        }
+        if old_self_active {
+            let _ = systemctl(&["start", TIMER]);
+        }
         restore_old_timer_states(&old_states);
         return Err(error);
     }
@@ -405,36 +589,80 @@ pub fn configure(settings: Settings, migrate_legacy: bool) -> Result<()> {
 
 pub fn repair_agent() -> Result<()> {
     let home = home()?;
-    ensure!(unit_is_managed(&units_dir(&home).join(SERVICE)) && unit_is_managed(&units_dir(&home).join(TIMER)),
-        "Agent repair requires units managed by Plasma Addon Manager");
+    ensure!(
+        unit_is_managed(&units_dir(&home).join(SERVICE))
+            && unit_is_managed(&units_dir(&home).join(TIMER)),
+        "Agent repair requires units managed by Plasma Addon Manager"
+    );
     install_agent(&home)
 }
 
 pub fn start_service() -> Result<()> {
     let home = home()?;
-    ensure!(unit_is_managed(&units_dir(&home).join(SERVICE)), "Save automation settings first");
+    ensure!(
+        unit_is_managed(&units_dir(&home).join(SERVICE)),
+        "Save automation settings first"
+    );
     systemctl(&["start", SERVICE])?;
     println!("Service finished. Open the Journal tab for details.");
     Ok(())
 }
 
 pub fn journal() -> Result<()> {
-    let result = output(Command::new("journalctl").args(["--user", "-u", SERVICE, "-n", "100", "--no-pager"]))?;
+    let result = output(Command::new("journalctl").args([
+        "--user",
+        "-u",
+        SERVICE,
+        "-n",
+        "100",
+        "--no-pager",
+    ]))?;
     io::stdout().write_all(&result.stdout)?;
     Ok(())
 }
 
 fn transient_failure(output: &Output) -> bool {
-    if output.status.success() { return false; }
-    let message = format!("{}\n{}", String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr)).to_ascii_lowercase();
-    ["network request failed", "timed out", "timeout", "could not resolve host", "temporary failure in name resolution", "dns error", "connection reset", "connection refused", "connection closed", "502 bad gateway", "503 service unavailable", "504 gateway timeout", "status: 429", "status: 502", "status: 503", "status: 504"]
-        .iter().any(|needle| message.contains(needle))
+    if output.status.success() {
+        return false;
+    }
+    let message = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    )
+    .to_ascii_lowercase();
+    [
+        "network request failed",
+        "timed out",
+        "timeout",
+        "could not resolve host",
+        "temporary failure in name resolution",
+        "dns error",
+        "connection reset",
+        "connection refused",
+        "connection closed",
+        "502 bad gateway",
+        "503 service unavailable",
+        "504 gateway timeout",
+        "status: 429",
+        "status: 502",
+        "status: 503",
+        "status: 504",
+    ]
+    .iter()
+    .any(|needle| message.contains(needle))
 }
 
-fn run_with_retries(mut work: impl FnMut() -> Result<Output>, mut on_retry: impl FnMut(usize, u64), mut wait: impl FnMut(u64)) -> Result<Output> {
+fn run_with_retries(
+    mut work: impl FnMut() -> Result<Output>,
+    mut on_retry: impl FnMut(usize, u64),
+    mut wait: impl FnMut(u64),
+) -> Result<Output> {
     for (index, delay) in RETRY_DELAYS.iter().copied().enumerate() {
         let result = work()?;
-        if !transient_failure(&result) { return Ok(result); }
+        if !transient_failure(&result) {
+            return Ok(result);
+        }
         on_retry(index + 2, delay);
         wait(delay);
     }
@@ -445,7 +673,10 @@ pub fn run_background() -> Result<Settings> {
     let home = home()?;
     // Require new app-owned settings, never silently adopt legacy GUI configs
     // when running unattended from a systemd service.
-    ensure!(Settings::path(&home).is_file(), "Automation has not been configured");
+    ensure!(
+        Settings::path(&home).is_file(),
+        "Automation has not been configured"
+    );
     let settings = Settings::load(&home)?;
     if !settings.automatic {
         println!("Automatic updates are disabled; skipping.");
@@ -459,19 +690,36 @@ pub fn run_background() -> Result<Settings> {
         }
     }
     let binary = find_plasmoid_updater().context("plasmoid-updater is not installed")?;
-    let restart = if settings.restart_plasma { "--restart-plasma" } else { "--no-restart-plasma" };
-    println!("Updating user KDE Store add-ons (restart Plasma: {})…", settings.restart_plasma);
+    let restart = if settings.restart_plasma {
+        "--restart-plasma"
+    } else {
+        "--no-restart-plasma"
+    };
+    println!(
+        "Updating user KDE Store add-ons (restart Plasma: {})…",
+        settings.restart_plasma
+    );
     let result = run_with_retries(
-        || Command::new(&binary)
-            .env("PATH", updater_path())
-            .args(["--skip-plasma-detection", "update", "--yes", restart])
-            .stdin(Stdio::null()).output().context("Cannot start plasmoid-updater"),
-        |attempt, seconds| println!("Temporary KDE Store network error; retry {attempt}/3 in {seconds}s…"),
+        || {
+            Command::new(&binary)
+                .env("PATH", updater_path())
+                .args(["--skip-plasma-detection", "update", "--yes", restart])
+                .stdin(Stdio::null())
+                .output()
+                .context("Cannot start plasmoid-updater")
+        },
+        |attempt, seconds| {
+            println!("Temporary KDE Store network error; retry {attempt}/3 in {seconds}s…")
+        },
         |seconds| thread::sleep(Duration::from_secs(seconds)),
     )?;
     io::stdout().write_all(&result.stdout)?;
     io::stderr().write_all(&result.stderr)?;
-    ensure!(result.status.success(), "plasmoid-updater failed with status {}", result.status);
+    ensure!(
+        result.status.success(),
+        "plasmoid-updater failed with status {}",
+        result.status
+    );
     println!("✓ Automatic update cycle completed.");
     Ok(settings)
 }
@@ -498,7 +746,11 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let home = dir.path();
         let legacy = home.join(".config/bazzite-plasmoid-updater-gui/settings.toml");
-        atomic_write(&legacy, b"automatic = true\nfrequency_hours = 12\nexcluded_packages = [\"weather\"]\n").unwrap();
+        atomic_write(
+            &legacy,
+            b"automatic = true\nfrequency_hours = 12\nexcluded_packages = [\"weather\"]\n",
+        )
+        .unwrap();
         let imported = Settings::load(home).unwrap();
         assert_eq!(imported.frequency_hours, 12);
         assert_eq!(imported.excluded_packages, vec!["weather"]);
@@ -512,14 +764,45 @@ mod tests {
         let path = units_dir(dir.path()).join(TIMER);
         atomic_write(&path, b"[Timer]\nOnCalendar=daily\n").unwrap();
         assert!(!unit_is_managed(&path));
-        assert!(unit_is_managed(&units_dir(dir.path()).join(SERVICE)) == false);
+        atomic_write(&path, format!("[Timer]\n# unrelated\n{MANAGED}\n").as_bytes()).unwrap();
+        assert!(!unit_is_managed(&path));
+        assert!(!unit_is_managed(&units_dir(dir.path()).join(SERVICE)));
+    }
+
+    #[test]
+    fn migration_backup_keeps_both_legacy_unit_files() {
+        let dir = tempfile::tempdir().unwrap();
+        let home = dir.path();
+        atomic_write(&units_dir(home).join("plasmoid-updater.timer"), b"old timer").unwrap();
+        atomic_write(&units_dir(home).join("plasmoid-updater.service"), b"old service").unwrap();
+        back_up_legacy_units(home, &["plasmoid-updater.timer"]).unwrap();
+        let backups = home.join(".config/plasma-addon-manager/backups");
+        let backup = fs::read_dir(backups).unwrap().next().unwrap().unwrap().path();
+        assert_eq!(fs::read(backup.join("plasmoid-updater.timer")).unwrap(), b"old timer");
+        assert_eq!(fs::read(backup.join("plasmoid-updater.service")).unwrap(), b"old service");
+    }
+
+    #[test]
+    fn links_existing_bsdtar_into_user_service_path() {
+        let dir = tempfile::tempdir().unwrap();
+        let home = dir.path();
+        let bin = home.join("custom/bsdtar");
+        atomic_write(&bin, b"#!/bin/sh\nexit 0\n").unwrap();
+        fs::set_permissions(&bin, fs::Permissions::from_mode(0o755)).unwrap();
+        link_bsdtar_for_service(home, &bin).unwrap();
+        assert!(service_bsdtar_exists(home));
+        assert!(link_bsdtar_for_service(home, &bin).is_err());
     }
 
     #[test]
     fn preserves_unrelated_upstream_configuration() {
         let dir = tempfile::tempdir().unwrap();
         let config = dir.path().join("plasmoid-updater.toml");
-        atomic_write(&config, b"assume_yes = true\nexcluded_patterns = [\"example\"]\n").unwrap();
+        atomic_write(
+            &config,
+            b"assume_yes = true\nexcluded_patterns = [\"example\"]\n",
+        )
+        .unwrap();
         let mut settings = Settings::default();
         settings.excluded_packages.push("clock".into());
         let text = upstream_document(&config, &settings).unwrap().to_string();
@@ -531,19 +814,43 @@ mod tests {
     #[test]
     fn retries_only_transient_network_failures() {
         fn failure(message: &str) -> Output {
-            Output { status: std::process::ExitStatus::from_raw(2 << 8), stdout: vec![], stderr: message.as_bytes().to_vec() }
+            Output {
+                status: std::process::ExitStatus::from_raw(2 << 8),
+                stdout: vec![],
+                stderr: message.as_bytes().to_vec(),
+            }
         }
         let mut attempts = 0;
         let mut delays = Vec::new();
         let result = run_with_retries(
-            || { attempts += 1; Ok(if attempts < 3 { failure("network request failed") } else { Output { status: std::process::ExitStatus::from_raw(0), stdout: vec![], stderr: vec![] } }) },
+            || {
+                attempts += 1;
+                Ok(if attempts < 3 {
+                    failure("network request failed")
+                } else {
+                    Output {
+                        status: std::process::ExitStatus::from_raw(0),
+                        stdout: vec![],
+                        stderr: vec![],
+                    }
+                })
+            },
             |attempt, delay| delays.push((attempt, delay)),
             |_| {},
-        ).unwrap();
+        )
+        .unwrap();
         assert!(result.status.success());
         assert_eq!(delays, vec![(2, 3), (3, 9)]);
         let mut unexpected = 0;
-        run_with_retries(|| { unexpected += 1; Ok(failure("permission denied")) }, |_, _| panic!("no retry"), |_| panic!("no wait")).unwrap();
+        run_with_retries(
+            || {
+                unexpected += 1;
+                Ok(failure("permission denied"))
+            },
+            |_, _| panic!("no retry"),
+            |_| panic!("no wait"),
+        )
+        .unwrap();
         assert_eq!(unexpected, 1);
     }
 }

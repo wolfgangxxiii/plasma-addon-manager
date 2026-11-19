@@ -108,8 +108,8 @@ Kirigami.ApplicationWindow {
         contentItem: Controls.Label {
             wrapMode: Text.WordWrap
             text: window.loc(
-                "Program pobierze oryginalny plasmoid-updater z GitHub, zweryfikuje SHA-256 i zainstaluje go wyłącznie w Twoim katalogu ~/.local/bin. Istniejąca aktualna instalacja zostanie zachowana. Obraz Bazzite i harmonogram systemd pozostaną bez zmian.",
-                "The app will download the upstream plasmoid-updater from GitHub, verify its SHA-256 checksum and install it only into ~/.local/bin. A current installation is preserved. The Bazzite image and systemd schedule remain unchanged.")
+                "Program pobierze oryginalny plasmoid-updater z GitHub, zweryfikuje SHA-256 i zainstaluje go w ~/.local/bin. Na Bazzite w razie potrzeby doinstaluje też libarchive przez Homebrew w katalogu użytkownika. Obraz Bazzite i harmonogram systemd pozostaną bez zmian.",
+                "The app downloads plasmoid-updater from GitHub, verifies SHA-256, and installs it to ~/.local/bin. On Bazzite it can also install libarchive via user-local Homebrew if needed. The OS image and systemd schedule remain unchanged.")
         }
     }
 

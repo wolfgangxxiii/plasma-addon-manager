@@ -32,14 +32,20 @@ fn main() -> ExitCode {
     match automation::run_background() {
         Ok(settings) => {
             if settings.automatic && preferences.0 {
-                notify("Plasma Addon Manager", "Automatyczna aktualizacja dodatków zakończona.");
+                notify(
+                    "Plasma Addon Manager",
+                    "Automatyczna aktualizacja dodatków zakończona.",
+                );
             }
             ExitCode::SUCCESS
         }
         Err(error) => {
             eprintln!("Automatic KDE Store updates failed: {error:#}");
             if preferences.1 {
-                notify("Błąd aktualizacji dodatków Plasma", "Sprawdź dziennik Plasma Addon Manager.");
+                notify(
+                    "Błąd aktualizacji dodatków Plasma",
+                    "Sprawdź dziennik Plasma Addon Manager.",
+                );
             }
             ExitCode::FAILURE
         }
