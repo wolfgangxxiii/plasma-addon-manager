@@ -5,7 +5,7 @@ pam_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 pam_build="${pam_root}/build/package-deb"
 pam_dist="${pam_root}/dist"
 
-for tool in cmake cpack ninja cargo dpkg-deb dpkg-shlibdeps; do
+for tool in cmake cpack ninja cargo dpkg-deb dpkg-shlibdeps file; do
     command -v "$tool" >/dev/null 2>&1 || {
         echo "Missing Debian packaging tool: $tool" >&2
         exit 1
