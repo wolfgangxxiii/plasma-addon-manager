@@ -51,27 +51,27 @@ jobs:
           }
           WAYLAND_DISPLAY=pam-wayland QT_QPA_PLATFORM=wayland QT_QUICK_BACKEND=software \
             APPIMAGE_EXTRACT_AND_RUN=1 \
-            dist/Plasma-Addon-Manager-v0.4.4-x86_64.AppImage --self-test
+            dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage --self-test
           WAYLAND_DISPLAY=pam-wayland QT_QPA_PLATFORM=wayland QT_QUICK_BACKEND=software \
             APPIMAGE_EXTRACT_AND_RUN=1 \
-            dist/Plasma-Addon-Manager-v0.4.4-x86_64.AppImage --self-test-session-log
+            dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage --self-test-session-log
       - name: Verify binary and checksum
         run: |
-          test -s dist/Plasma-Addon-Manager-v0.4.4-x86_64.AppImage
-          sha256sum dist/Plasma-Addon-Manager-v0.4.4-x86_64.AppImage
+          test -s dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
+          sha256sum dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
       - name: Publish AppImage directly in Releases
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=v0.4.4-appimage-preview.1
-          appimage=dist/Plasma-Addon-Manager-v0.4.4-x86_64.AppImage
+          tag=v0.4.5-appimage-preview.1
+          appimage=dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
           test -s "$appimage"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo 'Preview already published; leaving the existing download unchanged.'
           else
             gh release create "$tag" "$appimage" \
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-              --title 'Plasma Addon Manager 0.4.4 — czytelniejszy interfejs i postęp działań' \
-              --notes 'AppImage x86_64 dla KDE Plasma 6. Nowy pulpit z podpowiedzią następnego kroku; stały pasek postępu na dole (animowany bez fałszywych procentów, czas trwania i aktualny krok); prawy panel kolorowych powiadomień z błędami, sukcesami i ostrzeżeniami. Dla wąskich okien panel wysuwany z prawej. Pełny dziennik sesji pozostaje nietknięty. Instalator plasmoid-updater oraz bsdtar obsługuje openSUSE, Fedorę, Debiana/Ubuntu, Arch/CachyOS i Bazzite. Tylko jeden samodzielny .AppImage bez ZIP/DEB/Flatpak.'
+              --title 'Plasma Addon Manager 0.4.5 — nowa karta O programie' \
+              --notes 'AppImage x86_64 dla KDE Plasma 6. Karta O programie wzorowana na wersji dla Bazzite: logo, nazwa, wersja, informacje o autorze, czytelne przyciski do repozytorium, wydań, zgłoszeń błędów i licencji oraz podziękowanie dla autora plasmoid-updater. Interfejs Qt6/Kirigami z poprzedniej wersji 0.4.4 zachowuje stały pasek postępu, prawy panel powiadomień, responsywny układ i kompletny dziennik sesji. Tylko jeden samodzielny .AppImage bez ZIP/DEB/Flatpak.'
           fi

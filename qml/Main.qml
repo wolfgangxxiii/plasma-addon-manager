@@ -575,8 +575,8 @@ Kirigami.ApplicationWindow {
                 Layout.fillWidth: true
                 opacity: 0.65
                 font.pixelSize: 12
-                text: window.loc("Wersja 0.4.4  ·  KDE Plasma 6  ·  Bez terminala",
-                                 "Version 0.4.4  ·  KDE Plasma 6  ·  No terminal needed")
+                text: window.loc("Wersja 0.4.5  ·  KDE Plasma 6  ·  Bez terminala",
+                                 "Version 0.4.5  ·  KDE Plasma 6  ·  No terminal needed")
             }
 
             Kirigami.InlineMessage {
@@ -1150,31 +1150,12 @@ Kirigami.ApplicationWindow {
                 }
             }
 
-            Controls.Frame {
+            AboutPage {
                 visible: window.section === 4
                 Layout.fillWidth: true
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: Kirigami.Units.smallSpacing
-                    Kirigami.Heading { text: "Plasma Addon Manager 0.4.4"; level: 2 }
-                    Controls.Label {
-                        Layout.fillWidth: true
-                        wrapMode: Text.WordWrap
-                        text: window.loc("Wielodystrybucyjny interfejs Qt6/Kirigami z backendem Rust.",
-                                         "Cross-distribution Qt6/Kirigami frontend with a Rust backend.")
-                    }
-                    Controls.Label {
-                        Layout.fillWidth: true
-                        wrapMode: Text.WordWrap
-                        text: "Copyright © 2026 Szymon Bławat (wolfgangxxiii)\nGPL-3.0-or-later"
-                    }
-                    Controls.Label {
-                        Layout.fillWidth: true
-                        wrapMode: Text.WordWrap
-                        text: window.loc("Wykorzystuje narzędzie plasmoid-updater autorstwa uwuclxdy.",
-                                         "Works with the plasmoid-updater tool by uwuclxdy.")
-                    }
-                }
+                Layout.maximumWidth: 840
+                Layout.alignment: Qt.AlignHCenter
+                polish: window.polish
             }
 
                 }
