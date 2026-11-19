@@ -8,7 +8,7 @@
 **Jeden menedżer dodatków KDE Plasma 6 dla wielu dystrybucji.**
 
 [![License: GPLv3+](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
-![Stage](https://img.shields.io/badge/stage-0.1.0%20foundation-orange)
+![Stage](https://img.shields.io/badge/stage-0.1.1%20AppImage%20preview-orange)
 ![Stack](https://img.shields.io/badge/GUI-Qt6%20%2B%20Kirigami-3577c1)
 
 </div>
@@ -21,10 +21,10 @@ application for KDE Plasma 6 on Bazzite, Fedora KDE, Debian, Kubuntu, KDE neon, 
 CachyOS, openSUSE and other Linux distributions.
 
 > [!IMPORTANT]
-> **Version 0.1.0 is an initial, read-only development foundation, not a full replacement**
-> for the existing Bazzite and Debian/Ubuntu applications. It cannot install the
-> updater, edit schedules or update add-ons yet. The AppImage is a
-> **development preview**.
+> **Version 0.1.1 is a development preview, not a full replacement** for the
+> existing Bazzite and Debian/Ubuntu applications. It can inspect and manually
+> update user add-ons with confirmation if `plasmoid-updater` is already installed.
+> It does not install the updater or modify existing systemd schedules.
 
 ### Implemented in this milestone
 
@@ -34,6 +34,11 @@ CachyOS, openSUSE and other Linux distributions.
 - Read-only checks for Plasma session, architecture and required commands.
 - Installed add-on list via `plasmoid-updater list-installed`.
 - Available update check via `plasmoid-updater check` (without applying updates).
+- Read-only preview (`update --dry-run` where supported; otherwise `check`).
+- Confirmed manual updates with `update --yes --no-restart-plasma`.
+- Bazzite/Linuxbrew detection and PATH support, ported from the working Bazzite GUI.
+- AppImage bundles Qt Wayland EGL/client plugins and checks Kirigami's KDE plugin.
+- Software Qt Quick rendering by default in the AppImage, avoiding broken host OpenGL contexts.
 - Existing timer status and recent journal via `systemctl --user` and `journalctl --user`.
 - Asynchronous process execution: the interface does not block during scans.
 - Allow-listed helper commands: no shell interpretation or unexpected system writes.
@@ -77,7 +82,7 @@ privileges to inspect its supported resources.
 
 ### AppImage only — direct download
 
-Download `Plasma-Addon-Manager-v0.1.0-x86_64.AppImage` directly from
+Download `Plasma-Addon-Manager-v0.1.1-x86_64.AppImage` directly from
 [GitHub Releases](https://github.com/wolfgangxxiii/plasma-addon-manager/releases).
 It is a standalone `.AppImage` download, **not a ZIP archive**. The
 [AppImage build workflow](https://github.com/wolfgangxxiii/plasma-addon-manager/actions/workflows/appimage.yml)
@@ -88,8 +93,8 @@ packages.
 To run the AppImage on KDE Plasma (x86_64):
 
 ```bash
-chmod +x Plasma-Addon-Manager-v0.1.0-x86_64.AppImage
-./Plasma-Addon-Manager-v0.1.0-x86_64.AppImage
+chmod +x Plasma-Addon-Manager-v0.1.1-x86_64.AppImage
+./Plasma-Addon-Manager-v0.1.1-x86_64.AppImage
 ```
 
 To build it from source, run `bash scripts/build-appimage.sh` on a Linux x86_64
@@ -105,17 +110,19 @@ cargo test --manifest-path backend/Cargo.toml
 cargo run --manifest-path backend/Cargo.toml -- diagnose
 cargo run --manifest-path backend/Cargo.toml -- inventory
 cargo run --manifest-path backend/Cargo.toml -- check
+cargo run --manifest-path backend/Cargo.toml -- dry-run
 cargo run --manifest-path backend/Cargo.toml -- timer
 cargo run --manifest-path backend/Cargo.toml -- journal
 ```
 
-The helper intentionally accepts only `diagnose`, `inventory`, `check`, `timer`
-and `journal`. `update`, `install` and other modifying operations **are not**
-available in this release.
+The helper also provides `update`, which modifies user-installed KDE Store add-ons
+and must be confirmed in the GUI. It never installs system packages or changes
+systemd units. `install` and schedule management remain unavailable.
 
 ### Roadmap
 
 1. **0.1.0 — Foundation:** Qt6/Kirigami, Rust discovery and read-only screens.
+   **0.1.1 — Bazzite fix:** Wayland/Kirigami packaging, preview and manual updates.
 2. **0.2.0 — Compatibility:** shared installer for `plasmoid-updater`, SHA-256
    verification, existing-install preservation and distro-specific prerequisites.
 3. **0.3.0 — Automation:** migrate safely from existing user services, manage
@@ -149,10 +156,10 @@ Docelowo ma działać na Bazzite, Fedora KDE, Debianie, Kubuntu, KDE neon, Arch,
 CachyOS, openSUSE i innych systemach korzystających z Plasma 6.
 
 > [!IMPORTANT]
-> **Wersja 0.1.0 to wczesna wersja rozwojowa, wyłącznie do odczytu.** Nie jest
-> jeszcze zamiennikiem dotychczasowych aplikacji. Nie instaluje narzędzia,
-> nie zmienia harmonogramu i nie wykonuje aktualizacji dodatków.
-> AppImage jest obecnie wersją **testową**.
+> **Wersja 0.1.1 to wersja testowa, niepełny zamiennik dotychczasowych aplikacji.**
+> Odczytuje, symuluje i umożliwia ręczne aktualizowanie dodatków za potwierdzeniem,
+> jeśli `plasmoid-updater` jest już zainstalowany. Nie instaluje narzędzia
+> ani nie zmienia harmonogramu systemd.
 
 ### Co już działa w kodzie?
 
@@ -162,7 +169,11 @@ CachyOS, openSUSE i innych systemach korzystających z Plasma 6.
 - Diagnostyka zależności i sesji KDE Plasma.
 - Odczyt dodatków i dostępnych aktualizacji przez istniejący `plasmoid-updater`.
 - Podgląd stanu timera oraz ostatnich wpisów dziennika użytkownika.
-- Asynchroniczne, **niemodyfikujące systemu** polecenia backendu Rust.
+- Bezpieczne sprawdzenie aktualizacji (kod wyjścia 100 oznacza znalezione aktualizacje).
+- Symulacja (`--dry-run` lub `check`) i ręczna aktualizacja po zatwierdzeniu.
+- Wykrywanie `plasmoid-updater` z Linuxbrew na Bazzite, dołączone wtyczki Wayland EGL/Kirigami.
+- Domyślne renderowanie programowe Qt Quick w AppImage; można je zmienić zmienną `QT_QUICK_BACKEND`.
+- Asynchroniczna obsługa poleceń Rust bez blokowania interfejsu.
 
 ### Kompilacja
 
@@ -189,8 +200,8 @@ Pobierz gotowy plik `.AppImage` bezpośrednio z
 Nie trzeba pobierać archiwum ZIP z GitHub Actions.
 
 ```bash
-chmod +x Plasma-Addon-Manager-v0.1.0-x86_64.AppImage
-./Plasma-Addon-Manager-v0.1.0-x86_64.AppImage
+chmod +x Plasma-Addon-Manager-v0.1.1-x86_64.AppImage
+./Plasma-Addon-Manager-v0.1.1-x86_64.AppImage
 ```
 
 Wersję testową można samodzielnie zbudować przez

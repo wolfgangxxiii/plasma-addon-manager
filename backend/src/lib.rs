@@ -1,6 +1,5 @@
-//! Read-only system discovery for Plasma Addon Manager.
-//! Distribution-specific installation and update operations will be added
-//! behind separately tested adapters; the detection layer never installs.
+//! System discovery for Plasma Addon Manager.
+//! Installation and systemd unit migration remain explicitly out of scope.
 
 use std::env;
 use std::fs;
@@ -139,17 +138,59 @@ pub fn is_executable(path: &Path) -> bool {
 }
 
 pub fn find_plasmoid_updater() -> Option<PathBuf> {
-    if let Some(path) = executable_on_path("plasmoid-updater") {
-        return Some(path);
+    // Match the proven lookup order used by the Bazzite and Debian GUIs:
+    // their installs may live outside PATH, especially on atomic desktops.
+    let mut candidates = Vec::new();
+    if let Some(home) = env::var_os("HOME") {
+        let home = PathBuf::from(home);
+        candidates.push(home.join(".local/bin/plasmoid-updater"));
+        candidates.push(home.join(".cargo/bin/plasmoid-updater"));
     }
-    let home = env::var_os("HOME")?;
-    let home = PathBuf::from(home);
-    [
-        home.join(".local/bin/plasmoid-updater"),
-        home.join(".cargo/bin/plasmoid-updater"),
-    ]
-    .into_iter()
-    .find(|path| is_executable(path))
+    candidates.extend([
+        PathBuf::from("/home/linuxbrew/.linuxbrew/bin/plasmoid-updater"),
+        PathBuf::from("/usr/local/bin/plasmoid-updater"),
+        PathBuf::from("/usr/bin/plasmoid-updater"),
+    ]);
+    if let Some(paths) = env::var_os("PATH") {
+        candidates.extend(env::split_paths(&paths).map(|dir| dir.join("plasmoid-updater")));
+    }
+    candidates
+        .into_iter()
+        .find(|path| is_executable(path) && valid_updater_version(path))
+}
+
+pub fn valid_updater_version(path: &Path) -> bool {
+    let output = std::process::Command::new(path)
+        .arg("--version")
+        .stdin(std::process::Stdio::null())
+        .output();
+    output.is_ok_and(|result| {
+        result.status.success()
+            && {
+                let text = String::from_utf8_lossy(&result.stdout);
+                let mut parts = text.split_whitespace();
+                parts.next() == Some("plasmoid-updater") && parts.next().is_some()
+            }
+    })
+}
+
+pub fn updater_path() -> String {
+    let mut segments = Vec::new();
+    if let Some(home) = env::var_os("HOME") {
+        segments.push(PathBuf::from(home).join(".local/bin"));
+    }
+    segments.push(PathBuf::from("/home/linuxbrew/.linuxbrew/opt/libarchive/bin"));
+    segments.push(PathBuf::from("/home/linuxbrew/.linuxbrew/bin"));
+    if let Some(path) = env::var_os("PATH") {
+        segments.extend(env::split_paths(&path));
+    } else {
+        segments.push(PathBuf::from("/usr/local/bin"));
+        segments.push(PathBuf::from("/usr/bin"));
+    }
+    env::join_paths(segments)
+        .unwrap_or_else(|_| std::ffi::OsString::from("/usr/local/bin:/usr/bin"))
+        .to_string_lossy()
+        .into_owned()
 }
 
 #[cfg(test)]
@@ -219,5 +260,10 @@ mod tests {
     #[test]
     fn refuses_paths_as_program_names() {
         assert_eq!(executable_on_path("../../bin/sh"), None);
+    }
+
+    #[test]
+    fn nonexistent_updater_does_not_pass_validation() {
+        assert!(!valid_updater_version(Path::new("/no-such-updater")));
     }
 }

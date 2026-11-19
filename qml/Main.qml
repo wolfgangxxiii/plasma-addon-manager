@@ -27,6 +27,24 @@ Kirigami.ApplicationWindow {
         }
     }
 
+    Controls.Dialog {
+        id: confirmUpdate
+        parent: Controls.Overlay.overlay
+        anchors.centerIn: parent
+        width: Math.min(parent.width - 32, 480)
+        modal: true
+        focus: true
+        title: window.loc("Zainstalować aktualizacje dodatków?", "Install add-on updates?")
+        standardButtons: Controls.Dialog.Ok | Controls.Dialog.Cancel
+        onAccepted: backend.runAction("update")
+        contentItem: Controls.Label {
+            wrapMode: Text.WordWrap
+            text: window.loc(
+                "Zostaną zaktualizowane dodatki KDE Store bieżącego użytkownika przez plasmoid-updater. Nie zostanie zmodyfikowany system Bazzite ani uruchomiony ponownie pulpit Plasma. Operacja wymaga zainstalowanego plasmoid-updater.",
+                "plasmoid-updater will update KDE Store add-ons for your user. The Bazzite system image and Plasma session will not be restarted. A working plasmoid-updater installation is required.")
+        }
+    }
+
     globalDrawer: Kirigami.GlobalDrawer {
         title: "Plasma Addon Manager"
         titleIcon: "preferences-desktop-plasma"
@@ -107,8 +125,8 @@ Kirigami.ApplicationWindow {
                 visible: true
                 type: Kirigami.MessageType.Information
                 text: window.loc(
-                    "Wersja rozwojowa 0.1.0: wyłącznie odczyt. Instalacja i automatyczne aktualizacje zostaną przeniesione po testach.",
-                    "Development version 0.1.0: read-only. Installation and scheduled updates will follow after testing.")
+                    "Wersja testowa 0.1.1: odczyt, symulacja i ręczna aktualizacja dodatków po potwierdzeniu. Instalator i harmonogram pozostają bez zmian.",
+                    "Preview 0.1.1: inspection, preview and confirmed manual updates. Installer and schedule management are not yet available.")
             }
 
             GridLayout {
@@ -177,8 +195,8 @@ Kirigami.ApplicationWindow {
                     Controls.Label {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap
-                        text: window.loc("Odczyt listy dodatków i sprawdzanie aktualizacji. Na tym etapie nic nie jest modyfikowane.",
-                                         "Inspect installed add-ons or check for updates. Nothing is modified at this stage.")
+                        text: window.loc("Sprawdź dodatki, zasymuluj lub ręcznie zastosuj aktualizacje. Zmiany wymagają potwierdzenia.",
+                                         "Inspect add-ons, preview or manually install updates. Changes require confirmation.")
                     }
                     Flow {
                         Layout.fillWidth: true
@@ -194,6 +212,18 @@ Kirigami.ApplicationWindow {
                             icon.name: "view-refresh"
                             enabled: !backend.running
                             onClicked: backend.runAction("check")
+                        }
+                        Controls.Button {
+                            text: window.loc("Symulacja aktualizacji", "Preview update")
+                            icon.name: "document-preview"
+                            enabled: !backend.running
+                            onClicked: backend.runAction("dry-run")
+                        }
+                        Controls.Button {
+                            text: window.loc("Aktualizuj dodatki…", "Update add-ons…")
+                            icon.name: "software-update-available"
+                            enabled: !backend.running
+                            onClicked: confirmUpdate.open()
                         }
                     }
                 }
@@ -249,7 +279,7 @@ Kirigami.ApplicationWindow {
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.smallSpacing
-                    Kirigami.Heading { text: "Plasma Addon Manager 0.1.0"; level: 2 }
+                    Kirigami.Heading { text: "Plasma Addon Manager 0.1.1"; level: 2 }
                     Controls.Label {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap

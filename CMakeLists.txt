@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(PlasmaAddonManager VERSION 0.1.0 LANGUAGES CXX)
+project(PlasmaAddonManager VERSION 0.1.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -42,7 +42,7 @@ add_custom_target(plasma-addon-helper-build ALL
         "${CMAKE_BINARY_DIR}/cargo-target/release/plasma-addon-helper"
         "${BACKEND_OUTPUT}"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-    COMMENT "Building the Rust read-only helper"
+    COMMENT "Building the Rust helper"
     VERBATIM
 )
 add_dependencies(plasma-addon-manager plasma-addon-helper-build)

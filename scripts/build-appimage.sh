@@ -64,7 +64,7 @@ else
 fi
 export QML_SOURCES_PATHS="${pam_root}/qml"
 export APPIMAGE_EXTRACT_AND_RUN=1
-export OUTPUT="${pam_dist}/Plasma-Addon-Manager-v0.1.0-x86_64.AppImage"
+export OUTPUT="${pam_dist}/Plasma-Addon-Manager-v0.1.1-x86_64.AppImage"
 
 # linuxdeploy's QML scanner sees the Kirigami import, but the KDE Quick
 # Controls style is selected at runtime in C++ and is otherwise skipped.
@@ -87,6 +87,28 @@ test -f "$pam_kirigami_style" || {
 mkdir -p "${pam_appdir}/usr/plugins/kf6/kirigami/platform"
 cp -a "$pam_kirigami_style" "${pam_appdir}/usr/plugins/kf6/kirigami/platform/"
 
+# linuxdeploy-plugin-qt deploys Wayland *platforms*, but doesn't reliably
+# deploy their EGL buffer, decoration and shell integrations. Their absence
+# caused `Failed to load client buffer integration: "wayland-egl"` on Bazzite.
+# Deploy before linuxdeploy, so ELF dependency discovery also sees the files.
+for pam_wayland_subdir in \
+    wayland-graphics-integration-client \
+    wayland-shell-integration \
+    wayland-decoration-client; do
+    if test -d "${pam_qt_plugins}/${pam_wayland_subdir}"; then
+        mkdir -p "${pam_appdir}/usr/plugins/${pam_wayland_subdir}"
+        cp -a "${pam_qt_plugins}/${pam_wayland_subdir}/." \
+            "${pam_appdir}/usr/plugins/${pam_wayland_subdir}/"
+    fi
+done
+test -f "${pam_appdir}/usr/plugins/wayland-graphics-integration-client/libqt-plugin-wayland-egl.so" || {
+    echo 'Missing Wayland EGL client integration; refusing to publish a broken AppImage.' >&2
+    exit 1
+}
+
+# Keep both QML modules and KDE/Wayland plugins in the AppImage search paths.
+cp "${pam_root}/packaging/qt.conf" "${pam_appdir}/usr/bin/qt.conf"
+
 pam_platforms="${pam_qt_plugins}/platforms"
 pam_extra_platforms=""
 if test -f "${pam_platforms}/libqoffscreen.so"; then
@@ -103,7 +125,18 @@ export EXTRA_PLATFORM_PLUGINS="$pam_extra_platforms"
 test -s "$OUTPUT"
 test -f "${pam_appdir}/usr/qml/org/kde/desktop/Button.qml"
 test -f "${pam_appdir}/usr/plugins/kf6/kirigami/platform/org.kde.desktop.so"
-QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
-    "$OUTPUT" --self-test
+test -f "${pam_appdir}/usr/plugins/wayland-graphics-integration-client/libqt-plugin-wayland-egl.so"
+pam_smoke_log="${pam_build}/appimage-smoke.log"
+if ! QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+    "$OUTPUT" --self-test >"$pam_smoke_log" 2>&1; then
+    cat "$pam_smoke_log" >&2
+    echo 'AppImage Qt/Kirigami smoke test failed.' >&2
+    exit 1
+fi
+cat "$pam_smoke_log"
+if grep -q 'Failed to find a Kirigami platform plugin' "$pam_smoke_log"; then
+    echo 'AppImage Kirigami style fallback detected; refusing to publish.' >&2
+    exit 1
+fi
 sha256sum "$OUTPUT"
 echo "AppImage ready: $OUTPUT"

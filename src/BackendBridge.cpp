@@ -5,8 +5,19 @@
 #include <QFileInfo>
 #include <QStandardPaths>
 #include <QStringList>
+#include <QTimer>
+
+#ifdef Q_OS_UNIX
+#include <csignal>
+#include <unistd.h>
+#endif
 
 BackendBridge::BackendBridge(QObject *parent) : QObject(parent) {
+#ifdef Q_OS_UNIX
+    // The Rust helper starts plasmoid-updater as a child. Put both in a
+    // separate process group so Cancel cannot leave a background update alive.
+    m_process.setChildProcessModifier([] { ::setpgid(0, 0); });
+#endif
     connect(&m_process, &QProcess::readyReadStandardOutput, this, [this] {
         appendOutput(QString::fromUtf8(m_process.readAllStandardOutput()));
     });
@@ -76,7 +87,8 @@ void BackendBridge::setStatus(const QString &text) {
 void BackendBridge::runAction(const QString &action) {
     static const QStringList allowedActions = {
         QStringLiteral("diagnose"), QStringLiteral("inventory"),
-        QStringLiteral("check"), QStringLiteral("timer"), QStringLiteral("journal")
+        QStringLiteral("check"), QStringLiteral("dry-run"), QStringLiteral("update"),
+        QStringLiteral("timer"), QStringLiteral("journal")
     };
     if (running() || !allowedActions.contains(action)) {
         return;
@@ -100,6 +112,23 @@ void BackendBridge::cancel() {
     if (!running()) {
         return;
     }
+#ifdef Q_OS_UNIX
+    const qint64 pid = m_process.processId();
+    if (pid > 1 && ::getpgid(static_cast<pid_t>(pid)) == pid) {
+        ::kill(-static_cast<pid_t>(pid), SIGTERM);
+        QTimer::singleShot(1500, this, [this, pid] {
+            if (running() && m_process.processId() == pid) {
+                if (::getpgid(static_cast<pid_t>(pid)) == pid) {
+                    ::kill(-static_cast<pid_t>(pid), SIGKILL);
+                }
+                m_process.kill();
+            }
+        });
+    } else {
+        m_process.kill();
+    }
+#else
     m_process.kill();
+#endif
     setStatus(QStringLiteral("Cancelling…"));
 }
