@@ -20,7 +20,7 @@ jobs:
         run: |
           apt-get update
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-            ca-certificates curl cmake ninja-build g++ git \
+            ca-certificates curl cmake ninja-build g++ git file \
             rustc cargo dpkg-dev \
             extra-cmake-modules qt6-base-dev qt6-declarative-dev \
             libkirigami-dev libkf6qqc2desktopstyle-dev \
@@ -77,3 +77,34 @@ jobs:
           name: plasma-addon-manager-0.1.0-flatpak
           path: dist/*.flatpak
           if-no-files-found: error
+
+  preview-release:
+    name: Publish preview download files
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [deb, appimage, flatpak]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: plasma-addon-manager-0.1.0-*
+          path: dist
+          merge-multiple: true
+      - name: Verify all package files exist
+        run: |
+          test -s dist/plasma-addon-manager_0.1.0_amd64.deb
+          test -s dist/Plasma-Addon-Manager-v0.1.0-x86_64.AppImage
+          test -s dist/Plasma-Addon-Manager-v0.1.0-x86_64.flatpak
+          sha256sum dist/*
+      - name: Publish v0.1.0 preview to GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view v0.1.0-preview.1 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo 'Preview release already exists; leaving the published files unchanged.'
+          else
+            gh release create v0.1.0-preview.1 dist/*.deb dist/*.AppImage dist/*.flatpak \
+              --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
+              --title 'Plasma Addon Manager v0.1.0 preview' \
+              --notes 'Testowe pakiety x86_64 dla KDE Plasma: DEB (Debian 13), AppImage i Flatpak. Wersja 0.1.0 oferuje tylko diagnostykę/odczyt; nie instaluje jeszcze aktualizacji dodatków. Flatpak ma ograniczony dostęp do hosta. Nie jest to stabilne wydanie produkcyjne.'

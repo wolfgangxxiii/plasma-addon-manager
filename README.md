@@ -77,10 +77,12 @@ privileges to inspect its supported resources.
 
 ### Preview packages: DEB, AppImage and Flatpak
 
-The [Build preview packages](https://github.com/wolfgangxxiii/plasma-addon-manager/actions/workflows/packages.yml)
-workflow builds three downloadable artifacts. Open a successful workflow run,
-then download them from **Artifacts**. Packages are not automatically published
-to GitHub Releases.
+Download all three formats from the
+[GitHub Releases page](https://github.com/wolfgangxxiii/plasma-addon-manager/releases)
+once the `v0.1.0-preview.1` pre-release has been published. The
+[Build preview packages](https://github.com/wolfgangxxiii/plasma-addon-manager/actions/workflows/packages.yml)
+workflow also offers downloadable files in each successful run's **Artifacts**
+section. The pre-release is created only after all three builds succeed on `main`.
 
 | Format | Build command | Install / run |
 |---|---|---|
@@ -213,8 +215,10 @@ budują trzy formaty:
 - **AppImage:** `bash scripts/build-appimage.sh` — przenośna wersja Qt6/Kirigami.
 - **Flatpak:** `bash scripts/build-flatpak.sh` — środowisko KDE Runtime 6.9.
 
-Po prawidłowym zakończeniu workflow pliki pobiera się z sekcji **Artifacts**.
-Nie są automatycznie dołączane do oficjalnych wydań GitHub.
+Po zbudowaniu wszystkich trzech pakietów na gałęzi `main` są one publikowane
+jako **wydanie testowe** `v0.1.0-preview.1` w
+[GitHub Releases](https://github.com/wolfgangxxiii/plasma-addon-manager/releases).
+Pliki pozostają też dostępne w sekcji **Artifacts** udanego workflow.
 
 **Uwaga o Flatpaku:** domyślna izolacja blokuje dostęp do poleceń hosta.
 Opcjonalny most `flatpak-spawn --host` wymaga świadomego nadania szerokiego
