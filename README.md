@@ -8,7 +8,7 @@
 **Jeden menedżer dodatków KDE Plasma 6 dla wielu dystrybucji.**
 
 [![License: GPLv3+](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
-![Stage](https://img.shields.io/badge/stage-0.4.0%20AppImage%20preview-orange)
+![Stage](https://img.shields.io/badge/stage-0.4.1%20AppImage%20preview-orange)
 ![Stack](https://img.shields.io/badge/GUI-Qt6%20%2B%20Kirigami-3577c1)
 
 </div>
@@ -21,7 +21,7 @@ application for KDE Plasma 6 on Bazzite, Fedora KDE, Debian, Kubuntu, KDE neon, 
 CachyOS, openSUSE and other Linux distributions.
 
 > [!IMPORTANT]
-> **Version 0.4.0 is a development preview with an opt-in background updater.**
+> **Version 0.4.1 is a development preview with an opt-in background updater.**
 > It installs `plasmoid-updater`, checks and manually updates add-ons, and now
 > configures its own systemd user timer. Any existing Bazzite/Debian schedule is
 > left intact until the user explicitly consents to migration.
@@ -43,6 +43,10 @@ CachyOS, openSUSE and other Linux distributions.
   prerequisites and KDE Store availability), separate from update preview.
 - Live GUI process output during manual updates, with transient network retries
   for read-only inventory and update checks.
+- A complete session-wide action log, including time-stamped starts, failures,
+  successes and CLI output. It is kept until the app closes; only the Journal
+  screen shows the full text. Other screens show a compact green/red result,
+  which automatic status refreshes never overwrite.
 - Read-only preview (`update --dry-run` where supported; otherwise `check`).
 - Confirmed manual updates with `update --yes --no-restart-plasma`.
 - One-click GUI installer for `plasmoid-updater`: verified upstream GitHub SHA-256,
@@ -104,7 +108,7 @@ in Automation.
 
 ### AppImage only — direct download
 
-Download `Plasma-Addon-Manager-v0.4.0-x86_64.AppImage` directly from
+Download `Plasma-Addon-Manager-v0.4.1-x86_64.AppImage` directly from
 [GitHub Releases](https://github.com/wolfgangxxiii/plasma-addon-manager/releases).
 It is a standalone `.AppImage` download, **not a ZIP archive**. The
 [AppImage build workflow](https://github.com/wolfgangxxiii/plasma-addon-manager/actions/workflows/appimage.yml)
@@ -134,8 +138,8 @@ an AppImage cannot override this security rule before being launched.
 Developers may also launch the AppImage on KDE Plasma (x86_64) via terminal:
 
 ```bash
-chmod +x Plasma-Addon-Manager-v0.4.0-x86_64.AppImage
-./Plasma-Addon-Manager-v0.4.0-x86_64.AppImage
+chmod +x Plasma-Addon-Manager-v0.4.1-x86_64.AppImage
+./Plasma-Addon-Manager-v0.4.1-x86_64.AppImage
 ```
 
 To build it from source, run `bash scripts/build-appimage.sh` on a Linux x86_64
@@ -173,6 +177,8 @@ manages only the app-owned systemd **user** units. No system packages are update
    `systemd --user` agent/timer, configuration, exclusions and notifications.
 4. **0.4.0 — Add-on overview:** structured inventory and update cards, live
    progress, agent health dashboard and saved configuration checks.
+   **0.4.1 — Session logging:** retain all actions until exit, with compact
+   success/error messages on each screen and a dedicated Journal view.
 5. **0.5.0 — Reliability:** extended rollback/systemd integration tests, runtime
    recovery from KDE Store errors and UI regression tests.
 6. **1.0.0 — Release:** verified AppImage on multiple Plasma 6 distributions,
@@ -204,7 +210,7 @@ Docelowo ma działać na Bazzite, Fedora KDE, Debianie, Kubuntu, KDE neon, Arch,
 CachyOS, openSUSE i innych systemach korzystających z Plasma 6.
 
 > [!IMPORTANT]
-> **Wersja 0.4.0 nadal jest testowa — ma już automatyzację i przegląd dodatków w GUI.**
+> **Wersja 0.4.1 nadal jest testowa — ma już automatyzację, przegląd dodatków i pełny dziennik sesji.**
 > Pobiera `plasmoid-updater` z GitHub, weryfikuje SHA-256, instaluje go
 > w katalogu użytkownika i pozwala kontrolować oraz ręcznie aktualizować dodatki.
 > Tworzy własny harmonogram `systemd --user`; wcześniejszych harmonogramów
@@ -226,6 +232,11 @@ CachyOS, openSUSE i innych systemach korzystających z Plasma 6.
   usługa, ustawienia i test odczytu KDE Store bez instalowania dodatków.
 - Bieżące komunikaty podczas operacji oraz ponawianie błędów sieciowych podczas
   odczytu dodatków i sprawdzania aktualizacji.
+- Kompletny dziennik wszystkich operacji od uruchomienia programu, z czasem,
+  komunikatami i wynikami. Tylko ekran Dziennik pokazuje pełny tekst;
+  pozostałe ekrany pokazują krótkie komunikaty zielone/czerwone. Automatyczne
+  odświeżenie stanu nie usuwa ostatniego wyniku. Dziennik sesji znika dopiero
+  po zamknięciu programu (historia usługi systemd jest przechowywana osobno).
 - Podgląd stanu timera oraz ostatnich wpisów dziennika użytkownika.
 - Bezpieczne sprawdzenie aktualizacji (kod wyjścia 100 oznacza znalezione aktualizacje).
 - Symulacja (`--dry-run` lub `check`) i ręczna aktualizacja po zatwierdzeniu.
@@ -277,8 +288,8 @@ AppImage dwuklikiem. Jest to zabezpieczenie Linuksa, nie błąd aplikacji.
 Wyłącznie dla osób preferujących terminal istnieje również możliwość:
 
 ```bash
-chmod +x Plasma-Addon-Manager-v0.4.0-x86_64.AppImage
-./Plasma-Addon-Manager-v0.4.0-x86_64.AppImage
+chmod +x Plasma-Addon-Manager-v0.4.1-x86_64.AppImage
+./Plasma-Addon-Manager-v0.4.1-x86_64.AppImage
 ```
 
 Wersję testową można samodzielnie zbudować przez

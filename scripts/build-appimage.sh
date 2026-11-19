@@ -66,7 +66,7 @@ else
 fi
 export QML_SOURCES_PATHS="${pam_root}/qml"
 export APPIMAGE_EXTRACT_AND_RUN=1
-export OUTPUT="${pam_dist}/Plasma-Addon-Manager-v0.4.0-x86_64.AppImage"
+export OUTPUT="${pam_dist}/Plasma-Addon-Manager-v0.4.1-x86_64.AppImage"
 
 # linuxdeploy's QML scanner sees the Kirigami import, but the KDE Quick
 # Controls style is selected at runtime in C++ and is otherwise skipped.
@@ -140,5 +140,13 @@ if grep -q 'Failed to find a Kirigami platform plugin' "$pam_smoke_log"; then
     echo 'AppImage Kirigami style fallback detected; refusing to publish.' >&2
     exit 1
 fi
+pam_session_log_test="${pam_build}/session-log-test.log"
+if ! QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+    "$OUTPUT" --self-test-session-log >"$pam_session_log_test" 2>&1; then
+    cat "$pam_session_log_test" >&2
+    echo 'AppImage session log regression test failed.' >&2
+    exit 1
+fi
+cat "$pam_session_log_test"
 sha256sum "$OUTPUT"
 echo "AppImage ready: $OUTPUT"
