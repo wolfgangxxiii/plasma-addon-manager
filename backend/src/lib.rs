@@ -5,6 +5,7 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+pub mod addons;
 pub mod automation;
 pub mod updater_installer;
 

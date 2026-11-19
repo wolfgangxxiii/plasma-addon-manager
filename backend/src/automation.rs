@@ -184,6 +184,174 @@ fn unit_property(name: &str, property: &str) -> Option<String> {
         .then(|| String::from_utf8_lossy(&result.stdout).trim().to_owned())
 }
 
+#[derive(Debug, Serialize)]
+pub struct DashboardState {
+    pub distribution: String,
+    pub updater_version: Option<String>,
+    pub agent_version: Option<String>,
+    pub agent_needs_repair: bool,
+    pub agent_managed: bool,
+    pub timer_active: bool,
+    pub timer_enabled: bool,
+    pub last_failed: bool,
+    pub next_run: String,
+    pub last_result: String,
+    pub conflicting_timers: Vec<String>,
+    pub automatic_configured: bool,
+    pub frequency_hours: u8,
+}
+
+fn version_of(path: &Path, prefix: &str) -> Option<String> {
+    let output = Command::new(path)
+        .arg("--version")
+        .stdin(Stdio::null())
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let raw = String::from_utf8(output.stdout).ok()?;
+    raw.trim().strip_prefix(prefix).map(str::to_owned)
+}
+
+fn service_result_failed(result: &str) -> bool {
+    !matches!(result, "" | "unknown" | "success")
+}
+
+pub fn dashboard_state() -> Result<DashboardState> {
+    let home = home()?;
+    let updater_version =
+        find_plasmoid_updater().and_then(|path| version_of(&path, "plasmoid-updater "));
+    let agent_version = version_of(&agent_path(&home), "plasma-addon-manager-agent ");
+    let agent_managed = unit_is_managed(&units_dir(&home).join(SERVICE))
+        && unit_is_managed(&units_dir(&home).join(TIMER));
+    let last_result = unit_property(SERVICE, "Result").unwrap_or_else(|| "unknown".to_owned());
+    let configured = Settings::path(&home).is_file();
+    let frequency_hours = Settings::load(&home)
+        .map(|settings| settings.frequency_hours)
+        .unwrap_or(24);
+    Ok(DashboardState {
+        distribution: read_distribution().pretty_name,
+        updater_version,
+        agent_needs_repair: agent_managed
+            && agent_version.as_deref() != Some(env!("CARGO_PKG_VERSION")),
+        agent_version,
+        agent_managed,
+        timer_active: user_unit_state(TIMER, "is-active"),
+        timer_enabled: user_unit_state(TIMER, "is-enabled"),
+        last_failed: service_result_failed(&last_result),
+        next_run: unit_property(TIMER, "NextElapseUSecRealtime").unwrap_or_default(),
+        last_result,
+        conflicting_timers: legacy_active()
+            .iter()
+            .map(|timer| (*timer).to_owned())
+            .collect(),
+        automatic_configured: configured,
+        frequency_hours,
+    })
+}
+
+/// Read-only test of the *saved* configuration, agent and systemd user timer.
+/// Unlike an updater dry-run, this verifies that unattended updates can run.
+pub fn test_configuration() -> Result<()> {
+    let home = home()?;
+    ensure!(
+        Settings::path(&home).is_file(),
+        "Save your automation settings before testing"
+    );
+    let settings = Settings::load(&home)?;
+    settings.validate()?;
+    let updater = find_plasmoid_updater().context("Install plasmoid-updater first")?;
+    println!("✓ Updater: {}", updater.display());
+    ensure!(
+        service_bsdtar_exists(&home),
+        "bsdtar is not available to the systemd service"
+    );
+    println!("✓ bsdtar is available to the background service.");
+    ensure!(
+        executable_on_path("kpackagetool6").is_some()
+            || is_executable(Path::new("/usr/bin/kpackagetool6")),
+        "kpackagetool6 is missing"
+    );
+    println!("✓ KDE package tool is available.");
+    let config = upstream_config(&home);
+    ensure!(
+        config.is_file(),
+        "No upstream configuration: {}",
+        config.display()
+    );
+    let _: DocumentMut = fs::read_to_string(&config)?
+        .parse()
+        .context("Invalid plasmoid-updater TOML")?;
+    println!("✓ Upstream configuration is valid.");
+
+    if settings.automatic {
+        ensure!(
+            unit_is_managed(&units_dir(&home).join(SERVICE)),
+            "Managed systemd service is missing"
+        );
+        ensure!(
+            unit_is_managed(&units_dir(&home).join(TIMER)),
+            "Managed systemd timer is missing"
+        );
+        ensure!(
+            version_of(&agent_path(&home), "plasma-addon-manager-agent ").as_deref()
+                == Some(env!("CARGO_PKG_VERSION")),
+            "Agent is missing or outdated; click Repair agent"
+        );
+        let service = fs::read_to_string(units_dir(&home).join(SERVICE))?;
+        ensure!(
+            service.contains(&format!("ExecStart=%h/.local/bin/{AGENT} run")),
+            "Service points to the wrong agent"
+        );
+        let timer = fs::read_to_string(units_dir(&home).join(TIMER))?;
+        ensure!(
+            timer.contains(&format!(
+                "OnCalendar={}",
+                timer_schedule(settings.frequency_hours)?
+            )),
+            "Timer interval does not match saved settings"
+        );
+        ensure!(
+            user_unit_state(TIMER, "is-enabled") && user_unit_state(TIMER, "is-active"),
+            "Scheduled updates are not enabled and active"
+        );
+        ensure!(
+            unit_property(SERVICE, "LoadState").as_deref() == Some("loaded")
+                && unit_property(TIMER, "LoadState").as_deref() == Some("loaded"),
+            "Systemd did not load the new units"
+        );
+        ensure!(
+            legacy_active().is_empty(),
+            "An older updater schedule is still active; migration requires consent"
+        );
+        println!(
+            "✓ Agent v{} and scheduled timer are ready.",
+            env!("CARGO_PKG_VERSION")
+        );
+        println!(
+            "Next update: {}",
+            unit_property(TIMER, "NextElapseUSecRealtime").unwrap_or_default()
+        );
+    } else {
+        ensure!(
+            !user_unit_state(TIMER, "is-enabled") && !user_unit_state(TIMER, "is-active"),
+            "The timer is still active even though automatic updates are disabled"
+        );
+        println!("✓ Automatic updates are correctly disabled.");
+    }
+    println!("Checking KDE Store read-only (no add-ons will be changed)…");
+    io::stdout().flush()?;
+    let checked = crate::addons::updates()?;
+    println!(
+        "✓ Read-only check completed: {} available updates, {} issues.",
+        checked.available.len(),
+        checked.issues.len()
+    );
+    println!("✓ Saved automation configuration is valid.");
+    Ok(())
+}
+
 pub fn status() {
     let home = match home() {
         Ok(path) => path,
@@ -702,12 +870,16 @@ pub fn run_background() -> Result<Settings> {
         return Ok(settings);
     }
     let _lock = update_lock()?;
-    if settings.auto_update_tool {
+    let tool_error = if settings.auto_update_tool {
         println!("Checking updates to the plasmoid-updater tool…");
-        if let Err(error) = updater_installer::install() {
+        let error = updater_installer::install().err();
+        if let Some(error) = &error {
             eprintln!("Updater binary check failed (continuing with installed version): {error}");
         }
-    }
+        error
+    } else {
+        None
+    };
     let binary = find_plasmoid_updater().context("plasmoid-updater is not installed")?;
     let restart = if settings.restart_plasma {
         "--restart-plasma"
@@ -739,6 +911,9 @@ pub fn run_background() -> Result<Settings> {
         "plasmoid-updater failed with status {}",
         result.status
     );
+    if let Some(error) = tool_error {
+        bail!("Add-ons were updated, but the updater self-update check failed: {error}");
+    }
     println!("✓ Automatic update cycle completed.");
     Ok(settings)
 }

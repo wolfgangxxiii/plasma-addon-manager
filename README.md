@@ -8,7 +8,7 @@
 **Jeden menedżer dodatków KDE Plasma 6 dla wielu dystrybucji.**
 
 [![License: GPLv3+](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
-![Stage](https://img.shields.io/badge/stage-0.3.0%20AppImage%20preview-orange)
+![Stage](https://img.shields.io/badge/stage-0.4.0%20AppImage%20preview-orange)
 ![Stack](https://img.shields.io/badge/GUI-Qt6%20%2B%20Kirigami-3577c1)
 
 </div>
@@ -21,7 +21,7 @@ application for KDE Plasma 6 on Bazzite, Fedora KDE, Debian, Kubuntu, KDE neon, 
 CachyOS, openSUSE and other Linux distributions.
 
 > [!IMPORTANT]
-> **Version 0.3.0 is a development preview with an opt-in background updater.**
+> **Version 0.4.0 is a development preview with an opt-in background updater.**
 > It installs `plasmoid-updater`, checks and manually updates add-ons, and now
 > configures its own systemd user timer. Any existing Bazzite/Debian schedule is
 > left intact until the user explicitly consents to migration.
@@ -34,6 +34,15 @@ CachyOS, openSUSE and other Linux distributions.
 - Read-only checks for Plasma session, architecture and required commands.
 - Installed add-on list via `plasmoid-updater list-installed`.
 - Available update check via `plasmoid-updater check` (without applying updates).
+- Structured installed add-on and update cards, including read-only system add-ons,
+  update versions and per-add-on issues; compatible with upstream 0.2.1 text output
+  and future JSON output.
+- Dashboard showing updater/agent versions, agent repair needs, timer health,
+  previous service result and next scheduled update.
+- Full read-only automation configuration test (service/timer/agent, settings,
+  prerequisites and KDE Store availability), separate from update preview.
+- Live GUI process output during manual updates, with transient network retries
+  for read-only inventory and update checks.
 - Read-only preview (`update --dry-run` where supported; otherwise `check`).
 - Confirmed manual updates with `update --yes --no-restart-plasma`.
 - One-click GUI installer for `plasmoid-updater`: verified upstream GitHub SHA-256,
@@ -95,7 +104,7 @@ in Automation.
 
 ### AppImage only — direct download
 
-Download `Plasma-Addon-Manager-v0.3.0-x86_64.AppImage` directly from
+Download `Plasma-Addon-Manager-v0.4.0-x86_64.AppImage` directly from
 [GitHub Releases](https://github.com/wolfgangxxiii/plasma-addon-manager/releases).
 It is a standalone `.AppImage` download, **not a ZIP archive**. The
 [AppImage build workflow](https://github.com/wolfgangxxiii/plasma-addon-manager/actions/workflows/appimage.yml)
@@ -125,8 +134,8 @@ an AppImage cannot override this security rule before being launched.
 Developers may also launch the AppImage on KDE Plasma (x86_64) via terminal:
 
 ```bash
-chmod +x Plasma-Addon-Manager-v0.3.0-x86_64.AppImage
-./Plasma-Addon-Manager-v0.3.0-x86_64.AppImage
+chmod +x Plasma-Addon-Manager-v0.4.0-x86_64.AppImage
+./Plasma-Addon-Manager-v0.4.0-x86_64.AppImage
 ```
 
 To build it from source, run `bash scripts/build-appimage.sh` on a Linux x86_64
@@ -162,9 +171,11 @@ manages only the app-owned systemd **user** units. No system packages are update
    launch using Gear Lever on Bazzite.
 3. **0.3.0 — Automation:** migrate safely from existing user services, manage
    `systemd --user` agent/timer, configuration, exclusions and notifications.
-4. **0.4.0 — Add-on updates:** update workflow, clear progress, rollback safeguards,
-   recovery from KDE Store errors and UI/regression tests.
-5. **1.0.0 — Release:** verified AppImage on multiple Plasma 6 distributions,
+4. **0.4.0 — Add-on overview:** structured inventory and update cards, live
+   progress, agent health dashboard and saved configuration checks.
+5. **0.5.0 — Reliability:** extended rollback/systemd integration tests, runtime
+   recovery from KDE Store errors and UI regression tests.
+6. **1.0.0 — Release:** verified AppImage on multiple Plasma 6 distributions,
    with bilingual documentation and runtime tests.
 
 ### Migration and safety
@@ -193,7 +204,7 @@ Docelowo ma działać na Bazzite, Fedora KDE, Debianie, Kubuntu, KDE neon, Arch,
 CachyOS, openSUSE i innych systemach korzystających z Plasma 6.
 
 > [!IMPORTANT]
-> **Wersja 0.3.0 jest nadal testowa, ale ma już automatyzację w GUI.**
+> **Wersja 0.4.0 nadal jest testowa — ma już automatyzację i przegląd dodatków w GUI.**
 > Pobiera `plasmoid-updater` z GitHub, weryfikuje SHA-256, instaluje go
 > w katalogu użytkownika i pozwala kontrolować oraz ręcznie aktualizować dodatki.
 > Tworzy własny harmonogram `systemd --user`; wcześniejszych harmonogramów
@@ -206,6 +217,15 @@ CachyOS, openSUSE i innych systemach korzystających z Plasma 6.
 - Wykrywanie dystrybucji na podstawie `/etc/os-release`.
 - Diagnostyka zależności i sesji KDE Plasma.
 - Odczyt dodatków i dostępnych aktualizacji przez istniejący `plasmoid-updater`.
+- Karty dodatków z nazwą, typem, wersją i dostępną aktualizacją; odczyt dodatków
+  użytkownika i systemowych, bez modyfikowania pakietów systemowych.
+- Obsługa aktualnego wyjścia tekstowego `plasmoid-updater 0.2.1` i nowszego JSON.
+- Pulpit z wersją programu i agenta, stanem timera, wynikiem ostatniej usługi
+  oraz ostrzeżeniem o wymaganej naprawie.
+- Pełny test zapisanej konfiguracji automatyzacji: zależności, agent, timer,
+  usługa, ustawienia i test odczytu KDE Store bez instalowania dodatków.
+- Bieżące komunikaty podczas operacji oraz ponawianie błędów sieciowych podczas
+  odczytu dodatków i sprawdzania aktualizacji.
 - Podgląd stanu timera oraz ostatnich wpisów dziennika użytkownika.
 - Bezpieczne sprawdzenie aktualizacji (kod wyjścia 100 oznacza znalezione aktualizacje).
 - Symulacja (`--dry-run` lub `check`) i ręczna aktualizacja po zatwierdzeniu.
@@ -257,8 +277,8 @@ AppImage dwuklikiem. Jest to zabezpieczenie Linuksa, nie błąd aplikacji.
 Wyłącznie dla osób preferujących terminal istnieje również możliwość:
 
 ```bash
-chmod +x Plasma-Addon-Manager-v0.3.0-x86_64.AppImage
-./Plasma-Addon-Manager-v0.3.0-x86_64.AppImage
+chmod +x Plasma-Addon-Manager-v0.4.0-x86_64.AppImage
+./Plasma-Addon-Manager-v0.4.0-x86_64.AppImage
 ```
 
 Wersję testową można samodzielnie zbudować przez
@@ -266,8 +286,8 @@ Wersję testową można samodzielnie zbudować przez
 [GitHub Actions](https://github.com/wolfgangxxiii/plasma-addon-manager/actions/workflows/appimage.yml)
 publikuje AppImage w Releases. Nie tworzymy już pakietów DEB ani Flatpak.
 
-Kolejne etapy obejmą rozbudowaną diagnostykę, lepszą wizualizację postępu,
-testy AppImage na wielu dystrybucjach i dopracowanie obsługi błędów KDE Store.
+Kolejne etapy obejmą testy AppImage na wielu rzeczywistych dystrybucjach,
+rozbudowane testy migracji systemd i dalsze dopracowanie obsługi błędów KDE Store.
 
 **Program nie jest menedżerem aktualizacji systemu operacyjnego.**
 
