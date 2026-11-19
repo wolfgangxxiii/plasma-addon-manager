@@ -33,9 +33,6 @@ Kirigami.ApplicationWindow {
     property bool inventoryReady: false
     property bool updatesReady: false
     readonly property bool bsdtarMissing: dashboard.bsdtar_available === false
-    function isOpenSuse() {
-        return (dashboard.distribution || "").toLowerCase().startsWith("opensuse")
-    }
     readonly property bool polish: languageChoice === "pl"
                                    || (languageChoice === "auto"
                                        && Qt.locale().name.toLowerCase().startsWith("pl"))
@@ -161,14 +158,14 @@ Kirigami.ApplicationWindow {
         width: Math.min(parent.width - 32, 480)
         modal: true
         focus: true
-        title: window.loc("Zainstalować plasmoid-updater?", "Install plasmoid-updater?")
+        title: window.loc("Zainstalować aktualizator i jego zależności?", "Install updater and prerequisites?")
         standardButtons: Controls.Dialog.Ok | Controls.Dialog.Cancel
         onAccepted: backend.runAction("install")
         contentItem: Controls.Label {
             wrapMode: Text.WordWrap
             text: window.loc(
-                "Program pobierze oryginalny plasmoid-updater z GitHub, zweryfikuje SHA-256 i zainstaluje go w ~/.local/bin. Na Bazzite w razie potrzeby doinstaluje też libarchive przez Homebrew w katalogu użytkownika. Obraz Bazzite i harmonogram systemd pozostaną bez zmian.",
-                "The app downloads plasmoid-updater from GitHub, verifies SHA-256, and installs it to ~/.local/bin. On Bazzite it can also install libarchive via user-local Homebrew if needed. The OS image and systemd schedule remain unchanged.")
+                "Program zainstaluje lub sprawdzi plasmoid-updater w ~/.local/bin (SHA-256) i zapewni wymagane bsdtar. Na Bazzite wykorzysta Homebrew w katalogu użytkownika. Na openSUSE, Debianie, Fedorze lub Arch/CachyOS może doinstalować jeden pakiet przez menedżer systemowy, wyświetlając standardowe okno autoryzacji administratora. Nie aktualizuje całego systemu ani nie zmienia harmonogramu.",
+                "The app installs or checks plasmoid-updater in ~/.local/bin (SHA-256) and ensures bsdtar. On Bazzite it uses user-local Homebrew. On openSUSE, Debian, Fedora or Arch/CachyOS it may install one system package via the native package manager with a normal graphical administrator prompt. It does not upgrade the entire OS or change your schedule.")
         }
     }
 
@@ -252,8 +249,8 @@ Kirigami.ApplicationWindow {
                 visible: true
                 type: Kirigami.MessageType.Information
                 text: window.loc(
-                    "Wersja 0.4.2: poprawki zgodności z openSUSE, diagnostyka brakujących narzędzi i bezpieczny odczyt dodatków systemowych.",
-                    "Version 0.4.2: openSUSE compatibility fixes, missing-prerequisite diagnostics and safe system add-on inventory.")
+                    "Wersja 0.4.3: instalacja plasmoid-updater i brakujących zależności jedną operacją, bez wpisywania poleceń w terminalu.",
+                    "Version 0.4.3: install plasmoid-updater and missing prerequisites together, without terminal commands.")
             }
 
             Kirigami.InlineMessage {
@@ -273,24 +270,8 @@ Kirigami.ApplicationWindow {
                 Layout.fillWidth: true
                 visible: window.section <= 2 && window.bsdtarMissing
                 type: Kirigami.MessageType.Warning
-                text: window.isOpenSuse()
-                      ? window.loc("Brakuje narzędzia bsdtar. W openSUSE Tumbleweed zainstaluj pakiet «bsdtar» przez YaST lub Discover, a następnie kliknij «Odśwież stan». Do tego czasu sprawdzanie i aktualizacja dodatków są niedostępne.",
-                                   "bsdtar is missing. On openSUSE install the 'bsdtar' package using YaST or Discover, then refresh status. Update checks are unavailable until then.")
-                      : window.loc("Brakuje narzędzia bsdtar. Zainstaluj je przez menedżer oprogramowania swojej dystrybucji (na Bazzite użyj przycisku instalacji), a następnie odśwież stan.",
-                                   "bsdtar is missing. Install it through your distribution's software manager (on Bazzite use the installer), then refresh status.")
-            }
-            Controls.Button {
-                visible: window.section <= 2 && window.bsdtarMissing && window.isOpenSuse()
-                text: window.loc("Otwórz pakiet bsdtar dla openSUSE", "Open openSUSE bsdtar package")
-                icon.name: "download"
-                onClicked: Qt.openUrlExternally("https://software.opensuse.org/package/bsdtar")
-            }
-            Controls.Button {
-                visible: window.section <= 2 && window.bsdtarMissing
-                text: window.loc("Sprawdź ponownie zależności", "Check dependencies again")
-                icon.name: "view-refresh"
-                enabled: !backend.running
-                onClicked: backend.runAction("status-json")
+                text: window.loc("Brakuje bsdtar. Przejdź do Pulpitu i kliknij «Zainstaluj / sprawdź wersję». Program doinstaluje potrzebną zależność razem z aktualizatorem; na niektórych dystrybucjach poprosi o autoryzację administratora.",
+                                 "bsdtar is missing. Open Dashboard and choose Install / check version. The app will install the required utility as part of the same action; some distributions require graphical administrator authorization.")
             }
 
             GridLayout {
@@ -460,8 +441,8 @@ Kirigami.ApplicationWindow {
                         level: 2
                     }
                     Controls.Label {
-                        text: window.loc("Pobierz i zainstaluj plasmoid-updater w katalogu użytkownika. Bez terminala, sudo i zmiany pakietów systemowych.",
-                                         "Download and install plasmoid-updater into your user directory. No terminal, sudo or system package changes.")
+                        text: window.loc("Zainstaluj lub sprawdź plasmoid-updater oraz wymagane bsdtar jednym przyciskiem. Bez terminala; system może poprosić o zgodę administratora na doinstalowanie pakietu.",
+                                         "Install or check plasmoid-updater and the required bsdtar utility with one button. No terminal; your OS may ask for administrator authorization to install the prerequisite package.")
                         wrapMode: Text.WordWrap
                         Layout.fillWidth: true
                     }
@@ -785,7 +766,7 @@ Kirigami.ApplicationWindow {
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: Kirigami.Units.smallSpacing
-                    Kirigami.Heading { text: "Plasma Addon Manager 0.4.2"; level: 2 }
+                    Kirigami.Heading { text: "Plasma Addon Manager 0.4.3"; level: 2 }
                     Controls.Label {
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap

@@ -4,7 +4,7 @@ use plasma_addon_helper::{
     addons,
     automation::{self, Settings},
     executable_on_path, find_plasmoid_updater, in_flatpak, is_plasma_session, read_distribution,
-    updater_installer, updater_path, DistributionFamily,
+    updater_installer, updater_path,
 };
 use std::env;
 use std::io::{self, Write};
@@ -104,12 +104,11 @@ fn diagnose() -> Result<(), String> {
     if missing.is_empty() {
         Ok(())
     } else {
-        let hint =
-            if distribution.family == DistributionFamily::OpenSuse && missing.contains(&"bsdtar") {
-                "On openSUSE install the 'bsdtar' package in YaST Software Management or Discover."
-            } else {
-                "Install the missing dependencies using your distribution's software manager."
-            };
+        let hint = if missing.contains(&"bsdtar") {
+            "Click Install / check version in Plasma Addon Manager to install bsdtar together with the updater; administrator authorization may be required."
+        } else {
+            "Install the missing dependencies using your distribution's software manager."
+        };
         Err(format!(
             "Missing required dependencies: {}. {hint}",
             missing.join(", ")
@@ -191,21 +190,9 @@ fn execute(action: &str, extra: &[String]) -> Result<(), String> {
                 Err("Install from the standalone AppImage, not a Flatpak sandbox".into())
             } else {
                 updater_installer::install()?;
-                if read_distribution().family == DistributionFamily::AtomicFedora {
-                    automation::prepare_bazzite_dependencies()
-                        .map_err(|error| format!("Bazzite prerequisites: {error:#}"))?;
-                } else if executable_on_path("bsdtar").is_none() {
-                    println!(
-                        "The updater binary is installed, but KDE Store updates require bsdtar."
-                    );
-                    if read_distribution().family == DistributionFamily::OpenSuse {
-                        println!("On openSUSE install the 'bsdtar' package in YaST or Discover.");
-                    } else {
-                        println!(
-                            "Install the libarchive/bsdtar utility with your software manager."
-                        );
-                    }
-                }
+                automation::ensure_bsdtar_for_install()
+                    .map_err(|error| format!("bsdtar prerequisite: {error:#}"))?;
+                println!("✓ plasmoid-updater and the required bsdtar utility are ready.");
                 Ok(())
             }
         }

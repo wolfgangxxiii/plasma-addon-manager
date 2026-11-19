@@ -669,6 +669,106 @@ pub fn prepare_bazzite_dependencies() -> Result<()> {
     Ok(())
 }
 
+/// Install only the archive utility required by plasmoid-updater. The GUI's
+/// existing installer confirmation also authorizes this prerequisite setup.
+/// On mutable distributions PolicyKit shows its normal desktop authorization
+/// dialog; no password is read from a terminal or passed through the helper.
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct HostArchivePackage {
+    manager: &'static str,
+    arguments: &'static [&'static str],
+    package: &'static str,
+}
+
+fn host_archive_package(family: DistributionFamily) -> Option<HostArchivePackage> {
+    match family {
+        DistributionFamily::OpenSuse => Some(HostArchivePackage {
+            manager: "/usr/bin/zypper",
+            arguments: &["--non-interactive", "install", "--no-recommends", "bsdtar"],
+            package: "bsdtar",
+        }),
+        DistributionFamily::Debian => Some(HostArchivePackage {
+            manager: "/usr/bin/apt-get",
+            arguments: &[
+                "install",
+                "--yes",
+                "--no-install-recommends",
+                "libarchive-tools",
+            ],
+            package: "libarchive-tools",
+        }),
+        DistributionFamily::Fedora => Some(HostArchivePackage {
+            manager: "/usr/bin/dnf",
+            arguments: &["install", "--assumeyes", "bsdtar"],
+            package: "bsdtar",
+        }),
+        DistributionFamily::Arch => Some(HostArchivePackage {
+            manager: "/usr/bin/pacman",
+            arguments: &["--sync", "--needed", "--noconfirm", "libarchive"],
+            package: "libarchive",
+        }),
+        DistributionFamily::AtomicFedora | DistributionFamily::Unknown => None,
+    }
+}
+
+pub fn ensure_bsdtar_for_install() -> Result<()> {
+    let home = home()?;
+    if service_bsdtar_exists(&home) {
+        println!("✓ bsdtar is already installed; nothing to do.");
+        return Ok(());
+    }
+    if let Some(source) = executable_on_path("bsdtar") {
+        link_bsdtar_for_service(&home, &source)?;
+        return Ok(());
+    }
+    let distribution = read_distribution();
+    if distribution.family == DistributionFamily::AtomicFedora {
+        return prepare_bazzite_dependencies();
+    }
+    let package = host_archive_package(distribution.family).context(
+        "This distribution has no supported bsdtar installer. Install bsdtar from its graphical software manager",
+    )?;
+    ensure!(
+        is_executable(Path::new(package.manager)),
+        "Package manager {} is missing; install '{}' using your graphical software manager",
+        package.manager,
+        package.package
+    );
+    let pkexec = Path::new("/usr/bin/pkexec");
+    ensure!(
+        is_executable(pkexec),
+        "PolicyKit pkexec is unavailable. Install '{}' using your graphical software manager",
+        package.package
+    );
+    println!(
+        "Installing the required '{}' package using {}. Approve the graphical administrator prompt if requested…",
+        package.package, package.manager
+    );
+    io::stdout().flush()?;
+    let status = Command::new(pkexec)
+        .arg("--disable-internal-agent")
+        .arg(package.manager)
+        .args(package.arguments)
+        .stdin(Stdio::null())
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .status()
+        .with_context(|| format!("Cannot start PolicyKit to install '{}'", package.package))?;
+    ensure!(
+        status.success(),
+        "Installation of '{}' was not completed ({}). Check the administrator authorization and try again",
+        package.package,
+        status
+    );
+    ensure!(
+        service_bsdtar_exists(&home),
+        "Package manager finished, but bsdtar was not found. Check the '{}' package in the software manager",
+        package.package
+    );
+    println!("✓ bsdtar is ready for KDE Store updates and the background agent.");
+    Ok(())
+}
+
 fn restore_old_timer_states(names: &[(&str, bool, bool)]) {
     for (timer, enabled, active) in names {
         if *enabled {
@@ -689,7 +789,7 @@ pub fn configure(settings: Settings, migrate_legacy: bool) -> Result<()> {
             "Install plasmoid-updater first using the Install button"
         );
         ensure!(service_bsdtar_exists(&home) || executable_on_path("bsdtar").is_some(),
-            "bsdtar is missing. On openSUSE install the 'bsdtar' package with YaST/Discover; on Bazzite click Install / check version to prepare Homebrew. Other distributions may call the package 'libarchive-tools'");
+            "bsdtar is missing. Click Install / check version in Plasma Addon Manager to install the required package as part of updater setup");
     }
     let unit_dir = units_dir(&home);
     let service = unit_dir.join(SERVICE);
@@ -943,6 +1043,27 @@ mod tests {
     use std::os::unix::process::ExitStatusExt;
 
     #[test]
+    fn bsdtar_packages_match_supported_distributions() {
+        for (family, name, manager) in [
+            (DistributionFamily::OpenSuse, "bsdtar", "/usr/bin/zypper"),
+            (
+                DistributionFamily::Debian,
+                "libarchive-tools",
+                "/usr/bin/apt-get",
+            ),
+            (DistributionFamily::Fedora, "bsdtar", "/usr/bin/dnf"),
+            (DistributionFamily::Arch, "libarchive", "/usr/bin/pacman"),
+        ] {
+            let package = host_archive_package(family).unwrap();
+            assert_eq!(package.package, name);
+            assert_eq!(package.manager, manager);
+            assert!(package.arguments.contains(&name));
+        }
+        assert!(host_archive_package(DistributionFamily::AtomicFedora).is_none());
+        assert!(host_archive_package(DistributionFamily::Unknown).is_none());
+    }
+
+    #[test]
     fn dashboard_version_ignores_updater_license_text() {
         let output = "plasmoid-updater 0.2.1\nCopyright (c) 2025 uwuclxdy\nLicense GPLv3+\n";
         assert_eq!(
@@ -951,11 +1072,11 @@ mod tests {
         );
         assert_eq!(
             parse_version(
-                "plasma-addon-manager-agent 0.4.2\n",
+                "plasma-addon-manager-agent 0.4.3\n",
                 "plasma-addon-manager-agent "
             )
             .as_deref(),
-            Some("0.4.2")
+            Some("0.4.3")
         );
         assert_eq!(parse_version("Unknown binary", "plasmoid-updater "), None);
     }
