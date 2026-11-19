@@ -11,7 +11,10 @@ use std::process::{Command, Stdio};
 // Ported from the working Bazzite and Debian GUIs: never restart the desktop
 // on a manual update and never modify the host's system package manager.
 const MANUAL_UPDATE_ARGS: &[&str] = &[
-    "--skip-plasma-detection", "update", "--yes", "--no-restart-plasma",
+    "--skip-plasma-detection",
+    "update",
+    "--yes",
+    "--no-restart-plasma",
 ];
 
 fn run(program: &str, args: &[&str]) -> Result<(), String> {
@@ -20,7 +23,10 @@ fn run(program: &str, args: &[&str]) -> Result<(), String> {
 
 fn run_command(command: &mut Command, args: &[&str], check: bool) -> Result<(), String> {
     let description = format!("{:?}", command.get_program());
-    let output = command.args(args).stdin(Stdio::null()).output()
+    let output = command
+        .args(args)
+        .stdin(Stdio::null())
+        .output()
         .map_err(|error| format!("Cannot execute {description}: {error}"))?;
     io::stdout()
         .write_all(&output.stdout)
@@ -32,7 +38,10 @@ fn run_command(command: &mut Command, args: &[&str], check: bool) -> Result<(), 
     if output.status.success() || (check && output.status.code() == Some(100)) {
         Ok(())
     } else {
-        Err(format!("{description} exited with status {}", output.status))
+        Err(format!(
+            "{description} exited with status {}",
+            output.status
+        ))
     }
 }
 
@@ -101,14 +110,22 @@ fn updater(action: &str) -> Result<(), String> {
     let mut command = Command::new(binary);
     command.env("PATH", updater_path());
     match action {
-        "inventory" => run_command(&mut command, &["--skip-plasma-detection", "list-installed"], false),
+        "inventory" => run_command(
+            &mut command,
+            &["--skip-plasma-detection", "list-installed"],
+            false,
+        ),
         "check" => run_command(&mut command, &["--skip-plasma-detection", "check"], true),
         "dry-run" => {
-            let help = command.args(["--skip-plasma-detection", "update", "--help"])
-                .stdin(Stdio::null()).output()
+            let help = command
+                .args(["--skip-plasma-detection", "update", "--help"])
+                .stdin(Stdio::null())
+                .output()
                 .map_err(|error| format!("Cannot inspect updater options: {error}"))?;
             if !help.status.success() {
-                return Err("Cannot inspect updater options safely; no update was performed".into());
+                return Err(
+                    "Cannot inspect updater options safely; no update was performed".into(),
+                );
             }
             let supports_dry_run = String::from_utf8_lossy(&help.stdout).contains("--dry-run");
             // Reset arguments in a new command because Command::args appends.
@@ -116,7 +133,11 @@ fn updater(action: &str) -> Result<(), String> {
             update.env("PATH", updater_path());
             if supports_dry_run {
                 println!("Preview: plasmoid-updater update --dry-run");
-                run_command(&mut update, &["--skip-plasma-detection", "update", "--dry-run"], false)
+                run_command(
+                    &mut update,
+                    &["--skip-plasma-detection", "update", "--dry-run"],
+                    false,
+                )
             } else {
                 println!("This version has no --dry-run; using the read-only check command.");
                 run_command(&mut update, &["--skip-plasma-detection", "check"], true)
@@ -138,7 +159,11 @@ fn execute(action: &str) -> Result<(), String> {
             Ok(())
         }
         "inventory" | "check" => {
-            let command = if action == "inventory" { "list-installed" } else { "check" };
+            let command = if action == "inventory" {
+                "list-installed"
+            } else {
+                "check"
+            };
             if in_flatpak() {
                 run_on_host("plasmoid-updater", &[command])
             } else {
