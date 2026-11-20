@@ -58,7 +58,8 @@ install(PROGRAMS "${AGENT_OUTPUT}"
     DESTINATION "${CMAKE_INSTALL_LIBEXECDIR}/plasma-addon-manager")
 install(FILES packaging/io.github.wolfgangxxiii.PlasmaAddonManager.desktop
     DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
-install(FILES assets/io.github.wolfgangxxiii.PlasmaAddonManager.svg
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps)
+install(FILES assets/plasma-addon-manager-icon-v2.svg
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps
+    RENAME io.github.wolfgangxxiii.PlasmaAddonManager.svg)
 install(FILES packaging/io.github.wolfgangxxiii.PlasmaAddonManager.metainfo.xml
     DESTINATION ${CMAKE_INSTALL_DATADIR}/metainfo)

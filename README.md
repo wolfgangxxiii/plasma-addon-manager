@@ -298,7 +298,7 @@ The new application icon and README banner use a consistent blue-violet palette 
 | Asset / Zasób | File / Plik |
 | :-- | :-- |
 | README banner / Baner | [PNG](assets/plasma-addon-manager-banner.png) |
-| Application icon / Ikona programu | [SVG](assets/io.github.wolfgangxxiii.PlasmaAddonManager.svg) |
+| Application icon / Ikona programu | [SVG](assets/plasma-addon-manager-icon-v2.svg) |
 | PNG icons / Ikony PNG | [16](assets/plasma-addon-manager-icon-16.png) · [32](assets/plasma-addon-manager-icon-32.png) · [48](assets/plasma-addon-manager-icon-48.png) · [64](assets/plasma-addon-manager-icon-64.png) · [128](assets/plasma-addon-manager-icon-128.png) · [256](assets/plasma-addon-manager-icon-256.png) · [512](assets/plasma-addon-manager-icon-512.png) · [1024](assets/plasma-addon-manager-icon-1024.png) |
 | Complete asset pack / Pełny pakiet | [Download ZIP / Pobierz ZIP](assets/plasma-addon-manager-branding.zip) |
 
@@ -316,6 +316,6 @@ Copyright © 2026 **Szymon Bławat**.
 Licensed under **GNU GPL-3.0-or-later** — see [LICENSE](LICENSE). The application and its visual assets belong to this project; upstream components retain their respective licenses and authorship. / Aplikacja i jej grafiki są częścią tego projektu; niezależne komponenty zachowują własne licencje i autorów.
 
 <p align="center">
-  <img src="assets/io.github.wolfgangxxiii.PlasmaAddonManager.svg" width="64" alt="Plasma Addon Manager icon" /><br />
+  <img src="assets/plasma-addon-manager-icon-v2.svg" width="64" alt="Plasma Addon Manager icon" /><br />
   <sub>Made for KDE Plasma 6 • Created by wolfgangxxiii</sub>
 </p>

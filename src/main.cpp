@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QGuiApplication>
+#include <QIcon>
 #include <QPluginLoader>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -103,6 +104,9 @@ int main(int argc, char *argv[]) {
         qputenv("QT_QUICK_BACKEND", "software");
     }
     QGuiApplication app(argc, argv);
+    // The embedded PNG guarantees the new icon even when the app is launched
+    // directly from an AppImage before its desktop entry has been integrated.
+    QGuiApplication::setWindowIcon(QIcon(QStringLiteral(":/images/app.png")));
     QCoreApplication::setOrganizationName(QStringLiteral("wolfgangxxiii"));
     QCoreApplication::setApplicationName(QStringLiteral("Plasma Addon Manager"));
     QGuiApplication::setDesktopFileName(

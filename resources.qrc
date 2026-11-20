@@ -4,6 +4,7 @@
         <file alias="AboutPage.qml">qml/AboutPage.qml</file>
     </qresource>
     <qresource prefix="/images">
-        <file alias="app.svg">assets/io.github.wolfgangxxiii.PlasmaAddonManager.svg</file>
+        <file alias="app.svg">assets/plasma-addon-manager-icon-v2.svg</file>
+        <file alias="app.png">assets/plasma-addon-manager-icon-256.png</file>
     </qresource>
 </RCC>

@@ -473,7 +473,7 @@ Kirigami.ApplicationWindow {
 
     globalDrawer: Kirigami.GlobalDrawer {
         title: "Plasma Addon Manager"
-        titleIcon: "preferences-desktop-plasma"
+        titleIcon: "qrc:/images/app.svg"
         actions: [
             Kirigami.Action {
                 text: window.loc("Pulpit", "Dashboard")
