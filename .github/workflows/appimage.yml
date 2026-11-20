@@ -26,7 +26,7 @@ jobs:
             rustc cargo patchelf file binutils \
             extra-cmake-modules qt6-base-dev qt6-declarative-dev \
             qt6-wayland qt6-base-dev-tools \
-            libkirigami-dev libkf6qqc2desktopstyle-dev libkf6colorscheme-dev \
+            libkirigami-dev libkf6qqc2desktopstyle-dev libkf6colorscheme-dev libkf6config-dev \
             kde-style-breeze-data \
             qml6-module-org-kde-kirigami qml6-module-org-kde-desktop \
             qml6-module-qtquick-controls qml6-module-qtquick-layouts
