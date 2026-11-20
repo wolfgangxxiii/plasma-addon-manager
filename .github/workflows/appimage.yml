@@ -76,7 +76,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=v0.4.5-appimage-preview.14
+          tag=v0.4.5-appimage-preview.15
           appimage=dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
           test -s "$appimage"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
@@ -84,6 +84,6 @@ jobs:
           else
             gh release create "$tag" "$appimage" \
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 14 · Bezpieczne usuwanie' \
-              --notes 'PL: Dodano w Automatyzacji przycisk usuwania instalacji i zmian programu z podglądem oraz potwierdzeniem. Własne pliki użytkownika mogą być usunięte, a współdzielone narzędzia tylko po zaznaczeniu opcji. Dodatki KDE, pakiety systemowe i kopie migracji pozostają bez zmian. Zachowano poprawki wyglądu i systemowego koloru akcentu. EN: Added guarded cleanup with preview and confirmation, preserving KDE add-ons, distribution packages, migration backups and shared tools by default. The AppImage is also available as a downloadable Actions artifact.'
+              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 15 · Czyszczenie na Pulpicie' \
+              --notes 'PL: Przeniesiono przycisk „Usuń instalacje i zmiany…” z Automatyzacji do Pulpitu. Zachowano podgląd plików, potwierdzenie usunięcia i ochronę współdzielonych narzędzi. Dodatki KDE, pakiety systemowe i kopie migracji pozostają bez zmian. EN: Moved the guarded „Remove installations and changes…” action from Automation to Dashboard. File preview, explicit confirmation and safeguards remain unchanged. KDE add-ons, system packages and migration backups are preserved.'
           fi

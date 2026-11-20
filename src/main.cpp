@@ -458,12 +458,21 @@ int main(int argc, char *argv[]) {
         }
         root->setProperty("addonListExpanded", true);
         QCoreApplication::processEvents();
+        root->setProperty("section", 0);
+        QCoreApplication::processEvents();
+        QObject *cleanupFrame = root->findChild<QObject *>(QStringLiteral("cleanupDashboardFrame"));
+        QObject *cleanupButton = root->findChild<QObject *>(QStringLiteral("cleanupButton"));
+        if (!cleanupFrame || !cleanupFrame->property("visible").toBool()
+                || !cleanupButton || !cleanupButton->property("visible").toBool()
+                || !cleanupButton->property("enabled").toBool()) {
+            qCritical() << "QML smoke test: cleanup preview action is missing from Dashboard";
+            return 3;
+        }
         root->setProperty("section", 2);
         QCoreApplication::processEvents();
-        QObject *cleanupButton = root->findChild<QObject *>(QStringLiteral("cleanupButton"));
-        if (!cleanupButton || !cleanupButton->property("visible").toBool()
-                || !cleanupButton->property("enabled").toBool()) {
-            qCritical() << "QML smoke test: cleanup preview action is missing from Automation";
+        if (cleanupFrame->property("visible").toBool()
+                || cleanupButton->property("visible").toBool()) {
+            qCritical() << "QML smoke test: cleanup preview action is visible outside Dashboard";
             return 3;
         }
         root->setProperty("section", 3);

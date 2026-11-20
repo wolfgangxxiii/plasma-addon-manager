@@ -111,7 +111,7 @@ Osobny <code>plasma-addon-manager-agent</code> wykonuje zaplanowane zadania **r�
 
 ### 🧹 Usuwanie zmian aplikacji
 
-W zakładce **Automatyzacja** znajduje się przycisk **„Usuń instalacje i zmiany…”**. Wyświetla podgląd konkretnych plików i wymaga potwierdzenia przed usunięciem. Funkcja działa na Bazzite, openSUSE, Debianie/Ubuntu, Fedorze i Archu — bez uprawnień roota.
+W zakładce **Pulpit** znajduje się przycisk **„Usuń instalacje i zmiany…”**. Wyświetla podgląd konkretnych plików i wymaga potwierdzenia przed usunięciem. Funkcja działa na Bazzite, openSUSE, Debianie/Ubuntu, Fedorze i Archu — bez uprawnień roota.
 
 - Zatrzymuje i wyłącza **własny** timer oraz usługę `systemd --user`, jeżeli mają znacznik Plasma Addon Manager.
 - Usuwa własnego agenta, ustawienia automatyzacji, preferencje wyglądu i wygenerowany skrót/ikonę AppImage, jeśli należą do programu.
@@ -244,7 +244,7 @@ The independent <code>plasma-addon-manager-agent</code> performs scheduled work 
 
 ### 🧹 Remove application changes
 
-The **Automation** page includes a **“Remove installations and changes…”** button. It shows an exact file preview and asks for confirmation before removing anything. It works across Bazzite, openSUSE, Debian/Ubuntu, Fedora and Arch without root access.
+The **Dashboard** page includes a **“Remove installations and changes…”** button. It shows an exact file preview and asks for confirmation before removing anything. It works across Bazzite, openSUSE, Debian/Ubuntu, Fedora and Arch without root access.
 
 - Stops and disables **app-owned** `systemd --user` timer and service units when they carry the Plasma Addon Manager marker.
 - Removes the app's background agent, automation settings, appearance preferences and generated AppImage launcher/icon when recognized as app-owned.

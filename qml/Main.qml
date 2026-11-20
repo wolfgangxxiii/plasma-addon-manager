@@ -1096,6 +1096,36 @@ Kirigami.ApplicationWindow {
             }
 
             Controls.Frame {
+                objectName: "cleanupDashboardFrame"
+                visible: window.section === 0
+                Layout.fillWidth: true
+                ColumnLayout {
+                    width: parent.width
+                    spacing: Kirigami.Units.smallSpacing
+                    Kirigami.Heading {
+                        level: 3
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        text: window.loc("Usuń instalacje i zmiany programu", "Remove application installations and changes")
+                    }
+                    Controls.Label {
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        text: window.loc(
+                            "Wyłącz harmonogram i usuń pliki utworzone przez Plasma Addon Manager. Przed usunięciem sprawdzisz dokładną listę i zdecydujesz, czy uwzględnić także współdzielone narzędzia.",
+                            "Disable the schedule and remove Plasma Addon Manager files. Review the exact items and optionally include shared tools before confirming.")
+                    }
+                    Controls.Button {
+                        objectName: "cleanupButton"
+                        text: window.loc("Usuń instalacje i zmiany…", "Remove installations and changes…")
+                        icon.source: "qrc:/images/ui-error.png"
+                        enabled: !backend.running
+                        onClicked: backend.runAction("cleanup-preview")
+                    }
+                }
+            }
+
+            Controls.Frame {
                 objectName: "addonsSectionFrame"
                 visible: window.section === 1
                 Layout.fillWidth: true
@@ -1422,33 +1452,6 @@ Kirigami.ApplicationWindow {
                                      && !window.bsdtarMissing
                             onClicked: backend.runAction("test-config")
                         }
-                    }
-                }
-            }
-
-            Controls.Frame {
-                visible: window.section === 2
-                Layout.fillWidth: true
-                ColumnLayout {
-                    width: parent.width
-                    spacing: Kirigami.Units.smallSpacing
-                    Kirigami.Heading {
-                        level: 3
-                        text: window.loc("Usuń konfigurację aplikacji", "Remove application configuration")
-                    }
-                    Controls.Label {
-                        Layout.fillWidth: true
-                        wrapMode: Text.WordWrap
-                        text: window.loc(
-                            "Jednym przyciskiem wyłącz harmonogram i usuń pliki utworzone przez Plasma Addon Manager. Przed usunięciem zobaczysz listę zmian i wybierzesz, czy usunąć także narzędzia współdzielone.",
-                            "Use one button to disable the schedule and remove Plasma Addon Manager files. Review the exact items and optionally include shared tools before confirming.")
-                    }
-                    Controls.Button {
-                        objectName: "cleanupButton"
-                        text: window.loc("Usuń instalacje i zmiany…", "Remove installations and changes…")
-                        icon.source: "qrc:/images/ui-error.png"
-                        enabled: !backend.running
-                        onClicked: backend.runAction("cleanup-preview")
                     }
                 }
             }
