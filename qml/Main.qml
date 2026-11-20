@@ -40,6 +40,7 @@ Kirigami.ApplicationWindow {
     property string inventoryWarning: ""
     property var availableUpdates: []
     property var updateIssues: []
+    property var cleanupPreview: ({ items: [], preserved_pl: [], preserved_en: [] })
     property int skippedUpdates: 0
     property int unmatchedUpdates: 0
     property int addonView: 0
@@ -83,6 +84,18 @@ Kirigami.ApplicationWindow {
         const seconds = elapsedSeconds % 60
         return minutes + ":" + (seconds < 10 ? "0" : "") + seconds
     }
+    function cleanupItemsText() {
+        const lines = []
+        const items = cleanupPreview.items || []
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i]
+            lines.push("• " + (polish ? item.label_pl : item.label_en)
+                       + (item.optional ? loc(" (opcjonalnie)", " (optional)") : "")
+                       + "\n  " + item.path)
+        }
+        return lines.length > 0 ? lines.join("\n\n")
+            : loc("Nie znaleziono elementów do usunięcia.", "No removable items were found.")
+    }
     function actionName(action) {
         switch (action) {
         case "diagnose": return loc("Diagnostyka środowiska", "Environment diagnostics")
@@ -101,6 +114,8 @@ Kirigami.ApplicationWindow {
         case "repair-agent": return loc("Naprawa agenta", "Repair agent")
         case "run-service": return loc("Uruchomienie aktualizacji w tle", "Run background update")
         case "test-config": return loc("Test konfiguracji", "Configuration test")
+        case "cleanup-preview": return loc("Podgląd przywracania", "Cleanup preview")
+        case "cleanup": return loc("Usuwanie zmian aplikacji", "Remove application changes")
         default: return action
         }
     }
@@ -140,6 +155,13 @@ Kirigami.ApplicationWindow {
         function onOperationResultChanged() {
             if (!backend.lastOperation.length) return
             const ok = backend.lastOperationSucceeded
+            if (ok && backend.lastOperation === "cleanup") {
+                window.automationConfigLoaded = false
+                window.automationLoadError = window.loc(
+                    "Ustawienia zostały usunięte. Zamknij aplikację i usuń jej AppImage, jeśli nie chcesz już z niej korzystać.",
+                    "Settings were removed. Close the app and delete its AppImage if you no longer need it.")
+                window.automaticEnabled = false
+            }
             window.addNotification(
                 ok ? "success" : "error",
                 (ok ? window.loc("Zakończono", "Completed") : window.loc("Błąd działania", "Action failed"))
@@ -181,6 +203,15 @@ Kirigami.ApplicationWindow {
                         window.loc("Szczegóły znajdziesz na karcie Dodatki Plasma.", "See the Plasma add-ons page for details."))
                 }
             } catch (error) { console.warn("Invalid updates data:", error) }
+        }
+        function onCleanupPreviewLoaded(json) {
+            try {
+                window.cleanupPreview = JSON.parse(json)
+                removeUserTools.checked = false
+                confirmCleanup.open()
+            } catch (error) {
+                console.warn("Invalid cleanup preview:", error)
+            }
         }
         function onSettingsLoaded(json) {
             try {
@@ -243,6 +274,61 @@ Kirigami.ApplicationWindow {
             text: window.loc(
                 "Program zainstaluje lub sprawdzi plasmoid-updater w ~/.local/bin (SHA-256) i zapewni wymagane bsdtar. Na Bazzite wykorzysta Homebrew w katalogu użytkownika. Na openSUSE, Debianie, Fedorze lub Arch/CachyOS może doinstalować jeden pakiet przez menedżer systemowy, wyświetlając standardowe okno autoryzacji administratora. Nie aktualizuje całego systemu ani nie zmienia harmonogramu.",
                 "The app installs or checks plasmoid-updater in ~/.local/bin (SHA-256) and ensures bsdtar. On Bazzite it uses user-local Homebrew. On openSUSE, Debian, Fedora or Arch/CachyOS it may install one system package via the native package manager with a normal graphical administrator prompt. It does not upgrade the entire OS or change your schedule.")
+        }
+    }
+
+    Controls.Dialog {
+        id: confirmCleanup
+        parent: Controls.Overlay.overlay
+        anchors.centerIn: parent
+        width: Math.min(parent.width - 32, 600)
+        modal: true
+        focus: true
+        title: window.loc("Usunąć zmiany Plasma Addon Manager?", "Remove Plasma Addon Manager changes?")
+        standardButtons: Controls.Dialog.Ok | Controls.Dialog.Cancel
+        onAccepted: backend.runCleanup(removeUserTools.checked)
+        contentItem: ColumnLayout {
+            spacing: Kirigami.Units.smallSpacing
+            Controls.Label {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                text: window.loc(
+                    "Zostaną zatrzymane automatyczne aktualizacje i usunięte tylko rozpoznane pliki aplikacji. Sprawdź listę przed potwierdzeniem.",
+                    "Automatic updates will be stopped and only recognized app files will be removed. Review the list before confirming.")
+            }
+            Controls.ScrollView {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 210
+                Controls.Label {
+                    width: parent.width
+                    wrapMode: Text.WrapAnywhere
+                    text: window.cleanupItemsText()
+                    font.pixelSize: 12
+                }
+            }
+            Controls.CheckBox {
+                id: removeUserTools
+                Layout.fillWidth: true
+                visible: (window.cleanupPreview.items || []).some(function(item) { return item.optional })
+                checked: false
+                text: window.loc("Usuń także lokalny plasmoid-updater i dowiązanie bsdtar (mogły istnieć wcześniej)",
+                                 "Also remove local plasmoid-updater and bsdtar symlink (they may predate this app)")
+            }
+            Controls.Label {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                font.pixelSize: 11
+                opacity: 0.8
+                text: (window.polish ? window.cleanupPreview.preserved_pl
+                                     : window.cleanupPreview.preserved_en).join("\n")
+            }
+            NoticeBanner {
+                Layout.fillWidth: true
+                kind: "warning"
+                text: window.loc(
+                    "Dodatki KDE, pakiety systemowe i kopie migracji pozostaną nietknięte. AppImage lub pakiet aplikacji usuń osobno. Nie da się automatycznie odtworzyć wszystkich zmian wprowadzonych przez starsze wersje.",
+                    "KDE add-ons, OS packages and migration backups will remain untouched. Remove the AppImage or app package separately. Not every change made by older versions can be safely reversed.")
+            }
         }
     }
 
@@ -1336,6 +1422,33 @@ Kirigami.ApplicationWindow {
                                      && !window.bsdtarMissing
                             onClicked: backend.runAction("test-config")
                         }
+                    }
+                }
+            }
+
+            Controls.Frame {
+                visible: window.section === 2
+                Layout.fillWidth: true
+                ColumnLayout {
+                    width: parent.width
+                    spacing: Kirigami.Units.smallSpacing
+                    Kirigami.Heading {
+                        level: 3
+                        text: window.loc("Usuń konfigurację aplikacji", "Remove application configuration")
+                    }
+                    Controls.Label {
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        text: window.loc(
+                            "Jednym przyciskiem wyłącz harmonogram i usuń pliki utworzone przez Plasma Addon Manager. Przed usunięciem zobaczysz listę zmian i wybierzesz, czy usunąć także narzędzia współdzielone.",
+                            "Use one button to disable the schedule and remove Plasma Addon Manager files. Review the exact items and optionally include shared tools before confirming.")
+                    }
+                    Controls.Button {
+                        objectName: "cleanupButton"
+                        text: window.loc("Usuń instalacje i zmiany…", "Remove installations and changes…")
+                        icon.source: "qrc:/images/ui-error.png"
+                        enabled: !backend.running
+                        onClicked: backend.runAction("cleanup-preview")
                     }
                 }
             }

@@ -1,7 +1,7 @@
 //! Explicit allow-list of commands invoked by the Qt frontend.
 
 use plasma_addon_helper::{
-    addons,
+    addons, cleanup,
     automation::{self, Settings},
     executable_on_path, find_plasmoid_updater, in_flatpak, is_plasma_session, read_distribution,
     updater_installer, updater_path,
@@ -253,8 +253,27 @@ fn execute(action: &str, extra: &[String]) -> Result<(), String> {
         "journal" => automation::journal().map_err(|error| format!("{error:#}")),
         "repair-agent" => automation::repair_agent().map_err(|error| format!("{error:#}")),
         "run-service" => automation::start_service().map_err(|error| format!("{error:#}")),
+        "cleanup-preview" => {
+            if in_flatpak() {
+                return Err("Cleanup requires the native application or AppImage, not Flatpak".into());
+            }
+            let plan = cleanup::preview().map_err(|error| format!("{error:#}"))?;
+            println!("{}", serde_json::to_string(&plan).map_err(|error| error.to_string())?);
+            Ok(())
+        }
+        "cleanup" => {
+            if in_flatpak() {
+                return Err("Cleanup requires the native application or AppImage, not Flatpak".into());
+            }
+            let remove_optional = match extra {
+                [choice] if choice.as_str() == "remove-user-tools" => true,
+                [choice] if choice.as_str() == "keep-user-tools" => false,
+                _ => return Err("Explicit cleanup choice is required: remove-user-tools or keep-user-tools".into()),
+            };
+            cleanup::remove(remove_optional).map_err(|error| format!("{error:#}"))
+        }
         "--help" | "help" => {
-            println!("Usage: plasma-addon-helper [diagnose|inventory|check|inventory-json|updates-json|status-json|dry-run|update|install|settings-show|settings-save|test-config|timer|journal|repair-agent|run-service]");
+            println!("Usage: plasma-addon-helper [diagnose|inventory|check|inventory-json|updates-json|status-json|dry-run|update|install|settings-show|settings-save|test-config|timer|journal|repair-agent|run-service|cleanup-preview|cleanup <keep-user-tools|remove-user-tools>]");
             println!("Modifying actions require explicit GUI confirmation. Only user-owned KDE add-ons and systemd --user settings are touched; the OS image is never changed.");
             Ok(())
         }
