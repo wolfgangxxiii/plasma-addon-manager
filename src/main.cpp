@@ -315,6 +315,15 @@ int main(int argc, char *argv[]) {
         }
         root->setProperty("section", 1);
         QCoreApplication::processEvents();
+        QObject *addonsFrame = root->findChild<QObject *>(QStringLiteral("addonsSectionFrame"));
+        QObject *addonsLayout = root->findChild<QObject *>(QStringLiteral("addonsSectionLayout"));
+        QObject *addonList = root->findChild<QObject *>(QStringLiteral("addonItemsScroll"));
+        if (!addonsFrame || !addonsLayout || !addonList
+                || addonsLayout->property("width").toDouble()
+                   < addonsFrame->property("width").toDouble() - 60) {
+            qCritical() << "QML smoke test: add-on descriptions do not fit their frame";
+            return 3;
+        }
         double referenceActionWidth = -1;
         for (const char *name : {"actionInstalled", "actionUpdates", "actionPreview", "actionApply"}) {
             QObject *button = root->findChild<QObject *>(QString::fromLatin1(name));
@@ -324,6 +333,44 @@ int main(int argc, char *argv[]) {
                 qCritical() << "QML smoke test: add-on action buttons are not aligned" << name << width;
                 return 3;
             }
+        }
+        // Simulate a populated KDE Store inventory. Its scrollable list must
+        // stay bounded, with update actions fixed above it.
+        QVariantList manyAddons;
+        for (int i = 0; i < 80; ++i) {
+            QVariantMap item = addon;
+            item.insert(QStringLiteral("name"),
+                        QStringLiteral("A deliberately long Plasma add-on name %1 withouttruncatedcontent")
+                            .arg(i));
+            manyAddons.append(item);
+        }
+        root->setProperty("installedAddons", manyAddons);
+        root->setProperty("addonView", 0);
+        QCoreApplication::processEvents();
+        const double listHeight = addonList->property("height").toDouble();
+        if (listHeight < 100 || listHeight > 345
+                || addonList->property("contentHeight").toDouble() <= listHeight) {
+            qCritical() << "QML smoke test: a large add-on inventory is not scrollable"
+                        << listHeight << addonList->property("contentHeight");
+            return 3;
+        }
+        root->setProperty("addonListExpanded", false);
+        QCoreApplication::processEvents();
+        if (addonList->property("visible").toBool()) {
+            qCritical() << "QML smoke test: add-on list cannot be collapsed";
+            return 3;
+        }
+        root->setProperty("addonListExpanded", true);
+        QCoreApplication::processEvents();
+        root->setProperty("section", 3);
+        QCoreApplication::processEvents();
+        QObject *journalFrame = root->findChild<QObject *>(QStringLiteral("journalSectionFrame"));
+        QObject *journalLayout = root->findChild<QObject *>(QStringLiteral("journalSectionLayout"));
+        if (!journalFrame || !journalLayout
+                || journalLayout->property("width").toDouble()
+                   < journalFrame->property("width").toDouble() - 60) {
+            qCritical() << "QML smoke test: journal description does not fit its frame";
+            return 3;
         }
         root->setProperty("section", 4);
         QCoreApplication::processEvents();

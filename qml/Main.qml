@@ -30,6 +30,7 @@ Kirigami.ApplicationWindow {
     property int skippedUpdates: 0
     property int unmatchedUpdates: 0
     property int addonView: 0
+    property bool addonListExpanded: true
     property bool inventoryReady: false
     property bool updatesReady: false
     property var notifications: []
@@ -737,10 +738,13 @@ Kirigami.ApplicationWindow {
 
                 Controls.Frame {
                     Layout.fillWidth: true
+                    Layout.preferredWidth: 0
+                    Layout.minimumWidth: 0
                     ColumnLayout {
+                        width: parent.width
                         RowLayout {
                             Kirigami.Icon { source: "computer"; Layout.preferredWidth: 20; Layout.preferredHeight: 20 }
-                            Kirigami.Heading { level: 3; text: window.loc("System", "System") }
+                            Kirigami.Heading { Layout.fillWidth: true; level: 3; wrapMode: Text.WordWrap; text: window.loc("System", "System") }
                         }
                         Controls.Label {
                             Layout.fillWidth: true
@@ -751,10 +755,13 @@ Kirigami.ApplicationWindow {
                 }
                 Controls.Frame {
                     Layout.fillWidth: true
+                    Layout.preferredWidth: 0
+                    Layout.minimumWidth: 0
                     ColumnLayout {
+                        width: parent.width
                         RowLayout {
                             Kirigami.Icon { source: "download"; Layout.preferredWidth: 20; Layout.preferredHeight: 20 }
-                            Kirigami.Heading { level: 3; text: "plasmoid-updater" }
+                            Kirigami.Heading { Layout.fillWidth: true; level: 3; wrapMode: Text.WrapAnywhere; text: "plasmoid-updater" }
                         }
                         Controls.Label {
                             Layout.fillWidth: true
@@ -769,10 +776,13 @@ Kirigami.ApplicationWindow {
                 }
                 Controls.Frame {
                     Layout.fillWidth: true
+                    Layout.preferredWidth: 0
+                    Layout.minimumWidth: 0
                     ColumnLayout {
+                        width: parent.width
                         RowLayout {
                             Kirigami.Icon { source: "system-run"; Layout.preferredWidth: 20; Layout.preferredHeight: 20 }
-                            Kirigami.Heading { level: 3; text: window.loc("Agent", "Agent") }
+                            Kirigami.Heading { Layout.fillWidth: true; level: 3; wrapMode: Text.WordWrap; text: window.loc("Agent", "Agent") }
                         }
                         Controls.Label {
                             Layout.fillWidth: true
@@ -789,10 +799,13 @@ Kirigami.ApplicationWindow {
                 }
                 Controls.Frame {
                     Layout.fillWidth: true
+                    Layout.preferredWidth: 0
+                    Layout.minimumWidth: 0
                     ColumnLayout {
+                        width: parent.width
                         RowLayout {
                             Kirigami.Icon { source: "chronometer"; Layout.preferredWidth: 20; Layout.preferredHeight: 20 }
-                            Kirigami.Heading { level: 3; text: window.loc("Harmonogram", "Schedule") }
+                            Kirigami.Heading { Layout.fillWidth: true; level: 3; wrapMode: Text.WordWrap; text: window.loc("Harmonogram", "Schedule") }
                         }
                         Controls.Label {
                             Layout.fillWidth: true
@@ -849,7 +862,10 @@ Kirigami.ApplicationWindow {
 
                 Controls.Frame {
                     Layout.fillWidth: true
+                    Layout.preferredWidth: 0
+                    Layout.minimumWidth: 0
                     ColumnLayout {
+                        width: parent.width
                         spacing: Kirigami.Units.smallSpacing
                         Kirigami.Heading {
                             text: window.loc("Stan środowiska", "Environment status")
@@ -871,7 +887,10 @@ Kirigami.ApplicationWindow {
                 }
                 Controls.Frame {
                     Layout.fillWidth: true
+                    Layout.preferredWidth: 0
+                    Layout.minimumWidth: 0
                     ColumnLayout {
+                        width: parent.width
                         spacing: Kirigami.Units.smallSpacing
                         Kirigami.Heading {
                             text: window.loc("Sprawdź aktualizacje", "Check for updates")
@@ -900,7 +919,7 @@ Kirigami.ApplicationWindow {
                 visible: window.section === 0
                 Layout.fillWidth: true
                 ColumnLayout {
-                    Layout.fillWidth: true
+                    width: parent.width
                     spacing: Kirigami.Units.smallSpacing
                     Kirigami.Heading {
                         text: window.loc("Instalacja narzędzia", "Install the updater")
@@ -922,10 +941,12 @@ Kirigami.ApplicationWindow {
             }
 
             Controls.Frame {
+                objectName: "addonsSectionFrame"
                 visible: window.section === 1
                 Layout.fillWidth: true
                 ColumnLayout {
-                    Layout.fillWidth: true
+                    objectName: "addonsSectionLayout"
+                    width: parent.width
                     spacing: Kirigami.Units.largeSpacing
                     Kirigami.Heading {
                         text: window.loc("Dodatki KDE Store", "KDE Store add-ons")
@@ -1000,17 +1021,27 @@ Kirigami.ApplicationWindow {
                             onClicked: window.addonView = 1
                         }
                     }
-                    Controls.Label {
+                    RowLayout {
                         Layout.fillWidth: true
-                        wrapMode: Text.WordWrap
-                        text: window.addonView === 0
-                              ? window.inventoryReady
-                                ? window.loc("Znaleziono dodatków: ", "Installed add-ons: ") + window.installedAddons.length
-                                : window.loc("Kliknij «Zainstalowane dodatki», aby wczytać listę.", "Click Installed add-ons to load the list.")
-                              : window.updatesReady
-                                ? window.loc("Dostępne aktualizacje: ", "Available updates: ") + window.availableUpdates.length
-                                  + window.loc(" · Pominięte: ", " · Skipped: ") + window.skippedUpdates
-                                : window.loc("Kliknij «Dostępne aktualizacje», aby sprawdzić KDE Store.", "Click Available updates to check KDE Store.")
+                        Controls.Label {
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                            text: window.addonView === 0
+                                  ? window.inventoryReady
+                                    ? window.loc("Znaleziono dodatków: ", "Installed add-ons: ") + window.installedAddons.length
+                                    : window.loc("Kliknij «Zainstalowane dodatki», aby wczytać listę.", "Click Installed add-ons to load the list.")
+                                  : window.updatesReady
+                                    ? window.loc("Dostępne aktualizacje: ", "Available updates: ") + window.availableUpdates.length
+                                      + window.loc(" · Pominięte: ", " · Skipped: ") + window.skippedUpdates
+                                    : window.loc("Kliknij «Dostępne aktualizacje», aby sprawdzić KDE Store.", "Click Available updates to check KDE Store.")
+                        }
+                        Controls.ToolButton {
+                            objectName: "toggleAddonList"
+                            text: window.addonListExpanded
+                                  ? window.loc("Zwiń listę", "Collapse list")
+                                  : window.loc("Rozwiń listę", "Expand list")
+                            onClicked: window.addonListExpanded = !window.addonListExpanded
+                        }
                     }
                     Kirigami.InlineMessage {
                         Layout.fillWidth: true
@@ -1019,61 +1050,85 @@ Kirigami.ApplicationWindow {
                         text: window.loc("Wyświetlono dodatki użytkownika. Dodatki systemowe pominięto, ponieważ nie można ich bezpiecznie odczytać bez dodatkowych uprawnień.",
                                          "User add-ons are shown. System add-ons were omitted because they cannot be read safely without additional permissions.")
                     }
-                    Repeater {
-                        model: window.addonView === 0 ? window.installedAddons : window.availableUpdates
-                        delegate: Controls.Frame {
-                            id: addonFrame
-                            Layout.fillWidth: true
-                            // Repeater may briefly reuse a delegate while tabs switch.
-                            // Resolve by data shape so its binding never dereferences undefined.
-                            readonly property var addon: modelData && modelData.installed
-                                                         ? modelData.installed : modelData
-                            ColumnLayout {
-                                width: parent.width
-                                spacing: Kirigami.Units.smallSpacing
-                                Controls.Label {
+                    // Keep the action row above a bounded, independently
+                    // scrollable list. A large inventory no longer pushes
+                    // update controls out of view or grows the whole page.
+                    Controls.ScrollView {
+                        id: addonItemsScroll
+                        objectName: "addonItemsScroll"
+                        Layout.fillWidth: true
+                        // Also account for the visible page height, so the
+                        // fixed action controls remain above the inner list.
+                        Layout.preferredHeight: Math.min(328,
+                                                         Math.max(96, mainScroll.height - 265),
+                                                         Math.max(88, addonItemsContent.implicitHeight + 12))
+                        visible: window.addonListExpanded
+                        clip: true
+                        Controls.ScrollBar.horizontal.policy: Controls.ScrollBar.AlwaysOff
+                        Controls.ScrollBar.vertical.policy: Controls.ScrollBar.AsNeeded
+
+                        ColumnLayout {
+                            id: addonItemsContent
+                            width: addonItemsScroll.availableWidth
+                            spacing: Kirigami.Units.smallSpacing
+
+                            Repeater {
+                                model: window.addonView === 0 ? window.installedAddons : window.availableUpdates
+                                delegate: Controls.Frame {
+                                    id: addonFrame
                                     Layout.fillWidth: true
-                                    wrapMode: Text.WordWrap
-                                    font.bold: true
-                                    text: addonFrame.addon ? addonFrame.addon.name : ""
-                                }
-                                Controls.Label {
-                                    Layout.fillWidth: true
-                                    wrapMode: Text.WordWrap
-                                    opacity: 0.75
-                                    text: addonFrame.addon ? addonFrame.addon.component_type
-                                          + (addonFrame.addon.is_system
-                                             ? window.loc(" · Systemowy (tylko odczyt)", " · System (read-only)")
-                                             : window.loc(" · Użytkownik", " · User")) : ""
-                                }
-                                Controls.Label {
-                                    Layout.fillWidth: true
-                                    wrapMode: Text.WordWrap
-                                    text: !addonFrame.addon ? "" : window.addonView === 0
-                                          ? window.loc("Wersja: ", "Version: ") + addonFrame.addon.version
-                                          : addonFrame.addon.version + "  →  " + (modelData.latest_version || "—")
+                                    // Resolve both the inventory and update data shapes.
+                                    readonly property var addon: modelData && modelData.installed
+                                                                 ? modelData.installed : modelData
+                                    ColumnLayout {
+                                        width: parent.width
+                                        spacing: Kirigami.Units.smallSpacing
+                                        Controls.Label {
+                                            Layout.fillWidth: true
+                                            wrapMode: Text.WrapAnywhere
+                                            font.bold: true
+                                            text: addonFrame.addon ? addonFrame.addon.name : ""
+                                        }
+                                        Controls.Label {
+                                            Layout.fillWidth: true
+                                            wrapMode: Text.WordWrap
+                                            opacity: 0.75
+                                            text: addonFrame.addon ? addonFrame.addon.component_type
+                                                  + (addonFrame.addon.is_system
+                                                     ? window.loc(" · Systemowy (tylko odczyt)", " · System (read-only)")
+                                                     : window.loc(" · Użytkownik", " · User")) : ""
+                                        }
+                                        Controls.Label {
+                                            Layout.fillWidth: true
+                                            wrapMode: Text.WrapAnywhere
+                                            text: !addonFrame.addon ? "" : window.addonView === 0
+                                                  ? window.loc("Wersja: ", "Version: ") + addonFrame.addon.version
+                                                  : addonFrame.addon.version + "  →  " + (modelData.latest_version || "—")
+                                        }
+                                    }
                                 }
                             }
+                            Repeater {
+                                model: window.addonView === 1 ? window.updateIssues : []
+                                delegate: Kirigami.InlineMessage {
+                                    Layout.fillWidth: true
+                                    visible: true
+                                    type: Kirigami.MessageType.Warning
+                                    text: modelData.name + ": " + modelData.reason
+                                }
+                            }
+                            Controls.Label {
+                                visible: window.addonView === 0
+                                         ? window.inventoryReady && window.installedAddons.length === 0
+                                         : window.updatesReady && window.availableUpdates.length === 0
+                                            && window.updateIssues.length === 0
+                                Layout.fillWidth: true
+                                wrapMode: Text.WordWrap
+                                text: window.addonView === 0
+                                      ? window.loc("Nie znaleziono dodatków.", "No installed add-ons found.")
+                                      : window.loc("Wszystkie dodatki są aktualne.", "All add-ons are up to date.")
+                            }
                         }
-                    }
-                    Repeater {
-                        model: window.addonView === 1 ? window.updateIssues : []
-                        delegate: Kirigami.InlineMessage {
-                            Layout.fillWidth: true
-                            visible: true
-                            type: Kirigami.MessageType.Warning
-                            text: modelData.name + ": " + modelData.reason
-                        }
-                    }
-                    Controls.Label {
-                        visible: window.addonView === 0
-                                 ? window.inventoryReady && window.installedAddons.length === 0
-                                 : window.updatesReady && window.availableUpdates.length === 0
-                                    && window.updateIssues.length === 0
-                        Layout.fillWidth: true
-                        text: window.addonView === 0
-                              ? window.loc("Nie znaleziono dodatków.", "No installed add-ons found.")
-                              : window.loc("Wszystkie dodatki są aktualne.", "All add-ons are up to date.")
                     }
                 }
             }
@@ -1082,7 +1137,7 @@ Kirigami.ApplicationWindow {
                 visible: window.section === 2
                 Layout.fillWidth: true
                 ColumnLayout {
-                    Layout.fillWidth: true
+                    width: parent.width
                     spacing: Kirigami.Units.largeSpacing
                     Kirigami.Heading {
                         text: window.loc("Automatyczne aktualizacje", "Automatic updates")
@@ -1209,10 +1264,12 @@ Kirigami.ApplicationWindow {
             }
 
             Controls.Frame {
+                objectName: "journalSectionFrame"
                 visible: window.section === 3
                 Layout.fillWidth: true
                 ColumnLayout {
-                    Layout.fillWidth: true
+                    objectName: "journalSectionLayout"
+                    width: parent.width
                     spacing: Kirigami.Units.largeSpacing
                     Kirigami.Heading {
                         text: window.loc("Dziennik bieżącej sesji", "Current session log")
