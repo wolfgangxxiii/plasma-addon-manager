@@ -359,11 +359,27 @@ int main(int argc, char *argv[]) {
         root->setProperty("installedAddons", manyAddons);
         root->setProperty("addonView", 0);
         QCoreApplication::processEvents();
+        QObject *addonListContent = root->findChild<QObject *>(QStringLiteral("addonItemsContent"));
+        QObject *addonRepeater = root->findChild<QObject *>(QStringLiteral("addonItemsRepeater"));
+        // The software/offscreen and Wayland renderers polish layouts on
+        // different frames. Wait until the Repeater and ScrollView have
+        // both reflected the model before checking scrolling geometry.
+        for (int attempt = 0; attempt < 24; ++attempt) {
+            if (auto *item = qobject_cast<QQuickItem *>(addonListContent)) item->ensurePolished();
+            QCoreApplication::processEvents();
+            if (addonRepeater && addonRepeater->property("count").toInt() == 80
+                    && addonList->property("contentHeight").toDouble()
+                       > addonList->property("height").toDouble()) break;
+            QEventLoop renderTick;
+            QTimer::singleShot(25, &renderTick, &QEventLoop::quit);
+            renderTick.exec();
+        }
         const double listHeight = addonList->property("height").toDouble();
         if (listHeight < 100 || listHeight > 345
                 || addonList->property("contentHeight").toDouble() <= listHeight) {
             qCritical() << "QML smoke test: a large add-on inventory is not scrollable"
-                        << listHeight << addonList->property("contentHeight");
+                        << listHeight << addonList->property("contentHeight")
+                        << "repeater count" << (addonRepeater ? addonRepeater->property("count") : QVariant());
             return 3;
         }
         root->setProperty("addonListExpanded", false);

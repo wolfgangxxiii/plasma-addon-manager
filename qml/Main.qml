@@ -1083,10 +1083,12 @@ Kirigami.ApplicationWindow {
 
                         ColumnLayout {
                             id: addonItemsContent
+                            objectName: "addonItemsContent"
                             width: addonItemsScroll.availableWidth
                             spacing: Kirigami.Units.smallSpacing
 
                             Repeater {
+                                objectName: "addonItemsRepeater"
                                 model: window.addonView === 0 ? window.installedAddons : window.availableUpdates
                                 delegate: Controls.Frame {
                                     id: addonFrame
