@@ -33,6 +33,8 @@ jobs:
         run: |
           cargo test --manifest-path backend/Cargo.toml
           bash scripts/build-appimage.sh
+          QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software APPIMAGE_EXTRACT_AND_RUN=1 \
+            dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage --self-test-desktop-icon
       - name: Test AppImage in a headless Wayland session
         run: |
           export XDG_RUNTIME_DIR="$(mktemp -d)"
@@ -66,7 +68,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=v0.4.5-appimage-preview.2
+          tag=v0.4.5-appimage-preview.3
           appimage=dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
           test -s "$appimage"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
@@ -74,6 +76,6 @@ jobs:
           else
             gh release create "$tag" "$appimage" \
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 2 · Nowa ikona' \
-              --notes 'Nowy AppImage x86_64 dla KDE Plasma 6. Nowa grafika widoczna w menu KDE, panelu nawigacji, pasku zadań oraz w dekoracji okna, jeśli motyw KDE wyświetla ikony okien. Dodano osobne ustawienie QWindow::setIcon, zgodność identyfikatora .desktop z Wayland oraz skalowalne SVG i ikony PNG hicolor. Zachowano funkcje programu 0.4.5: automatyzację, aktualizację dodatków, powiadomienia i dziennik. Po aktualizacji ponownie zintegruj AppImage w Gear Lever, aby odświeżyć ikonę launchera.'
+              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 3 · Naprawa ikony Wayland' \
+              --notes 'Naprawiono pomarańczową ikonę W w dekoracji okna i na pasku zadań KDE Plasma na Wayland. Przy pierwszym uruchomieniu AppImage tworzy niewidoczny wpis tożsamości .desktop oraz kopiuje ikonę PNG do katalogu użytkownika XDG (bez sudo). Wpis ma identyfikator zgodny z app_id Qt; nie zastępuje własnych launcherów użytkownika i nie dodaje duplikatu do menu. Dodano test integracji ikony i usunięto zbędny przycisk Dziennik z dolnego paska (pełny dziennik nadal dostępny w Powiadomieniach). Po aktualizacji uruchom nowy plik AppImage; jeśli integrujesz go przez Gear Lever, ponownie zintegruj nową wersję.'
           fi

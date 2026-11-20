@@ -17,6 +17,8 @@ find_package(KF6 REQUIRED COMPONENTS QQC2DesktopStyle)
 
 qt_add_executable(plasma-addon-manager
     src/main.cpp
+    src/DesktopIconIntegration.cpp
+    src/DesktopIconIntegration.h
     src/BackendBridge.cpp
     src/BackendBridge.h
     resources.qrc

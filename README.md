@@ -83,7 +83,9 @@ Na tradycyjnych dystrybucjach instalacja brakującego pakietu systemowego może 
 
 **Bazzite KDE:** możesz zainstalować [Gear Lever](https://github.com/mijorus/gearlever) z Bazaar, otworzyć nim pobrany AppImage i wybrać **Integruj**. Aplikacja pojawi się wtedy w menu KDE. Gear Lever nie jest wymagany do uruchomienia programu.
 
-**Nowa ikona w AppImage Preview 2:** jeśli poprzednia wersja była już zintegrowana przez Gear Lever, zastąp ją nowo pobranym AppImage i ponownie zintegruj. Dzięki temu menu i pasek zadań KDE będą korzystać z aktualnej ikony zamiast starszej kopii zapisanej w systemie.
+**Ikona KDE/Wayland — poprawka Preview 3:** przy pierwszym uruchomieniu AppImage na Wayland program automatycznie zapisuje ikonę PNG i ukryty wpis identyfikacyjny <code>io.github.wolfgangxxiii.PlasmaAddonManager.desktop</code> w katalogu danych bieżącego użytkownika (<code>~/.local/share/</code> przy ustawieniach domyślnych). Dzięki temu KWin może skojarzyć uruchomione okno z ikoną programu zamiast wyświetlać pomarańczowe „W”. Nie wymaga to <code>sudo</code> i nie tworzy dodatkowej pozycji w menu. Istniejące wpisy użytkownika i systemu nie są nadpisywane.
+
+Jeśli poprzednia wersja była zintegrowana przez Gear Lever, zastąp ją nowym plikiem AppImage i odśwież integrację. Pełny dziennik otworzysz z prawego panelu **Powiadomienia**; usunięto powielony przycisk z dolnego paska.
 
 **Opcjonalnie z terminala:**
 
@@ -121,6 +123,7 @@ Osobny <code>plasma-addon-manager-agent</code> wykonuje zaplanowane zadania **r�
 | Problem | Co sprawdzić? |
 | :-- | :-- |
 | AppImage nie uruchamia się | Uprawnienie wykonywania pliku, architekturę x86_64 i sesję Plasma 6. |
+| Pomarańczowa ikona „W” w KDE Wayland | Uruchom AppImage Preview 3 — samodzielnie rejestruje ikonę i identyfikator okna w katalogu XDG użytkownika. Zamknij i ponownie uruchom program, jeśli KWin pamięta poprzednią ikonę. |
 | Brakuje <code>plasmoid-updater</code> lub <code>bsdtar</code> | Na Pulpicie kliknij **Zainstaluj / sprawdź wersję**. |
 | Nie widać wszystkich dodatków systemowych | Odczyt elementów systemowych jest opcjonalny; dodatki użytkownika pozostają dostępne bez hasła administratora. |
 | Harmonogram lub agent nie działa | Na karcie **Automatyzacja** uruchom test, a następnie skorzystaj z naprawy agenta i dziennika usługi. |
@@ -202,7 +205,9 @@ Installing a missing system prerequisite on a mutable distribution may request g
 
 **Bazzite KDE:** optionally use [Gear Lever](https://github.com/mijorus/gearlever) from Bazaar to integrate the AppImage with your KDE application menu. Gear Lever is not required for direct execution.
 
-**New icon in AppImage Preview 2:** if an earlier AppImage was integrated with Gear Lever, replace it with the new download and integrate it again. This refreshes the KDE launcher/taskbar icon instead of keeping the older installed copy.
+**KDE/Wayland icon — Preview 3 fix:** on first launch in a Wayland session, the AppImage automatically installs a PNG icon and a hidden identity file named <code>io.github.wolfgangxxiii.PlasmaAddonManager.desktop</code> in the current user's XDG data directory (<code>~/.local/share/</code> by default). KWin can then associate the actual window with the program icon instead of the orange "W". This requires no root permissions, adds no duplicate menu item and preserves user-managed launchers.
+
+If you previously used Gear Lever, replace the AppImage and refresh its integration. The full session journal remains accessible through the right-side **Notifications** panel; the redundant footer button has been removed.
 
 **Terminal alternative:**
 
@@ -240,6 +245,7 @@ The independent <code>plasma-addon-manager-agent</code> performs scheduled work 
 | Symptom | Suggested action |
 | :-- | :-- |
 | AppImage will not launch | Check executable permission, x86_64 architecture and your Plasma 6 session. |
+| Orange "W" icon on KDE Wayland | Launch AppImage Preview 3 to register the user-local icon and desktop identity. Close and reopen the app if KWin still shows a cached placeholder. |
 | Updater or <code>bsdtar</code> is missing | Use **Install / check version** on the Dashboard. |
 | Some system-wide add-ons are absent | System-wide inventory may be omitted when reading it would require interactive administrator access. |
 | Agent or timer is unhealthy | Run the **Automation** test, inspect the journal and use **Repair agent** if indicated. |

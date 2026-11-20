@@ -443,12 +443,6 @@ Kirigami.ApplicationWindow {
                     text: window.loc("Anuluj", "Cancel")
                     onClicked: backend.cancel()
                 }
-                Controls.Button {
-                    visible: !backend.running && backend.lastOperation.length > 0
-                    icon.name: "view-list-text"
-                    text: window.loc("Dziennik", "Journal")
-                    onClicked: window.section = 3
-                }
             }
 
             Controls.ProgressBar {
