@@ -1,377 +1,321 @@
 <div align="center">
 
-<img src="assets/io.github.wolfgangxxiii.PlasmaAddonManager.svg" width="100" alt="Plasma Addon Manager logo" />
+  <img src="assets/plasma-addon-manager-banner.png" alt="Plasma Addon Manager — Manage, Update, Automate" width="100%" />
 
-# Plasma Addon Manager
+  <h1>Plasma Addon Manager</h1>
 
-**One KDE Plasma 6 add-on manager for Linux distributions.**
-**Jeden menedżer dodatków KDE Plasma 6 dla wielu dystrybucji.**
+  <p><strong>One place for your KDE Plasma 6 add-ons.</strong><br />
+  <strong>Wszystkie dodatki KDE Plasma 6 w jednym miejscu.</strong></p>
 
-[![License: GPLv3+](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
-![Stage](https://img.shields.io/badge/stage-0.4.5%20AppImage%20preview-orange)
-![Stack](https://img.shields.io/badge/GUI-Qt6%20%2B%20Kirigami-3577c1)
+  <p>
+    <a href="https://github.com/wolfgangxxiii/plasma-addon-manager/releases"><img src="https://img.shields.io/badge/version-0.4.5%20preview-7559d9?style=for-the-badge" alt="Version 0.4.5 preview" /></a>
+    <img src="https://img.shields.io/badge/KDE-Plasma%206-1d99f3?style=for-the-badge&logo=kde" alt="KDE Plasma 6" />
+    <img src="https://img.shields.io/badge/Qt%206-Kirigami-20b4e6?style=for-the-badge" alt="Qt 6 and Kirigami" />
+    <img src="https://img.shields.io/badge/backend-Rust-dd6a38?style=for-the-badge&logo=rust&logoColor=white" alt="Rust backend" />
+  </p>
+
+  <p>
+    <a href="https://github.com/wolfgangxxiii/plasma-addon-manager/actions/workflows/appimage.yml"><img src="https://github.com/wolfgangxxiii/plasma-addon-manager/actions/workflows/appimage.yml/badge.svg" alt="AppImage build status" /></a>
+    <a href="LICENSE"><img src="https://img.shields.io/github/license/wolfgangxxiii/plasma-addon-manager?color=4eaa77" alt="GPL-3.0-or-later" /></a>
+    <img src="https://img.shields.io/badge/platform-Linux%20x86__64-64748b" alt="Linux x86_64" />
+  </p>
+
+  <p>
+    <a href="https://github.com/wolfgangxxiii/plasma-addon-manager/releases"><strong>⬇️ Download AppImage / Pobierz AppImage</strong></a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/wolfgangxxiii/plasma-addon-manager/issues">🐛 Issues / Zgłoś problem</a>
+    &nbsp;·&nbsp;
+    <a href="https://github.com/wolfgangxxiii/plasma-addon-manager/actions">⚙️ Builds</a>
+  </p>
+
+  <p><a href="#polski">🇵🇱 Polski</a> &nbsp; | &nbsp; <a href="#english">🇬🇧 English</a></p>
 
 </div>
 
-## 🇬🇧 English
-
-Plasma Addon Manager is a **Qt6/KDE Kirigami** frontend with a **Rust** helper for
-[plasmoid-updater](https://github.com/uwuclxdy/plasmoid-updater). The goal is a single
-application for KDE Plasma 6 on Bazzite, Fedora KDE, Debian, Kubuntu, KDE neon, Arch,
-CachyOS, openSUSE and other Linux distributions.
-
-> [!IMPORTANT]
-> **Version 0.4.5 is a development preview with an opt-in background updater.**
-> It installs `plasmoid-updater`, checks and manually updates add-ons, and now
-> configures its own systemd user timer. Any existing Bazzite/Debian schedule is
-> left intact until the user explicitly consents to migration.
-
-### Implemented in this milestone
-
-- Native Qt6 + Kirigami window following the Plasma desktop style.
-- Adaptive layout, navigation, Polish/English UI (automatic locale or manual choice).
-- Read-only distribution detection using `/etc/os-release` and `ID_LIKE`.
-- Read-only checks for Plasma session, architecture and required commands.
-- Installed add-on list via `plasmoid-updater list-installed`.
-- Available update check via `plasmoid-updater check` (without applying updates).
-- Structured installed add-on and update cards, including read-only system add-ons,
-  update versions and per-add-on issues; compatible with upstream 0.2.1 text output
-  and future JSON output.
-- Dashboard showing updater/agent versions, agent repair needs, timer health,
-  previous service result and next scheduled update.
-- A guided dashboard action for preparing missing tools or checking updates.
-- A persistent bottom progress bar with elapsed time and the latest readable
-  backend step; it remains indeterminate when the CLI cannot report percentages.
-- A dedicated right-side notification center with color-coded success, errors
-  and warnings, accessible as a right-side drawer in narrower windows.
-- The About page follows the Bazzite GUI's structure: app identity and logo,
-  theme-accented repository/download/help/license links, author and upstream credits.
-- Full read-only automation configuration test (service/timer/agent, settings,
-  prerequisites and KDE Store availability), separate from update preview.
-- Live GUI process output during manual updates, with transient network retries
-  for read-only inventory and update checks.
-- A complete session-wide action log, including time-stamped starts, failures,
-  successes and CLI output. It is kept until the app closes; only the Journal
-  screen shows the full text. A separate right panel shows compact colored
-  notices, which automatic status refreshes never overwrite. Clearing the
-  notices does not erase the session journal.
-- openSUSE-specific `bsdtar` package guidance, missing-prerequisite diagnostics,
-  compact updater versions without license text, and optional system inventory
-  without requesting an interactive `sudo` password.
-- Read-only preview (`update --dry-run` where supported; otherwise `check`).
-- Confirmed manual updates with `update --yes --no-restart-plasma`.
-- One-click GUI installer for `plasmoid-updater`: verified upstream GitHub SHA-256,
-  current-version preservation and atomic user-local installation without root.
-- Bazzite prerequisite setup in the same GUI action: reuse an existing `bsdtar`
-  or install `libarchive` through user-local Homebrew when missing (with consent).
-- One-click `bsdtar` setup along with `plasmoid-updater` on other supported
-  distributions: `bsdtar` via openSUSE/Zypper or Fedora/DNF,
-  `libarchive-tools` via Debian/Ubuntu/APT, and `libarchive` via Arch/CachyOS/Pacman.
-  System package installation requires the existing install confirmation and
-  the desktop PolicyKit administrator prompt; no terminal password entry.
-- Independent headless `plasma-addon-manager-agent` installed in `~/.local/bin`.
-- User-level schedule every 6, 12 or 24 hours, with optional Plasma restart,
-  upstream updater check and desktop notifications on success or failure.
-- Import settings from the working Bazzite/Debian GUIs and preserve upstream
-  `plasmoid-updater.toml` options while updating excluded packages.
-- Back up old systemd units and require explicit consent to disable old timers;
-  roll back files and timer states if the new configuration fails.
-- Repair the new agent, start the service manually and inspect its journal.
-- Bazzite/Linuxbrew detection and PATH support, ported from the working Bazzite GUI.
-- AppImage bundles Qt Wayland EGL/client plugins and checks Kirigami's KDE plugin.
-- Software Qt Quick rendering by default in the AppImage, avoiding broken host OpenGL contexts.
-- Timer status and recent journal via `systemctl --user` and `journalctl --user`.
-- Asynchronous process execution: the interface does not block during scans.
-- Allow-listed helper commands: no shell interpretation or unexpected system writes.
-
-The Qt GUI talks to a Rust helper. A separate Rust agent runs in systemd user
-services even when the AppImage is closed. Neither needs administrator rights
-for normal operation or makes changes to the atomic Bazzite OS image. Only
-installing a missing system prerequisite on a mutable distribution may ask
-for graphical administrator authorization.
-
-### Building from source
-
-Requirements:
-
-- Linux with **KDE Plasma 6** and a C++17 toolchain.
-- **Qt 6.5+**, Qt Quick, Qt Quick Controls 2, KDE Kirigami (KF6),
-  `QQC2DesktopStyle`, `extra-cmake-modules` and CMake 3.24+.
-- Stable Rust and Cargo.
-- `plasmoid-updater` for listing add-ons and checking updates.
-- systemd user services for the timer and journal pages.
-
-Install the matching development packages using your distribution's package
-manager (package names differ; see [KDE Kirigami documentation](https://develop.kde.org/docs/getting-started/kirigami/)).
-
-```bash
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-cmake --build build --parallel
-./build/bin/plasma-addon-manager
-```
-
-The build folder contains `plasma-addon-manager` (Qt frontend),
-`plasma-addon-helper` (Rust backend) and `plasma-addon-manager-agent` (background agent).
-
-To install locally using CMake:
-
-```bash
-sudo cmake --install build
-```
-
-Building and installing from source **only installs this application**. The
-upstream `plasmoid-updater` is installed separately by choosing **Install** in
-the GUI. The background agent is installed only after choosing **Save and apply**
-in Automation.
-
-### AppImage only — direct download
-
-Download `Plasma-Addon-Manager-v0.4.5-x86_64.AppImage` directly from
-[GitHub Releases](https://github.com/wolfgangxxiii/plasma-addon-manager/releases).
-It is a standalone `.AppImage` download, **not a ZIP archive**. The
-[AppImage build workflow](https://github.com/wolfgangxxiii/plasma-addon-manager/actions/workflows/appimage.yml)
-smoke-tests the Qt/Kirigami window and publishes the file to Releases after a
-successful build on `main`. The project no longer creates DEB or Flatpak
-packages.
-
-**On Bazzite KDE — no terminal needed:**
-
-1. Open **Bazaar** and install **Gear Lever** if it is not already installed.
-2. Download the AppImage from Releases and open it with **Gear Lever** in Dolphin.
-3. Select **Integrate**. Launch **Plasma Addon Manager** from the KDE app menu.
-4. Inside the app, choose **Install / check version** to set up `plasmoid-updater`.
-5. Open **Automation**, choose an interval and **Save and apply**. An active
-   old updater schedule requires an explicit migration checkbox.
-
-This is the AppImage integration approach recommended in the
-[Bazzite documentation](https://docs.bazzite.gg/Installing_and_Managing_Software/AppImage/).
-Gear Lever is only an optional graphical AppImage manager; this project still
-distributes **AppImage only**, not a Flatpak edition.
-
-Alternatively, standard Linux file managers can run AppImages directly: in
-**Dolphin → Properties → Permissions**, enable **Is executable**, then
-double-click. Downloaded files do not automatically receive execute permission;
-an AppImage cannot override this security rule before being launched.
-
-Developers may also launch the AppImage on KDE Plasma (x86_64) via terminal:
-
-```bash
-chmod +x Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
-./Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
-```
-
-To build it from source, run `bash scripts/build-appimage.sh` on a Linux x86_64
-system with Qt6, Kirigami, Rust/Cargo and the documented build dependencies.
-The output is placed in `dist/`. `linuxdeploy` and its Qt6 plugin are checked
-against pinned SHA-256 values. Runtime behavior on different Plasma 6
-distributions still needs validation.
-
-**On openSUSE Tumbleweed KDE:** the AppImage itself starts without installing
-additional system packages, but `plasmoid-updater` needs the **`bsdtar`**
-utility to check or apply KDE Store updates. Choose the same **Install / check
-version** button. It installs the official `bsdtar` package through Zypper
-if missing. Approve the regular graphical PolicyKit administrator prompt.
-No terminal commands or separate prerequisite button are required.
-If graphical authorization is unavailable or cancelled, the application
-reports the failure and does not silently proceed with updates.
-Read-only system add-ons are omitted when scanning needs interactive admin
-rights; user add-ons are still displayed.
-
-### Helper commands and tests
-
-```bash
-cargo test --manifest-path backend/Cargo.toml
-cargo run --manifest-path backend/Cargo.toml -- diagnose
-cargo run --manifest-path backend/Cargo.toml -- inventory
-cargo run --manifest-path backend/Cargo.toml -- check
-cargo run --manifest-path backend/Cargo.toml -- dry-run
-cargo run --manifest-path backend/Cargo.toml -- install
-cargo run --manifest-path backend/Cargo.toml -- settings-show
-cargo run --manifest-path backend/Cargo.toml -- timer
-cargo run --manifest-path backend/Cargo.toml -- journal
-```
-
-The helper also provides `install` and `update`. Both require user confirmation
-in the GUI. `install` downloads and verifies the upstream binary into the user
-account; `update` changes user-installed KDE Store add-ons. `settings-save`
-manages only the app-owned systemd **user** units. No system packages are updated.
-
-### Roadmap
-
-1. **0.1.0 — Foundation:** Qt6/Kirigami, Rust discovery and read-only screens.
-   **0.1.1 — Bazzite fix:** Wayland/Kirigami packaging, preview and manual updates.
-2. **0.2.0 — Installer:** SHA-256 verified user-local installer and terminal-free
-   launch using Gear Lever on Bazzite.
-3. **0.3.0 — Automation:** migrate safely from existing user services, manage
-   `systemd --user` agent/timer, configuration, exclusions and notifications.
-4. **0.4.0 — Add-on overview:** structured inventory and update cards, live
-   progress, agent health dashboard and saved configuration checks.
-   **0.4.1 — Session logging:** retain all actions until exit, with compact
-   success/error messages on each screen and a dedicated Journal view.
-   **0.4.2 — openSUSE:** dependency warnings, safe system inventory and a
-   properly formatted updater version.
-   **0.4.3 — Unified prerequisites:** install `bsdtar` through supported distro
-   package managers with graphical authentication as part of the updater setup.
-   **0.4.4 — Interface clarity:** fixed progress footer, colored right-side
-   notifications, responsive drawer and a guided dashboard action.
-   **0.4.5 — About page:** Bazzite-inspired identity card, theme-colored links,
-   author, upstream attribution and license information.
-5. **0.5.0 — Reliability:** extended rollback/systemd integration tests, runtime
-   recovery from KDE Store errors and UI regression tests.
-6. **1.0.0 — Release:** verified AppImage on multiple Plasma 6 distributions,
-   with bilingual documentation and runtime tests.
-
-### Migration and safety
-
-The original repositories remain unchanged:
-
-- [Bazzite Plasmoid Updater GUI](https://github.com/wolfgangxxiii/bazzite-kde-installer-plasmoid-updater-gui)
-- [Debian/Ubuntu Plasmoid Updater GUI](https://github.com/wolfgangxxiii/deb-kde-installer-plasmoid-updater-gui)
-
-Older Bazzite/Debian service/timer files are never overwritten. Only after
-explicit migration consent are *active* old timers disabled, with backup and
-rollback safeguards. The old settings files are preserved, and a new agent
-is installed under the distinct name `plasma-addon-manager-agent`.
-The project does **not perform general operating-system updates**. Its scope
-remains **KDE Store add-ons**. The single explicit installer action may install
-the missing `bsdtar` prerequisite (and its package dependencies) through the
-host package manager after PolicyKit authorization on mutable distributions.
-The Bazzite/atomic image is never modified.
-
 ---
+
+<a id="polski"></a>
 
 ## 🇵🇱 Polski
 
-**Plasma Addon Manager** to uniwersalny interfejs **Qt6/KDE Kirigami** z backendem
-**Rust**, przeznaczony do zarządzania aktualizacjami dodatków KDE Plasma 6 przez
-[plasmoid-updater](https://github.com/uwuclxdy/plasmoid-updater).
+**Plasma Addon Manager** to graficzna aplikacja do zarządzania dodatkami KDE Plasma 6 na różnych dystrybucjach Linuksa. Łączy natywny interfejs **Qt 6 + KDE Kirigami** z narzędziem [plasmoid-updater](https://github.com/uwuclxdy/plasmoid-updater) oraz własnym pomocnikiem i agentem napisanym w **Rust**.
 
-Docelowo ma działać na Bazzite, Fedora KDE, Debianie, Kubuntu, KDE neon, Arch,
-CachyOS, openSUSE i innych systemach korzystających z Plasma 6.
+Sprawdzaj dostępne aktualizacje, przeglądaj zainstalowane dodatki, uruchamiaj aktualizację ręcznie albo skonfiguruj ją raz, aby działała w tle.
 
 > [!IMPORTANT]
-> **Wersja 0.4.5 nadal jest testowa — ma automatyzację, przegląd dodatków, pełny dziennik sesji, wspólną instalację zależności, czytelniejszy interfejs i nową kartę „O programie”.**
-> Pobiera `plasmoid-updater` z GitHub, weryfikuje SHA-256, instaluje go
-> w katalogu użytkownika i pozwala kontrolować oraz ręcznie aktualizować dodatki.
-> Tworzy własny harmonogram `systemd --user`; wcześniejszych harmonogramów
-> nie przejmuje bez Twojej wyraźnej zgody. Nie zmienia obrazu systemu Bazzite.
+> **Wersja 0.4.5 jest wydaniem rozwojowym (preview), a nie stabilnym wydaniem 1.0.**
+> Obsługuje automatyczne aktualizacje po włączeniu ich przez użytkownika. Zgodność AppImage ze wszystkimi wymienionymi dystrybucjami nie została jeszcze w pełni zweryfikowana.
 
-### Co już działa w kodzie?
+### ✨ Najważniejsze możliwości
 
-- Natywne GUI Qt6/Kirigami z nawigacją i dopasowaniem do motywu Plasma.
-- Polski, angielski i automatyczny wybór języka.
-- Wykrywanie dystrybucji na podstawie `/etc/os-release`.
-- Diagnostyka zależności i sesji KDE Plasma.
-- Odczyt dodatków i dostępnych aktualizacji przez istniejący `plasmoid-updater`.
-- Karty dodatków z nazwą, typem, wersją i dostępną aktualizacją; odczyt dodatków
-  użytkownika i systemowych, bez modyfikowania pakietów systemowych.
-- Obsługa aktualnego wyjścia tekstowego `plasmoid-updater 0.2.1` i nowszego JSON.
-- Pulpit z wersją programu i agenta, stanem timera, wynikiem ostatniej usługi
-  oraz ostrzeżeniem o wymaganej naprawie.
-- Pulpit z wyraźnym następnym krokiem: przygotuj narzędzia albo sprawdź aktualizacje.
-- Stały pasek postępu na dole okna: czas operacji i bieżący krok, bez zmyślonych
-  procentów (animacja podczas działania).
-- Osobny panel powiadomień po prawej: sukcesy na zielono, błędy na czerwono,
-  ostrzeżenia w innym kolorze. Przy wąskim oknie otwiera się jako boczna szuflada.
-- Karta „O programie” w stylu wersji Bazzite: logo, nazwa i wersja aplikacji,
-  przyciski do repozytorium, wydań, pomocy i licencji oraz autor i źródło narzędzia.
-- Pełny test zapisanej konfiguracji automatyzacji: zależności, agent, timer,
-  usługa, ustawienia i test odczytu KDE Store bez instalowania dodatków.
-- Bieżące komunikaty podczas operacji oraz ponawianie błędów sieciowych podczas
-  odczytu dodatków i sprawdzania aktualizacji.
-- Kompletny dziennik wszystkich operacji od uruchomienia programu, z czasem,
-  komunikatami i wynikami. Tylko ekran Dziennik pokazuje pełny tekst;
-  panel po prawej pokazuje krótkie kolorowe komunikaty. Wyczyszczenie powiadomień
-  nie usuwa historii; automatyczne odświeżenie stanu nie usuwa ostatniego wyniku.
-  Dziennik sesji znika dopiero
-  po zamknięciu programu (historia usługi systemd jest przechowywana osobno).
-- Wykrywanie brakującego `bsdtar`, podpowiedź instalacji pakietu openSUSE,
-  prawidłowy czerwony wynik nieudanej diagnostyki, krótki numer wersji bez
-  licencji oraz bezpieczny odczyt dodatków bez żądania hasła `sudo`.
-- Instalacja brakującego `bsdtar` w tym samym kroku co `plasmoid-updater`:
-  openSUSE (Zypper), Fedora (DNF), Debian/Ubuntu (APT), Arch/CachyOS (Pacman),
-  Bazzite (Homebrew). Na systemach tradycyjnych może pojawić się graficzne
-  okno PolicyKit z prośbą o autoryzację administratora.
-- Podgląd stanu timera oraz ostatnich wpisów dziennika użytkownika.
-- Bezpieczne sprawdzenie aktualizacji (kod wyjścia 100 oznacza znalezione aktualizacje).
-- Symulacja (`--dry-run` lub `check`) i ręczna aktualizacja po zatwierdzeniu.
-- Przycisk instalacji `plasmoid-updater` bez konsoli i sudo, weryfikacja SHA-256.
-- Automatyczny agent i harmonogram aktualizacji co 6/12/24 godziny.
-- Wykluczenia dodatków, powiadomienia KDE, opcjonalny restart Plasma i aktualizacja narzędzia.
-- Bezpieczna migracja poprzednich harmonogramów: kopia zapasowa, zgoda użytkownika i przywracanie po błędzie.
-- Naprawa agenta, ręczne uruchomienie usługi i podgląd logów.
-- Wykrywanie `plasmoid-updater` z Linuxbrew na Bazzite, dołączone wtyczki Wayland EGL/Kirigami.
-- Domyślne renderowanie programowe Qt Quick w AppImage; można je zmienić zmienną `QT_QUICK_BACKEND`.
-- Asynchroniczna obsługa poleceń Rust bez blokowania interfejsu.
+| Sekcja | Co umożliwia? |
+| :-- | :-- |
+| 🏠 **Pulpit** | Stan środowiska i narzędzi, wersja aktualizatora i agenta, stan harmonogramu, następny termin oraz wskazówki dotyczące kolejnego kroku. |
+| 🧩 **Dodatki Plasma** | Lista zainstalowanych dodatków, informacje o wersjach i typach, dostępne aktualizacje oraz problemy wykryte podczas skanowania. |
+| 🔄 **Aktualizacje** | Sprawdzanie nowych wersji, symulacja zmian i ręczne aktualizowanie dodatków po potwierdzeniu. |
+| ⏱️ **Automatyzacja** | Harmonogram co **6, 12 lub 24 godziny**, wykluczenia dodatków, opcjonalny restart Plasma i powiadomienia KDE. |
+| 📋 **Dziennik** | Historia operacji z godzinami, wynikami i komunikatami pomocnika. Dziennik sesji pozostaje dostępny do zamknięcia okna. |
+| ℹ️ **O programie** | Dane aplikacji, autor, licencja oraz wygodne odnośniki do kodu, wydań i zgłaszania błędów. |
 
-### Kompilacja
+**Dopracowany interfejs:** automatyczny lub ręczny wybór języka polskiego i angielskiego, motyw zgodny z KDE Plasma, dolny pasek postępu z czasem operacji i osobny panel kolorowych powiadomień po prawej stronie (w węższych oknach jako wysuwany panel).
 
-Zainstaluj Rust/Cargo, CMake, Ninja, Qt6, Kirigami KF6 i narzędzia
-deweloperskie swojej dystrybucji, następnie wykonaj:
+### 🐧 Dystrybucje i zależności
 
-```bash
+Program wykrywa dystrybucję i przygotowuje wymagane narzędzia w odpowiedni sposób. **Do działania wymagane są KDE Plasma 6 i Linux x86_64.**
+
+| System | Sposób przygotowania brakującego <code>bsdtar</code> |
+| :-- | :-- |
+| **Bazzite KDE** | Istniejące narzędzie lub <code>libarchive</code> przez Homebrew użytkownika; bez zmiany obrazu systemu. |
+| **openSUSE Tumbleweed** | Pakiet <code>bsdtar</code> przez Zypper. |
+| **Fedora KDE** | Wymagany pakiet przez DNF. |
+| **Debian / Ubuntu / Kubuntu / KDE neon** | Pakiet <code>libarchive-tools</code> przez APT. |
+| **Arch Linux / CachyOS** | Pakiet <code>libarchive</code> przez Pacman. |
+
+Na tradycyjnych dystrybucjach instalacja brakującego pakietu systemowego może wymagać **graficznej autoryzacji PolicyKit**. Codzienne sprawdzanie dodatków i ich aktualizacje w katalogu użytkownika nie wymagają uprawnień administratora.
+
+### 📥 Pobieranie i instalacja
+
+1. Otwórz **[GitHub Releases](https://github.com/wolfgangxxiii/plasma-addon-manager/releases)** i pobierz plik <code>Plasma-Addon-Manager-v0.4.5-x86_64.AppImage</code>. To samodzielny plik wykonywalny — nie archiwum ZIP.
+2. W Dolphin wybierz **Właściwości → Uprawnienia** i zaznacz możliwość uruchamiania pliku jako programu.
+3. Otwórz AppImage dwukrotnym kliknięciem.
+4. Na **Pulpicie** wybierz **Zainstaluj / sprawdź wersję**, aby zainstalować lub sprawdzić <code>plasmoid-updater</code> i niezbędne zależności.
+5. Otwórz **Dodatki Plasma** i sprawdź dostępne aktualizacje.
+
+**Bazzite KDE:** możesz zainstalować [Gear Lever](https://github.com/mijorus/gearlever) z Bazaar, otworzyć nim pobrany AppImage i wybrać **Integruj**. Aplikacja pojawi się wtedy w menu KDE. Gear Lever nie jest wymagany do uruchomienia programu.
+
+**Opcjonalnie z terminala:**
+
+~~~bash
+chmod +x Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
+./Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
+~~~
+
+> [!NOTE]
+> Projekt obecnie publikuje **AppImage**, nie udostępnia pakietów DEB ani Flatpak. Zainstalowanie samej aplikacji nie instaluje automatycznie aktualizatora i nie włącza harmonogramu.
+
+### ⏰ Automatyczne aktualizacje
+
+1. Po zainstalowaniu aktualizatora przejdź do **Automatyzacja**.
+2. Wybierz częstotliwość (**6 / 12 / 24 h**) i ustaw opcje powiadomień, wykluczeń lub restartu Plasma.
+3. Kliknij **Zapisz i zastosuj**, aby utworzyć własny timer i usługę <code>systemd --user</code>.
+4. Użyj **Testuj konfigurację**, by sprawdzić zależności, agenta, usługę i harmonogram.
+
+Osobny <code>plasma-addon-manager-agent</code> wykonuje zaplanowane zadania **również po zamknięciu okna aplikacji**. Możesz ponadto naprawić agenta, ręcznie uruchomić usługę lub obejrzeć jej dziennik.
+
+> [!CAUTION]
+> Jeśli korzystasz ze starszego harmonogramu aplikacji Bazzite/Debian, jego przejęcie **wymaga osobnej, wyraźnej zgody**. Program tworzy kopie zapasowe i w razie niepowodzenia próbuje przywrócić wcześniejszy stan. Bez tej zgody nie wyłącza istniejących timerów.
+
+### 🛡️ Zakres działania i bezpieczeństwo
+
+- Aktualizuje **dodatki KDE Store**, nie cały system operacyjny.
+- Pobiera <code>plasmoid-updater</code> z wydania projektu źródłowego i sprawdza **SHA-256** przed instalacją w <code>~/.local/bin</code>.
+- W trybie normalnym działa na koncie użytkownika, bez <code>sudo</code>.
+- Przy brakujących zależnościach może — po zatwierdzeniu — zainstalować pakiet <code>bsdtar</code> lub jego odpowiednik przez menedżer pakietów na systemach modyfikowalnych.
+- Nie modyfikuje atomowego obrazu Bazzite i nie nadpisuje plików wcześniejszych aplikacji.
+- Dla skanowania i podglądu używa operacji odczytu; ręczne zmiany wymagają potwierdzenia.
+
+### 🧰 Rozwiązywanie problemów
+
+| Problem | Co sprawdzić? |
+| :-- | :-- |
+| AppImage nie uruchamia się | Uprawnienie wykonywania pliku, architekturę x86_64 i sesję Plasma 6. |
+| Brakuje <code>plasmoid-updater</code> lub <code>bsdtar</code> | Na Pulpicie kliknij **Zainstaluj / sprawdź wersję**. |
+| Nie widać wszystkich dodatków systemowych | Odczyt elementów systemowych jest opcjonalny; dodatki użytkownika pozostają dostępne bez hasła administratora. |
+| Harmonogram lub agent nie działa | Na karcie **Automatyzacja** uruchom test, a następnie skorzystaj z naprawy agenta i dziennika usługi. |
+| Pasek postępu nie pokazuje procentów | Gdy narzędzie nie udostępnia procentów, pasek celowo pokazuje animację oraz aktualny etap i czas pracy. |
+
+W razie problemów otwórz [Issues](https://github.com/wolfgangxxiii/plasma-addon-manager/issues) i dołącz informacje o dystrybucji, wersji Plasma oraz komunikat z dziennika (bez danych prywatnych).
+
+### 🛠️ Budowanie ze źródeł
+
+Wymagane: **CMake 3.24+**, kompilator C++17, Ninja, **Qt 6.5+**, Qt Quick/Quick Controls, **KDE Kirigami (KF6)**, **QQC2DesktopStyle**, Extra CMake Modules, **Rust i Cargo**.
+
+~~~bash
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build --parallel
 ./build/bin/plasma-addon-manager
-```
+~~~
 
 Testy backendu:
 
-```bash
+~~~bash
 cargo test --manifest-path backend/Cargo.toml
-```
+~~~
 
-### AppImage — bez archiwum ZIP
+Budowanie AppImage na odpowiednio przygotowanym systemie Linux x86_64:
 
-Projekt przygotowuje **wyłącznie AppImage** dla systemów KDE Plasma na x86_64.
-Pobierz gotowy plik `.AppImage` bezpośrednio z
-[GitHub Releases](https://github.com/wolfgangxxiii/plasma-addon-manager/releases).
-Nie trzeba pobierać archiwum ZIP z GitHub Actions.
+~~~bash
+bash scripts/build-appimage.sh
+~~~
 
-**Na Bazzite nie potrzebujesz terminala:** otwórz **Bazaar** i zainstaluj
-**Gear Lever** (jeśli go jeszcze nie ma). Następnie w **Dolphin** otwórz
-pobrany `.AppImage` za pomocą Gear Lever, kliknij **Integruj** i uruchamiaj
-Plasma Addon Manager z menu aplikacji KDE. W samym programie użyj przycisku
-**Zainstaluj / sprawdź wersję**, aby zainstalować `plasmoid-updater`. Na karcie
-**Automatyzacja** wybierz interwał i kliknij **Zapisz i zastosuj**. Jeśli stary
-timer jest aktywny, zaznacz zgodę na jego bezpieczne przejęcie.
-
-Można również bez Gear Lever: w Dolphin kliknij prawym przyciskiem plik,
-wybierz **Właściwości → Uprawnienia → Jest wykonywalny**, a następnie otwórz
-AppImage dwuklikiem. Jest to zabezpieczenie Linuksa, nie błąd aplikacji.
-
-**Na openSUSE Tumbleweed:** plik AppImage uruchamia się bez dodatkowych
-pakietów, lecz aktualizacje KDE Store wymagają **`bsdtar`**. Naciśnij zwykły
-przycisk **Zainstaluj / sprawdź wersję**. Program sam doinstaluje pakiet
-`bsdtar` przez Zypper; jeśli potrzeba uprawnień, pojawi się graficzne okno
-PolicyKit. Nie trzeba wpisywać żadnego polecenia w terminalu ani używać
-osobnego przycisku. Jeśli autoryzacja zostanie anulowana, program pokaże błąd.
-Odczyt listy dodatków użytkownika nadal nie wymaga hasła administratora.
-
-Wyłącznie dla osób preferujących terminal istnieje również możliwość:
-
-```bash
-chmod +x Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
-./Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
-```
-
-Wersję testową można samodzielnie zbudować przez
-`bash scripts/build-appimage.sh`. Po udanej kompilacji i teście uruchomienia
-[GitHub Actions](https://github.com/wolfgangxxiii/plasma-addon-manager/actions/workflows/appimage.yml)
-publikuje AppImage w Releases. Nie tworzymy już pakietów DEB ani Flatpak.
-
-Kolejne etapy obejmą testy AppImage na wielu rzeczywistych dystrybucjach,
-rozbudowane testy migracji systemd i dalsze dopracowanie obsługi błędów KDE Store.
-
-**Program nie jest menedżerem aktualizacji systemu operacyjnego.** Wyjątkiem
-jest instalacja niezbędnego pakietu `bsdtar` (i jego zależności) podczas
-konfiguracji aktualizatora, po potwierdzeniu przez użytkownika.
+Wynik zostanie zapisany w katalogu <code>dist/</code>. Skrypt sprawdza sumy kontrolne pobieranych narzędzi pakujących i wymaga dostępności odpowiednich modułów Qt/Kirigami.
 
 ---
 
-## License / Licencja
+<a id="english"></a>
 
-Copyright © 2026 Szymon Bławat (wolfgangxxiii).
+## 🇬🇧 English
 
-Licensed under **GNU GPL-3.0-or-later**, see [LICENSE](LICENSE). The upstream
-`plasmoid-updater` project is independent and retains its own license and authors.
+**Plasma Addon Manager** is a graphical application for managing **KDE Plasma 6 add-ons** across Linux distributions. It combines a native **Qt 6 / KDE Kirigami** interface with the independent [plasmoid-updater](https://github.com/uwuclxdy/plasmoid-updater) utility and a **Rust** backend.
+
+Browse installed add-ons, check for updates, review changes before applying them, and optionally schedule automatic updates in the background.
+
+> [!IMPORTANT]
+> **Version 0.4.5 is a development preview, not a stable 1.0 release.** Automatic updates are opt-in. The AppImage has not yet been fully validated on every listed Linux distribution.
+
+### ✨ Features
+
+| Page | What it does |
+| :-- | :-- |
+| 🏠 **Dashboard** | Environment and prerequisite checks, updater/agent versions, timer health, next run and suggested next action. |
+| 🧩 **Plasma add-ons** | Installed add-on inventory, types, versions, available updates and per-add-on issues. |
+| 🔄 **Updates** | Read-only update checks, dry-run preview and confirmed manual updates. |
+| ⏱️ **Automation** | **6/12/24-hour** schedules, exclusions, optional Plasma restart and KDE desktop notifications. |
+| 📋 **Journal** | Time-stamped session actions and output; separate access to the user service journal. |
+| ℹ️ **About** | App identity, project links, author, credits and license. |
+
+The adaptive interface follows the active Plasma theme, offers **Polish and English**, includes a persistent operation footer with elapsed time, and displays color-coded notices in a dedicated right-side panel or drawer.
+
+### 🐧 Linux support
+
+The application targets **KDE Plasma 6 on Linux x86_64**. Its prerequisite installer handles these distribution families:
+
+| Distribution | Missing <code>bsdtar</code> prerequisite |
+| :-- | :-- |
+| **Bazzite KDE** | Reuse an existing binary or install <code>libarchive</code> using user-local Homebrew without changing the OS image. |
+| **openSUSE Tumbleweed** | <code>bsdtar</code> through Zypper. |
+| **Fedora KDE** | Corresponding package through DNF. |
+| **Debian / Ubuntu / Kubuntu / KDE neon** | <code>libarchive-tools</code> through APT. |
+| **Arch Linux / CachyOS** | <code>libarchive</code> through Pacman. |
+
+Installing a missing system prerequisite on a mutable distribution may request graphical **PolicyKit authorization**. Ordinary add-on checks and user-local updates do not require root access.
+
+### 📥 Download and first run
+
+1. Download **<code>Plasma-Addon-Manager-v0.4.5-x86_64.AppImage</code>** from [GitHub Releases](https://github.com/wolfgangxxiii/plasma-addon-manager/releases). Download the executable itself, not an Actions ZIP.
+2. In Dolphin, use **Properties → Permissions** to allow executing the file.
+3. Open the AppImage.
+4. On **Dashboard**, select **Install / check version** to set up <code>plasmoid-updater</code> and prerequisites.
+5. Open **Plasma add-ons** to inspect installed items and check for updates.
+
+**Bazzite KDE:** optionally use [Gear Lever](https://github.com/mijorus/gearlever) from Bazaar to integrate the AppImage with your KDE application menu. Gear Lever is not required for direct execution.
+
+**Terminal alternative:**
+
+~~~bash
+chmod +x Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
+./Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
+~~~
+
+> [!NOTE]
+> The current release format is **AppImage only** (no DEB or Flatpak). Installing the graphical app alone does not install <code>plasmoid-updater</code> or enable a background schedule.
+
+### ⏰ Background updates
+
+1. Install or verify the updater from **Dashboard**.
+2. Open **Automation**, select **6, 12 or 24 hours**, and configure exclusions, notifications and optional Plasma restart.
+3. Choose **Save and apply** to configure the app-owned <code>systemd --user</code> service and timer.
+4. Run the configuration test to check requirements, agent, service and schedule.
+
+The independent <code>plasma-addon-manager-agent</code> performs scheduled work **even when the GUI is closed**. The app also supports agent repair, manual service execution and journal inspection.
+
+> [!CAUTION]
+> Existing schedules from the earlier Bazzite or Debian GUI are not silently replaced. Migration requires **explicit consent**, creates backups and includes rollback behavior if configuration fails.
+
+### 🛡️ Safety and scope
+
+- Manages **KDE Store add-ons**, not general operating-system upgrades.
+- Downloads the upstream <code>plasmoid-updater</code> release with **SHA-256 verification** and installs it under <code>~/.local/bin</code>.
+- Uses user-level permissions for normal operations.
+- Installs a missing system prerequisite only through a confirmed action; traditional distributions may show a PolicyKit prompt.
+- Leaves the atomic Bazzite OS image and old updater configuration files intact.
+- Keeps inventory and preview operations read-only; manual updates require confirmation.
+
+### 🧰 Troubleshooting
+
+| Symptom | Suggested action |
+| :-- | :-- |
+| AppImage will not launch | Check executable permission, x86_64 architecture and your Plasma 6 session. |
+| Updater or <code>bsdtar</code> is missing | Use **Install / check version** on the Dashboard. |
+| Some system-wide add-ons are absent | System-wide inventory may be omitted when reading it would require interactive administrator access. |
+| Agent or timer is unhealthy | Run the **Automation** test, inspect the journal and use **Repair agent** if indicated. |
+| Progress is animated without a percentage | The upstream CLI does not always report progress percentages; the elapsed time and current step remain visible. |
+
+For bug reports and feature requests, open [GitHub Issues](https://github.com/wolfgangxxiii/plasma-addon-manager/issues). Include your distribution, Plasma version and relevant log output without private information.
+
+### 🛠️ Build from source
+
+Requirements: **CMake 3.24+**, C++17 toolchain, Ninja, **Qt 6.5+**, Qt Quick / Quick Controls 2, **KDE Kirigami (KF6)**, **QQC2DesktopStyle**, Extra CMake Modules, **Rust and Cargo**.
+
+~~~bash
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+./build/bin/plasma-addon-manager
+~~~
+
+Backend tests:
+
+~~~bash
+cargo test --manifest-path backend/Cargo.toml
+~~~
+
+Build an AppImage on a suitable Linux x86_64 host:
+
+~~~bash
+bash scripts/build-appimage.sh
+~~~
+
+The output is written to <code>dist/</code>. The packaging script validates downloaded packaging tools using pinned SHA-256 hashes and checks the required Qt/Kirigami components.
+
+---
+
+## 🏗️ Architecture / Architektura
+
+~~~mermaid
+flowchart TD
+    GUI["Qt 6 + Kirigami GUI"] --> Helper["Rust helper"]
+    Helper --> Updater["plasmoid-updater"]
+    Helper --> Agent["Rust background agent"]
+    Agent --> Timer["systemd --user service + timer"]
+    Agent --> Updater
+~~~
+
+The GUI handles interaction while the helper performs allow-listed operations; scheduled updates run through a separate user-level agent. / Interfejs obsługuje użytkownika, pomocnik wykonuje dozwolone operacje, a oddzielny agent realizuje zadania według harmonogramu.
+
+## 🗺️ Roadmap / Plan rozwoju
+
+| Version / Wersja | Goal / Cel | Status |
+| :-- | :-- | :-- |
+| **0.1–0.3** | Qt/Kirigami foundations, installer, systemd automation / Podstawy, instalator, harmonogram | ✅ |
+| **0.4.0–0.4.5** | Add-on inventory, status, logs, notifications, About page / Dodatki, stan, dziennik, powiadomienia, O programie | ✅ Preview |
+| **0.5.0** | Reliability, migration/rollback and interface tests / Niezawodność, testy migracji i interfejsu | 🔜 |
+| **1.0.0** | Cross-distribution validation and stable AppImage / Testy wielu dystrybucji i stabilna wersja | 🔜 |
+
+## 🎨 Branding / Grafiki projektu
+
+The new application icon and README banner use a consistent blue-violet palette and a four-tile update symbol. / Nowa ikona aplikacji i baner README korzystają ze spójnej niebiesko-fioletowej kolorystyki i symbolu aktualizowanych dodatków.
+
+| Asset / Zasób | File / Plik |
+| :-- | :-- |
+| README banner / Baner | [PNG](assets/plasma-addon-manager-banner.png) |
+| Application icon / Ikona programu | [SVG](assets/io.github.wolfgangxxiii.PlasmaAddonManager.svg) |
+| PNG icons / Ikony PNG | [16](assets/plasma-addon-manager-icon-16.png) · [32](assets/plasma-addon-manager-icon-32.png) · [48](assets/plasma-addon-manager-icon-48.png) · [64](assets/plasma-addon-manager-icon-64.png) · [128](assets/plasma-addon-manager-icon-128.png) · [256](assets/plasma-addon-manager-icon-256.png) · [512](assets/plasma-addon-manager-icon-512.png) · [1024](assets/plasma-addon-manager-icon-1024.png) |
+| Complete asset pack / Pełny pakiet | [Download ZIP / Pobierz ZIP](assets/plasma-addon-manager-branding.zip) |
+
+## 🤝 Credits / Podziękowania
+
+- **Author / Autor:** [Szymon Bławat (wolfgangxxiii)](https://github.com/wolfgangxxiii)
+- **Upstream updater / Silnik aktualizacji:** [uwuclxdy/plasmoid-updater](https://github.com/uwuclxdy/plasmoid-updater) — independent project with its own authors and license.
+- **Earlier GUI projects / Wcześniejsze interfejsy:** [Bazzite GUI](https://github.com/wolfgangxxiii/bazzite-kde-installer-plasmoid-updater-gui) · [Debian/Ubuntu GUI](https://github.com/wolfgangxxiii/deb-kde-installer-plasmoid-updater-gui)
+- **Desktop ecosystem / Środowisko graficzne:** [KDE Plasma](https://kde.org/plasma-desktop/) · [Kirigami](https://develop.kde.org/frameworks/kirigami/)
+
+## 📜 License / Licencja
+
+Copyright © 2026 **Szymon Bławat**.
+
+Licensed under **GNU GPL-3.0-or-later** — see [LICENSE](LICENSE). The application and its visual assets belong to this project; upstream components retain their respective licenses and authorship. / Aplikacja i jej grafiki są częścią tego projektu; niezależne komponenty zachowują własne licencje i autorów.
+
+<p align="center">
+  <img src="assets/io.github.wolfgangxxiii.PlasmaAddonManager.svg" width="64" alt="Plasma Addon Manager icon" /><br />
+  <sub>Made for KDE Plasma 6 • Created by wolfgangxxiii</sub>
+</p>
