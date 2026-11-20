@@ -31,6 +31,23 @@ test -x "$pam_appdir/usr/libexec/plasma-addon-manager/plasma-addon-helper"
 test -x "$pam_appdir/usr/libexec/plasma-addon-manager/plasma-addon-manager-agent"
 "$pam_appdir/usr/libexec/plasma-addon-manager/plasma-addon-manager-agent" --version
 
+# Embed both Breeze schemes for a reliable Light/Dark switch even if a host
+# KDE installation uses a custom theme or has no Breeze presets installed.
+pam_schemes_dir="${pam_appdir}/usr/share/color-schemes"
+mkdir -p "$pam_schemes_dir"
+for pam_scheme in BreezeLight BreezeDark; do
+    test -f "/usr/share/color-schemes/${pam_scheme}.colors" || {
+        echo "Missing ${pam_scheme}.colors; install kde-style-breeze-data." >&2
+        exit 1
+    }
+    cp "/usr/share/color-schemes/${pam_scheme}.colors" "$pam_schemes_dir/"
+done
+if test -f /usr/share/doc/kde-style-breeze-data/copyright; then
+    mkdir -p "${pam_appdir}/usr/share/doc/plasma-addon-manager"
+    cp /usr/share/doc/kde-style-breeze-data/copyright \
+        "${pam_appdir}/usr/share/doc/plasma-addon-manager/breeze-copyright"
+fi
+
 mkdir -p "$pam_tools" "$pam_dist"
 
 # SHA-256 checksums of the upstream continuous releases on 2026-11-18.
@@ -127,6 +144,8 @@ export EXTRA_PLATFORM_PLUGINS="$pam_extra_platforms"
 test -s "$OUTPUT"
 test -f "${pam_appdir}/usr/qml/org/kde/desktop/Button.qml"
 test -f "${pam_appdir}/usr/plugins/kf6/kirigami/platform/org.kde.desktop.so"
+test -f "${pam_appdir}/usr/share/color-schemes/BreezeLight.colors"
+test -f "${pam_appdir}/usr/share/color-schemes/BreezeDark.colors"
 test -f "${pam_appdir}/usr/plugins/wayland-graphics-integration-client/libqt-plugin-wayland-egl.so"
 pam_smoke_log="${pam_build}/appimage-smoke.log"
 if ! QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \

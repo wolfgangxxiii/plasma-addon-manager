@@ -1,5 +1,6 @@
 #include "BackendBridge.h"
 #include "DesktopIconIntegration.h"
+#include "ThemeBridge.h"
 
 #include <QDir>
 #include <QEventLoop>
@@ -8,6 +9,7 @@
 #include <QGuiApplication>
 #include <QIcon>
 #include <QPluginLoader>
+#include <QPalette>
 #include <QStandardPaths>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -191,6 +193,7 @@ int main(int argc, char *argv[]) {
     }
 
     BackendBridge backend;
+    ThemeBridge themeBridge(smokeTest);
     QQmlApplicationEngine engine;
     bool qmlBindingError = false;
     if (smokeTest) {
@@ -207,6 +210,7 @@ int main(int argc, char *argv[]) {
         });
     }
     engine.rootContext()->setContextProperty(QStringLiteral("backend"), &backend);
+    engine.rootContext()->setContextProperty(QStringLiteral("themeBridge"), &themeBridge);
     engine.load(QUrl(QStringLiteral("qrc:/qml/Main.qml")));
     if (engine.rootObjects().isEmpty()) {
         return 1;
@@ -270,12 +274,48 @@ int main(int argc, char *argv[]) {
         QObject *aboutLogo = root->findChild<QObject *>(QStringLiteral("aboutBrandIcon"));
         QObject *topNavigation = root->findChild<QObject *>(QStringLiteral("horizontalNavigation"));
         QObject *languageSelector = root->findChild<QObject *>(QStringLiteral("interfaceLanguageSelector"));
+        QObject *themeSelector = root->findChild<QObject *>(QStringLiteral("interfaceThemeSelector"));
         QObject *mainScroll = root->findChild<QObject *>(QStringLiteral("mainContentScroll"));
         QObject *sidebar = root->findChild<QObject *>(QStringLiteral("notificationSidebar"));
         QObject *statusSeparator = root->findChild<QObject *>(QStringLiteral("statusSeparator"));
         if (!aboutLogo || aboutLogo->property("status").toInt() != 1
-                || !topNavigation || !languageSelector || !mainScroll || !sidebar || !statusSeparator) {
-            qCritical() << "QML smoke test: About icon, navigation, sidebar, status line or language control is missing";
+                || !topNavigation || !languageSelector || !themeSelector
+                || !mainScroll || !sidebar || !statusSeparator) {
+            qCritical() << "QML smoke test: About icon, navigation, sidebar, status line or appearance controls are missing";
+            return 3;
+        }
+        // Light/Dark must recolor the actual Qt application, not just change
+        // the selector's label. The test is transient and never saves settings.
+        if (themeBridge.choice() != QStringLiteral("auto")
+                || !themeBridge.setChoice(QStringLiteral("light"))) {
+            qCritical() << "QML smoke test: cannot select light appearance";
+            return 3;
+        }
+        QCoreApplication::processEvents();
+        if (QGuiApplication::palette().color(QPalette::Window).lightness() <= 128
+                || themeSelector->property("currentIndex").toInt() != 1) {
+            qCritical() << "QML smoke test: light scheme did not update the palette or selector";
+            return 3;
+        }
+        if (!themeBridge.setChoice(QStringLiteral("dark"))) {
+            qCritical() << "QML smoke test: cannot select dark appearance";
+            return 3;
+        }
+        QCoreApplication::processEvents();
+        if (QGuiApplication::palette().color(QPalette::Window).lightness() >= 128
+                || themeSelector->property("currentIndex").toInt() != 2) {
+            qCritical() << "QML smoke test: dark scheme did not update the palette or selector";
+            return 3;
+        }
+        if (themeBridge.setChoice(QStringLiteral("invalid"))
+                || themeBridge.choice() != QStringLiteral("dark")
+                || !themeBridge.setChoice(QStringLiteral("auto"))) {
+            qCritical() << "QML smoke test: invalid color setting or Auto fallback failed";
+            return 3;
+        }
+        QCoreApplication::processEvents();
+        if (themeSelector->property("currentIndex").toInt() != 0) {
+            qCritical() << "QML smoke test: Auto is not reflected in theme selector";
             return 3;
         }
         // All visible decoration must use bundled images. Icon theme lookup

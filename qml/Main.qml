@@ -295,6 +295,26 @@ Kirigami.ApplicationWindow {
                     }
                 }
             }
+            RowLayout {
+                Layout.fillWidth: true
+                Controls.Label {
+                    text: window.loc("Motyw", "Theme")
+                    font.pixelSize: 12
+                }
+                Item { Layout.fillWidth: true }
+                Controls.ComboBox {
+                    objectName: "interfaceThemeSelector"
+                    Layout.preferredWidth: 120
+                    model: ["Auto", window.loc("Jasny", "Light"), window.loc("Ciemny", "Dark")]
+                    currentIndex: Math.max(0, ["auto", "light", "dark"].indexOf(themeBridge.choice))
+                    Accessible.name: window.loc("Motyw interfejsu", "Interface theme")
+                    onActivated: function(index) {
+                        if (!themeBridge.setChoice(["auto", "light", "dark"][index])) {
+                            console.warn("Cannot activate requested color scheme")
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -1358,7 +1378,7 @@ Kirigami.ApplicationWindow {
             Controls.Frame {
                 visible: !window.showNotificationSidebar
                 Layout.fillWidth: true
-                Layout.preferredHeight: 156
+                Layout.preferredHeight: 194
                 padding: Kirigami.Units.largeSpacing
                 Loader {
                     anchors.fill: parent
@@ -1399,7 +1419,7 @@ Kirigami.ApplicationWindow {
                 }
                 Controls.Frame {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 156
+                    Layout.preferredHeight: 194
                     padding: Kirigami.Units.largeSpacing
                     Loader {
                         anchors.fill: parent
