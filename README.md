@@ -57,7 +57,7 @@ Sprawdzaj dostępne aktualizacje, przeglądaj zainstalowane dodatki, uruchamiaj 
 | 📋 **Dziennik** | Historia operacji z godzinami, wynikami i komunikatami pomocnika. Dziennik sesji pozostaje dostępny do zamknięcia okna. |
 | ℹ️ **O programie** | Dane aplikacji, autor, licencja oraz wygodne odnośniki do kodu, wydań i zgłaszania błędów. |
 
-**Dopracowany interfejs:** automatyczny lub ręczny wybór języka polskiego i angielskiego, motyw zgodny z KDE Plasma, dolny pasek postępu z czasem operacji i osobny panel kolorowych powiadomień po prawej stronie (w węższych oknach jako wysuwany panel).
+**Dopracowany interfejs:** górne menu nawigacyjne z pionową listą ekranów i podmenu języka (Auto / Polski / English), motyw zgodny z KDE Plasma, ikona programu w nagłówku i na ekranie „O programie”, dolny pasek postępu z czasem operacji i osobny panel kolorowych powiadomień po prawej stronie (w węższych oknach jako wysuwany panel).
 
 ### 🐧 Dystrybucje i zależności
 
@@ -83,7 +83,7 @@ Na tradycyjnych dystrybucjach instalacja brakującego pakietu systemowego może 
 
 **Bazzite KDE:** możesz zainstalować [Gear Lever](https://github.com/mijorus/gearlever) z Bazaar, otworzyć nim pobrany AppImage i wybrać **Integruj**. Aplikacja pojawi się wtedy w menu KDE. Gear Lever nie jest wymagany do uruchomienia programu.
 
-**Ikona KDE/Wayland — poprawka Preview 3:** przy pierwszym uruchomieniu AppImage na Wayland program automatycznie zapisuje ikonę PNG i ukryty wpis identyfikacyjny <code>io.github.wolfgangxxiii.PlasmaAddonManager.desktop</code> w katalogu danych bieżącego użytkownika (<code>~/.local/share/</code> przy ustawieniach domyślnych). Dzięki temu KWin może skojarzyć uruchomione okno z ikoną programu zamiast wyświetlać pomarańczowe „W”. Nie wymaga to <code>sudo</code> i nie tworzy dodatkowej pozycji w menu. Istniejące wpisy użytkownika i systemu nie są nadpisywane.
+**Ikona KDE/Wayland — od Preview 3:** przy pierwszym uruchomieniu AppImage na Wayland program automatycznie zapisuje ikonę PNG i ukryty wpis identyfikacyjny <code>io.github.wolfgangxxiii.PlasmaAddonManager.desktop</code> w katalogu danych bieżącego użytkownika (<code>~/.local/share/</code> przy ustawieniach domyślnych). Dzięki temu KWin może skojarzyć uruchomione okno z ikoną programu zamiast wyświetlać pomarańczowe „W”. Nie wymaga to <code>sudo</code> i nie tworzy dodatkowej pozycji w menu. Istniejące wpisy użytkownika i systemu nie są nadpisywane.
 
 Jeśli poprzednia wersja była zintegrowana przez Gear Lever, zastąp ją nowym plikiem AppImage i odśwież integrację. Pełny dziennik otworzysz z prawego panelu **Powiadomienia**; usunięto powielony przycisk z dolnego paska.
 
@@ -179,7 +179,7 @@ Browse installed add-ons, check for updates, review changes before applying them
 | 📋 **Journal** | Time-stamped session actions and output; separate access to the user service journal. |
 | ℹ️ **About** | App identity, project links, author, credits and license. |
 
-The adaptive interface follows the active Plasma theme, offers **Polish and English**, includes a persistent operation footer with elapsed time, and displays color-coded notices in a dedicated right-side panel or drawer.
+The adaptive interface follows the active Plasma theme, with a **top dropdown navigation** showing a vertical list of pages and a language submenu (Auto / Polski / English). It displays the app icon in the header and About card, includes a persistent operation footer with elapsed time, and displays color-coded notices in a dedicated right-side panel or drawer.
 
 ### 🐧 Linux support
 
@@ -205,7 +205,7 @@ Installing a missing system prerequisite on a mutable distribution may request g
 
 **Bazzite KDE:** optionally use [Gear Lever](https://github.com/mijorus/gearlever) from Bazaar to integrate the AppImage with your KDE application menu. Gear Lever is not required for direct execution.
 
-**KDE/Wayland icon — Preview 3 fix:** on first launch in a Wayland session, the AppImage automatically installs a PNG icon and a hidden identity file named <code>io.github.wolfgangxxiii.PlasmaAddonManager.desktop</code> in the current user's XDG data directory (<code>~/.local/share/</code> by default). KWin can then associate the actual window with the program icon instead of the orange "W". This requires no root permissions, adds no duplicate menu item and preserves user-managed launchers.
+**KDE/Wayland icon — fixed since Preview 3:** on first launch in a Wayland session, the AppImage automatically installs a PNG icon and a hidden identity file named <code>io.github.wolfgangxxiii.PlasmaAddonManager.desktop</code> in the current user's XDG data directory (<code>~/.local/share/</code> by default). KWin can then associate the actual window with the program icon instead of the orange "W". This requires no root permissions, adds no duplicate menu item and preserves user-managed launchers.
 
 If you previously used Gear Lever, replace the AppImage and refresh its integration. The full session journal remains accessible through the right-side **Notifications** panel; the redundant footer button has been removed.
 

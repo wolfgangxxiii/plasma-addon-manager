@@ -68,7 +68,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=v0.4.5-appimage-preview.3
+          tag=v0.4.5-appimage-preview.4
           appimage=dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
           test -s "$appimage"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
@@ -76,6 +76,6 @@ jobs:
           else
             gh release create "$tag" "$appimage" \
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 3 · Naprawa ikony Wayland' \
-              --notes 'Naprawiono pomarańczową ikonę W w dekoracji okna i na pasku zadań KDE Plasma na Wayland. Przy pierwszym uruchomieniu AppImage tworzy niewidoczny wpis tożsamości .desktop oraz kopiuje ikonę PNG do katalogu użytkownika XDG (bez sudo). Wpis ma identyfikator zgodny z app_id Qt; nie zastępuje własnych launcherów użytkownika i nie dodaje duplikatu do menu. Dodano test integracji ikony i usunięto zbędny przycisk Dziennik z dolnego paska (pełny dziennik nadal dostępny w Powiadomieniach). Po aktualizacji uruchom nowy plik AppImage; jeśli integrujesz go przez Gear Lever, ponownie zintegruj nową wersję.'
+              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 4 · Górne menu i ikona' \
+              --notes 'Odświeżono nawigację: zamiast wysuwanego menu bocznego jest rozwijane menu górne z pionową listą sekcji. W podmenu Język interfejsu zachowano wybór Auto/Polski/English. Na ekranie O programie i w nagłówku jest teraz prawdziwa ikona PNG aplikacji, ładowana bez zależności od obsługi SVG. Dodano test obecności obu elementów w QML. Zachowano naprawę ikony KDE Wayland oraz powiadomienia z pełnym dziennikiem z poprzedniego wydania.'
           fi

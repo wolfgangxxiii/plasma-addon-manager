@@ -33,11 +33,25 @@ ColumnLayout {
             width: parent.width
             spacing: Kirigami.Units.largeSpacing
 
-            Kirigami.Icon {
-                source: "qrc:/images/app.svg"
-                Layout.preferredWidth: 72
-                Layout.preferredHeight: 72
+            Rectangle {
+                Layout.preferredWidth: 88
+                Layout.preferredHeight: 88
                 Layout.alignment: Qt.AlignTop
+                radius: 16
+                color: Qt.rgba(Kirigami.Theme.highlightColor.r,
+                               Kirigami.Theme.highlightColor.g,
+                               Kirigami.Theme.highlightColor.b, 0.10)
+
+                Image {
+                    id: aboutLogo
+                    objectName: "aboutBrandIcon"
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    source: "qrc:/images/app.png"
+                    fillMode: Image.PreserveAspectFit
+                    sourceSize: Qt.size(128, 128)
+                    smooth: true
+                }
             }
             ColumnLayout {
                 Layout.fillWidth: true

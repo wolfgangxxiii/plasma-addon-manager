@@ -266,6 +266,12 @@ int main(int argc, char *argv[]) {
         QCoreApplication::processEvents();
         root->setProperty("section", 4);
         QCoreApplication::processEvents();
+        QObject *aboutLogo = root->findChild<QObject *>(QStringLiteral("aboutBrandIcon"));
+        QObject *topNavigation = root->findChild<QObject *>(QStringLiteral("topNavigationButton"));
+        if (!aboutLogo || aboutLogo->property("status").toInt() != 1 || !topNavigation) {
+            qCritical() << "QML smoke test: About icon or top navigation is missing";
+            return 3;
+        }
         root->setProperty("section", 0);
         QCoreApplication::processEvents();
         if (qmlBindingError) {

@@ -465,38 +465,6 @@ Kirigami.ApplicationWindow {
         }
     }
 
-    globalDrawer: Kirigami.GlobalDrawer {
-        title: "Plasma Addon Manager"
-        titleIcon: "qrc:/images/app.png"
-        actions: [
-            Kirigami.Action {
-                text: window.loc("Pulpit", "Dashboard")
-                icon.name: "view-dashboard"
-                onTriggered: window.section = 0
-            },
-            Kirigami.Action {
-                text: window.loc("Dodatki Plasma", "Plasma add-ons")
-                icon.name: "preferences-desktop-plasma"
-                onTriggered: window.section = 1
-            },
-            Kirigami.Action {
-                text: window.loc("Automatyzacja", "Automation")
-                icon.name: "chronometer"
-                onTriggered: window.section = 2
-            },
-            Kirigami.Action {
-                text: window.loc("Dziennik", "Journal")
-                icon.name: "view-list-text"
-                onTriggered: window.section = 3
-            },
-            Kirigami.Action {
-                text: window.loc("O programie", "About")
-                icon.name: "help-about"
-                onTriggered: window.section = 4
-            }
-        ]
-    }
-
     pageStack.initialPage: Kirigami.Page {
         title: window.currentSection
         padding: 0
@@ -525,8 +493,11 @@ Kirigami.ApplicationWindow {
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.largeSpacing
 
-                Kirigami.Icon {
-                    source: "preferences-desktop-plasma"
+                Image {
+                    source: "qrc:/images/app.png"
+                    fillMode: Image.PreserveAspectFit
+                    sourceSize: Qt.size(96, 96)
+                    smooth: true
                     Layout.preferredWidth: 46
                     Layout.preferredHeight: 46
                 }
@@ -546,13 +517,82 @@ Kirigami.ApplicationWindow {
                         Layout.fillWidth: true
                     }
                 }
-                Controls.ComboBox {
-                    id: languageSelector
-                    model: ["Auto", "Polski", "English"]
-                    implicitWidth: 115
-                    Accessible.name: window.loc("Język interfejsu", "Interface language")
-                    onActivated: function(index) {
-                        window.languageChoice = ["auto", "pl", "en"][index]
+                Controls.ToolButton {
+                    id: navigationButton
+                    objectName: "topNavigationButton"
+                    Layout.preferredWidth: 174
+                    icon.name: "application-menu"
+                    text: window.currentSection
+                    display: Controls.AbstractButton.TextBesideIcon
+                    Accessible.name: window.loc("Menu nawigacji — ", "Navigation menu — ") + window.currentSection
+                    Controls.ToolTip.visible: hovered
+                    Controls.ToolTip.text: window.loc("Wybierz ekran lub język", "Select a page or language")
+                    onClicked: navigationMenu.open()
+
+                    Controls.Menu {
+                        id: navigationMenu
+                        x: navigationButton.width - width
+                        y: navigationButton.height
+                        width: 235
+
+                        Controls.MenuItem {
+                            text: window.loc("Pulpit", "Dashboard")
+                            icon.name: "view-dashboard"
+                            checkable: true
+                            checked: window.section === 0
+                            onTriggered: window.section = 0
+                        }
+                        Controls.MenuItem {
+                            text: window.loc("Dodatki Plasma", "Plasma add-ons")
+                            icon.name: "preferences-desktop-plasma"
+                            checkable: true
+                            checked: window.section === 1
+                            onTriggered: window.section = 1
+                        }
+                        Controls.MenuItem {
+                            text: window.loc("Automatyzacja", "Automation")
+                            icon.name: "chronometer"
+                            checkable: true
+                            checked: window.section === 2
+                            onTriggered: window.section = 2
+                        }
+                        Controls.MenuItem {
+                            text: window.loc("Dziennik", "Journal")
+                            icon.name: "view-list-text"
+                            checkable: true
+                            checked: window.section === 3
+                            onTriggered: window.section = 3
+                        }
+                        Controls.MenuItem {
+                            text: window.loc("O programie", "About")
+                            icon.name: "help-about"
+                            checkable: true
+                            checked: window.section === 4
+                            onTriggered: window.section = 4
+                        }
+                        Controls.MenuSeparator {}
+                        Controls.Menu {
+                            title: window.loc("Język interfejsu", "Interface language")
+                            icon.name: "preferences-desktop-locale"
+                            Controls.MenuItem {
+                                text: window.loc("Automatycznie", "Automatic")
+                                checkable: true
+                                checked: window.languageChoice === "auto"
+                                onTriggered: window.languageChoice = "auto"
+                            }
+                            Controls.MenuItem {
+                                text: "Polski"
+                                checkable: true
+                                checked: window.languageChoice === "pl"
+                                onTriggered: window.languageChoice = "pl"
+                            }
+                            Controls.MenuItem {
+                                text: "English"
+                                checkable: true
+                                checked: window.languageChoice === "en"
+                                onTriggered: window.languageChoice = "en"
+                            }
+                        }
                     }
                 }
                 Controls.ToolButton {
