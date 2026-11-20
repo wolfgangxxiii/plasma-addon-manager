@@ -57,7 +57,7 @@ Sprawdzaj dostępne aktualizacje, przeglądaj zainstalowane dodatki, uruchamiaj 
 | 📋 **Dziennik** | Historia operacji z godzinami, wynikami i komunikatami pomocnika. Dziennik sesji pozostaje dostępny do zamknięcia okna. |
 | ℹ️ **O programie** | Dane aplikacji, autor, licencja oraz wygodne odnośniki do kodu, wydań i zgłaszania błędów. |
 
-**Dopracowany interfejs:** stały **poziomy pasek nawigacji** z pięcioma przyciskami (ikona nad podpisem), podświetleniem aktywnej sekcji w kolorze motywu KDE oraz osobnym wyborem języka (Auto / Polski / English) u góry po prawej. Ikona programu widoczna jest w nagłówku i na ekranie „O programie”. Dół okna zajmuje pasek postępu z czasem operacji, a po prawej znajduje się panel kolorowych powiadomień (w węższych oknach jako wysuwany panel).
+**Dopracowany interfejs:** stały **poziomy pasek nawigacji** z pięcioma przyciskami (jawna ikona nad czytelnym podpisem, z symbolem zapasowym), podświetleniem aktywnej sekcji w kolorze motywu KDE oraz osobnym wyborem języka (Auto / Polski / English). Po prawej, pod panelem kolorowych powiadomień, znajduje się karta z nazwą programu, jego ikoną, opisem i wyborem języka. W węższych oknach powiadomienia otwierają się jako wysuwany panel, a karta informacji znajduje się na dole przewijanej zawartości. Dół okna zajmuje pasek postępu z czasem operacji.
 
 ### 🐧 Dystrybucje i zależności
 
@@ -179,7 +179,7 @@ Browse installed add-ons, check for updates, review changes before applying them
 | 📋 **Journal** | Time-stamped session actions and output; separate access to the user service journal. |
 | ℹ️ **About** | App identity, project links, author, credits and license. |
 
-The adaptive interface follows the active Plasma theme, with a **permanent horizontal navigation bar** showing five icon-above-label buttons and a theme-colored active page. The language selector (Auto / Polski / English) remains in the upper-right corner. The app icon appears in the header and About card, a persistent operation footer shows elapsed time, and color-coded notices appear in the dedicated right-side panel or drawer.
+The adaptive interface follows the active Plasma theme, with a **permanent horizontal navigation bar** showing five buttons with explicitly rendered icons and labels, a fallback symbol, and a theme-colored active page. The app identity card (logo, short description, version and language selector: Auto / Polski / English) now sits **below the notifications panel in the right column**. In narrower windows notifications become a drawer, and the identity card moves to the bottom of the scrollable content. A persistent operation footer shows elapsed time.
 
 ### 🐧 Linux support
 

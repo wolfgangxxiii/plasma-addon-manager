@@ -268,9 +268,20 @@ int main(int argc, char *argv[]) {
         QCoreApplication::processEvents();
         QObject *aboutLogo = root->findChild<QObject *>(QStringLiteral("aboutBrandIcon"));
         QObject *topNavigation = root->findChild<QObject *>(QStringLiteral("horizontalNavigation"));
-        if (!aboutLogo || aboutLogo->property("status").toInt() != 1 || !topNavigation) {
-            qCritical() << "QML smoke test: About icon or top navigation is missing";
+        QObject *languageSelector = root->findChild<QObject *>(QStringLiteral("interfaceLanguageSelector"));
+        if (!aboutLogo || aboutLogo->property("status").toInt() != 1
+                || !topNavigation || !languageSelector) {
+            qCritical() << "QML smoke test: About icon, navigation or language control is missing";
             return 3;
+        }
+        for (const char *name : {"navDashboard", "navAddons", "navAutomation", "navJournal", "navAbout"}) {
+            QObject *tile = root->findChild<QObject *>(QString::fromLatin1(name));
+            QObject *label = tile ? tile->findChild<QObject *>(QStringLiteral("navigationLabel")) : nullptr;
+            if (!tile || tile->property("iconName").toString().isEmpty()
+                    || !label || label->property("text").toString().trimmed().isEmpty()) {
+                qCritical() << "QML smoke test: navigation tile has no icon or label" << name;
+                return 3;
+            }
         }
         root->setProperty("section", 0);
         QCoreApplication::processEvents();

@@ -2,6 +2,7 @@
     <qresource prefix="/qml">
         <file alias="Main.qml">qml/Main.qml</file>
         <file alias="AboutPage.qml">qml/AboutPage.qml</file>
+        <file alias="NavTile.qml">qml/NavTile.qml</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="app.svg">assets/plasma-addon-manager-icon-v2.svg</file>

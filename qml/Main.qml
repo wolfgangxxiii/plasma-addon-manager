@@ -51,11 +51,6 @@ Kirigami.ApplicationWindow {
         const base = noticeColor(kind)
         return Qt.rgba(base.r, base.g, base.b, 0.10)
     }
-    function navBackground(index, hovered) {
-        const active = section === index
-        const color = active ? Kirigami.Theme.highlightColor : Kirigami.Theme.textColor
-        return Qt.rgba(color.r, color.g, color.b, active ? 0.28 : (hovered ? 0.08 : 0))
-    }
     function addNotification(kind, heading, detail) {
         const next = notifications.slice()
         next.unshift({
@@ -234,6 +229,71 @@ Kirigami.ApplicationWindow {
             text: window.loc(
                 "Program zainstaluje lub sprawdzi plasmoid-updater w ~/.local/bin (SHA-256) i zapewni wymagane bsdtar. Na Bazzite wykorzysta Homebrew w katalogu użytkownika. Na openSUSE, Debianie, Fedorze lub Arch/CachyOS może doinstalować jeden pakiet przez menedżer systemowy, wyświetlając standardowe okno autoryzacji administratora. Nie aktualizuje całego systemu ani nie zmienia harmonogramu.",
                 "The app installs or checks plasmoid-updater in ~/.local/bin (SHA-256) and ensures bsdtar. On Bazzite it uses user-local Homebrew. On openSUSE, Debian, Fedora or Arch/CachyOS it may install one system package via the native package manager with a normal graphical administrator prompt. It does not upgrade the entire OS or change your schedule.")
+        }
+    }
+
+    // Reused below the desktop notification panel and at the bottom of the
+    // content on narrow windows, where the right column is replaced by a drawer.
+    Component {
+        id: appIdentityContent
+        ColumnLayout {
+            spacing: Kirigami.Units.smallSpacing
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Kirigami.Units.smallSpacing
+                Image {
+                    source: "qrc:/images/app.png"
+                    sourceSize: Qt.size(96, 96)
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    Layout.preferredWidth: 42
+                    Layout.preferredHeight: 42
+                    Layout.alignment: Qt.AlignTop
+                }
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 2
+                    Kirigami.Heading {
+                        Layout.fillWidth: true
+                        level: 3
+                        text: "Plasma Addon Manager"
+                        wrapMode: Text.WordWrap
+                    }
+                    Controls.Label {
+                        Layout.fillWidth: true
+                        text: window.loc("Menedżer dodatków KDE Plasma 6",
+                                         "KDE Plasma 6 add-on manager")
+                        wrapMode: Text.WordWrap
+                        font.pixelSize: 11
+                        opacity: 0.75
+                    }
+                }
+            }
+            Controls.Label {
+                Layout.fillWidth: true
+                font.pixelSize: 11
+                opacity: 0.65
+                text: window.loc("Wersja 0.4.5 · Bez terminala", "Version 0.4.5 · No terminal")
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Controls.Label {
+                    text: window.loc("Język", "Language")
+                    font.pixelSize: 12
+                }
+                Item { Layout.fillWidth: true }
+                Controls.ComboBox {
+                    objectName: "interfaceLanguageSelector"
+                    Layout.preferredWidth: 120
+                    model: ["Auto", "Polski", "English"]
+                    currentIndex: ["auto", "pl", "en"].indexOf(window.languageChoice)
+                    Accessible.name: window.loc("Język interfejsu", "Interface language")
+                    onActivated: function(index) {
+                        window.languageChoice = ["auto", "pl", "en"][index]
+                    }
+                }
+            }
         }
     }
 
@@ -494,54 +554,6 @@ Kirigami.ApplicationWindow {
                     width: mainScroll.availableWidth
                     spacing: Kirigami.Units.largeSpacing
 
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Kirigami.Units.largeSpacing
-
-                Image {
-                    source: "qrc:/images/app.png"
-                    fillMode: Image.PreserveAspectFit
-                    sourceSize: Qt.size(96, 96)
-                    smooth: true
-                    Layout.preferredWidth: 46
-                    Layout.preferredHeight: 46
-                }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 2
-                    Kirigami.Heading {
-                        text: "Plasma Addon Manager"
-                        level: 1
-                        Layout.fillWidth: true
-                    }
-                    Controls.Label {
-                        text: window.loc("Uniwersalny menedżer dodatków KDE Plasma 6",
-                                         "Universal KDE Plasma 6 add-on manager")
-                        wrapMode: Text.WordWrap
-                        opacity: 0.75
-                        Layout.fillWidth: true
-                    }
-                }
-                Controls.ComboBox {
-                    id: languageSelector
-                    model: ["Auto", "Polski", "English"]
-                    implicitWidth: 115
-                    currentIndex: ["auto", "pl", "en"].indexOf(window.languageChoice)
-                    Accessible.name: window.loc("Język interfejsu", "Interface language")
-                    onActivated: function(index) {
-                        window.languageChoice = ["auto", "pl", "en"][index]
-                    }
-                }
-                Controls.ToolButton {
-                    visible: !window.showNotificationSidebar
-                    icon.name: "dialog-information"
-                    text: window.notifications.length > 0 ? "(" + window.notifications.length + ")" : ""
-                    display: Controls.AbstractButton.TextBesideIcon
-                    Accessible.name: window.loc("Pokaż powiadomienia", "Show notifications")
-                    onClicked: notificationDrawer.open()
-                }
-            }
-
             Rectangle {
                 objectName: "horizontalNavigation"
                 Layout.fillWidth: true
@@ -557,110 +569,68 @@ Kirigami.ApplicationWindow {
                     anchors.margins: 6
                     spacing: 6
 
-                    Controls.ToolButton {
-                        id: dashboardTab
+                    NavTile {
+                        objectName: "navDashboard"
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         text: window.loc("Pulpit", "Dashboard")
-                        icon.name: "view-dashboard"
-                        icon.width: 26
-                        icon.height: 26
-                        font.pixelSize: 12
-                        display: Controls.AbstractButton.TextUnderIcon
-                        Accessible.name: text
+                        iconName: "view-dashboard"
+                        fallbackGlyph: "▦"
+                        selected: window.section === 0
                         onClicked: window.section = 0
-                        background: Rectangle {
-                            radius: 8
-                            color: window.navBackground(0, dashboardTab.hovered)
-                            border.width: window.section === 0 ? 1 : 0
-                            border.color: Kirigami.Theme.highlightColor
-                        }
                     }
-                    Controls.ToolButton {
-                        id: addonsTab
+                    NavTile {
+                        objectName: "navAddons"
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         text: window.loc("Dodatki Plasma", "Plasma add-ons")
-                        icon.name: "preferences-desktop-plasma"
-                        icon.width: 26
-                        icon.height: 26
-                        font.pixelSize: 12
-                        display: Controls.AbstractButton.TextUnderIcon
-                        Accessible.name: text
+                        iconName: "preferences-desktop-plasma"
+                        fallbackGlyph: "◇"
+                        selected: window.section === 1
                         onClicked: window.section = 1
-                        background: Rectangle {
-                            radius: 8
-                            color: window.navBackground(1, addonsTab.hovered)
-                            border.width: window.section === 1 ? 1 : 0
-                            border.color: Kirigami.Theme.highlightColor
-                        }
                     }
-                    Controls.ToolButton {
-                        id: automationTab
+                    NavTile {
+                        objectName: "navAutomation"
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         text: window.loc("Automatyzacja", "Automation")
-                        icon.name: "chronometer"
-                        icon.width: 26
-                        icon.height: 26
-                        font.pixelSize: 12
-                        display: Controls.AbstractButton.TextUnderIcon
-                        Accessible.name: text
+                        iconName: "chronometer"
+                        fallbackGlyph: "⏱"
+                        selected: window.section === 2
                         onClicked: window.section = 2
-                        background: Rectangle {
-                            radius: 8
-                            color: window.navBackground(2, automationTab.hovered)
-                            border.width: window.section === 2 ? 1 : 0
-                            border.color: Kirigami.Theme.highlightColor
-                        }
                     }
-                    Controls.ToolButton {
-                        id: journalTab
+                    NavTile {
+                        objectName: "navJournal"
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         text: window.loc("Dziennik", "Journal")
-                        icon.name: "view-list-text"
-                        icon.width: 26
-                        icon.height: 26
-                        font.pixelSize: 12
-                        display: Controls.AbstractButton.TextUnderIcon
-                        Accessible.name: text
+                        iconName: "view-list-text"
+                        fallbackGlyph: "≡"
+                        selected: window.section === 3
                         onClicked: window.section = 3
-                        background: Rectangle {
-                            radius: 8
-                            color: window.navBackground(3, journalTab.hovered)
-                            border.width: window.section === 3 ? 1 : 0
-                            border.color: Kirigami.Theme.highlightColor
-                        }
                     }
-                    Controls.ToolButton {
-                        id: aboutTab
+                    NavTile {
+                        objectName: "navAbout"
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         text: window.loc("O programie", "About")
-                        icon.name: "help-about"
-                        icon.width: 26
-                        icon.height: 26
-                        font.pixelSize: 12
-                        display: Controls.AbstractButton.TextUnderIcon
-                        Accessible.name: text
+                        iconName: "help-about"
+                        fallbackGlyph: "ⓘ"
+                        selected: window.section === 4
                         onClicked: window.section = 4
-                        background: Rectangle {
-                            radius: 8
-                            color: window.navBackground(4, aboutTab.hovered)
-                            border.width: window.section === 4 ? 1 : 0
-                            border.color: Kirigami.Theme.highlightColor
-                        }
+                    }
+                    NavTile {
+                        visible: !window.showNotificationSidebar
+                        Layout.preferredWidth: 82
+                        Layout.fillHeight: true
+                        text: window.loc("Alerty", "Alerts")
+                              + (window.notifications.length ? " (" + window.notifications.length + ")" : "")
+                        iconName: "dialog-information"
+                        fallbackGlyph: "!"
+                        selected: false
+                        onClicked: notificationDrawer.open()
                     }
                 }
-            }
-
-            Controls.Label {
-                Layout.fillWidth: true
-                opacity: 0.65
-                font.pixelSize: 12
-                text: window.loc("Wersja 0.4.5  ·  KDE Plasma 6  ·  Bez terminala",
-                                 "Version 0.4.5  ·  KDE Plasma 6  ·  No terminal needed")
             }
 
             Kirigami.InlineMessage {
@@ -1242,6 +1212,17 @@ Kirigami.ApplicationWindow {
                 polish: window.polish
             }
 
+            Controls.Frame {
+                visible: !window.showNotificationSidebar
+                Layout.fillWidth: true
+                Layout.preferredHeight: 156
+                padding: Kirigami.Units.largeSpacing
+                Loader {
+                    anchors.fill: parent
+                    sourceComponent: appIdentityContent
+                }
+            }
+
                 }
             }
 
@@ -1253,15 +1234,30 @@ Kirigami.ApplicationWindow {
                 opacity: 0.12
             }
 
-            Controls.Frame {
+            ColumnLayout {
                 visible: window.showNotificationSidebar
                 Layout.preferredWidth: 304
                 Layout.fillHeight: true
                 Layout.margins: Kirigami.Units.smallSpacing
-                padding: Kirigami.Units.largeSpacing
-                Loader {
-                    anchors.fill: parent
-                    sourceComponent: notificationPanelContent
+                spacing: Kirigami.Units.smallSpacing
+
+                Controls.Frame {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    padding: Kirigami.Units.largeSpacing
+                    Loader {
+                        anchors.fill: parent
+                        sourceComponent: notificationPanelContent
+                    }
+                }
+                Controls.Frame {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 156
+                    padding: Kirigami.Units.largeSpacing
+                    Loader {
+                        anchors.fill: parent
+                        sourceComponent: appIdentityContent
+                    }
                 }
             }
         }
