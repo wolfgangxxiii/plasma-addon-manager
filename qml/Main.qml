@@ -550,29 +550,20 @@ Kirigami.ApplicationWindow {
             anchors.fill: parent
             spacing: 0
 
-            Controls.ScrollView {
-                id: mainScroll
-                objectName: "mainContentScroll"
+            // Navigation belongs to the fixed window shell, not to the
+            // Flickable. Long pages (especially About) scroll beneath it.
+            ColumnLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.preferredWidth: 0
                 Layout.minimumWidth: 0
-                clip: true
-                leftPadding: Kirigami.Units.largeSpacing
-                rightPadding: Kirigami.Units.largeSpacing
-                topPadding: Kirigami.Units.largeSpacing
-                bottomPadding: Kirigami.Units.largeSpacing
-                Controls.ScrollBar.horizontal.policy: Controls.ScrollBar.AlwaysOff
-                Controls.ScrollBar.vertical.policy: Controls.ScrollBar.AlwaysOn
-
-                ColumnLayout {
-                    width: mainScroll.availableWidth
-                    spacing: Kirigami.Units.largeSpacing
+                spacing: 0
 
             Rectangle {
                 objectName: "horizontalNavigation"
                 Layout.fillWidth: true
                 Layout.preferredHeight: 82
+                Layout.margins: Kirigami.Units.largeSpacing
                 radius: 12
                 color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g,
                                Kirigami.Theme.textColor.b, 0.035)
@@ -644,6 +635,25 @@ Kirigami.ApplicationWindow {
                     }
                 }
             }
+
+            Controls.ScrollView {
+                id: mainScroll
+                objectName: "mainContentScroll"
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.preferredWidth: 0
+                Layout.minimumWidth: 0
+                clip: true
+                leftPadding: Kirigami.Units.largeSpacing
+                rightPadding: Kirigami.Units.largeSpacing
+                topPadding: 0
+                bottomPadding: Kirigami.Units.largeSpacing
+                Controls.ScrollBar.horizontal.policy: Controls.ScrollBar.AlwaysOff
+                Controls.ScrollBar.vertical.policy: Controls.ScrollBar.AlwaysOn
+
+                ColumnLayout {
+                    width: mainScroll.availableWidth
+                    spacing: Kirigami.Units.largeSpacing
 
             Kirigami.InlineMessage {
                 Layout.fillWidth: true
@@ -1256,6 +1266,7 @@ Kirigami.ApplicationWindow {
             }
 
                 }
+            }
             }
 
             Rectangle {

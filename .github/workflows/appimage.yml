@@ -68,7 +68,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=v0.4.5-appimage-preview.7
+          tag=v0.4.5-appimage-preview.8
           appimage=dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
           test -s "$appimage"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
@@ -76,6 +76,6 @@ jobs:
           else
             gh release create "$tag" "$appimage" \
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 7 · Równe menu i komplet ikon' \
-              --notes 'Sześć nowych ikon nawigacji jest teraz osadzonych jako grafiki PNG i wyświetlanych bezpośrednio przez Qt Quick Image (nie zależą od ikon motywu KDE). Wszystkie przyciski poziomego menu mają dokładnie jednakowy rozmiar. Panel powiadomień ma stałą szerokość przy przełączaniu zakładek, a pasek przewijania jest zawsze rezerwowany. Cztery przyciski działań w Dodatkach Plasma są wyrównane w jednym rzędzie, a górna linia oddziela dolny pasek stanu. Testy AppImage sprawdzają załadowanie rzeczywistych grafik PNG, geometrię menu i działań oraz stałą szerokość panelu. Zachowano poprzednie poprawki KDE Wayland, ikony okna, Dziennik i kartę O programie.'
+              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 8 · Nieruchome menu nawigacji' \
+              --notes 'Przeniesiono poziome menu nawigacji poza przewijany obszar zawartości. Podczas przewijania długiej karty O programie oraz innych zakładek menu i dolny pasek stanu pozostają na swoich miejscach. Dodano test QML sprawdzający hierarchię elementów i stałą pozycję menu po zmianie sekcji. Zachowano osadzone ikony PNG, równe kafelki menu, stałą szerokość powiadomień, wyrównane przyciski w Dodatkach Plasma oraz poprawki KDE Wayland i AppImage.'
           fi

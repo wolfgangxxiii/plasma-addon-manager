@@ -11,6 +11,7 @@
 #include <QStandardPaths>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQuickItem>
 #include <QQuickStyle>
 #include <QTimer>
 #include <QTemporaryDir>
@@ -277,6 +278,16 @@ int main(int argc, char *argv[]) {
             qCritical() << "QML smoke test: About icon, navigation, sidebar, status line or language control is missing";
             return 3;
         }
+        // The whole navigation bar must be a sibling of the scroll view,
+        // never a child of its Flickable content on long pages such as About.
+        auto *navigationItem = qobject_cast<QQuickItem *>(topNavigation);
+        auto *scrollItem = qobject_cast<QQuickItem *>(mainScroll);
+        if (!navigationItem || !scrollItem || scrollItem->isAncestorOf(navigationItem)
+                || navigationItem->parentItem() != scrollItem->parentItem()) {
+            qCritical() << "QML smoke test: fixed navigation is inside the scroll area";
+            return 3;
+        }
+        const double referenceNavigationY = topNavigation->property("y").toDouble();
         const double referenceSidebarWidth = sidebar->property("width").toDouble();
         const double referenceContentWidth = mainScroll->property("width").toDouble();
         double referenceTileWidth = -1;
@@ -317,8 +328,9 @@ int main(int argc, char *argv[]) {
         root->setProperty("section", 4);
         QCoreApplication::processEvents();
         if (qAbs(sidebar->property("width").toDouble() - referenceSidebarWidth) > 0.5
-                || qAbs(mainScroll->property("width").toDouble() - referenceContentWidth) > 0.5) {
-            qCritical() << "QML smoke test: sidebar or content width changed between pages";
+                || qAbs(mainScroll->property("width").toDouble() - referenceContentWidth) > 0.5
+                || qAbs(topNavigation->property("y").toDouble() - referenceNavigationY) > 0.5) {
+            qCritical() << "QML smoke test: sidebar, content or fixed navigation changed between pages";
             return 3;
         }
         root->setProperty("section", 0);
