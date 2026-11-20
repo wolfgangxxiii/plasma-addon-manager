@@ -51,6 +51,11 @@ Kirigami.ApplicationWindow {
         const base = noticeColor(kind)
         return Qt.rgba(base.r, base.g, base.b, 0.10)
     }
+    function navBackground(index, hovered) {
+        const active = section === index
+        const color = active ? Kirigami.Theme.highlightColor : Kirigami.Theme.textColor
+        return Qt.rgba(color.r, color.g, color.b, active ? 0.28 : (hovered ? 0.08 : 0))
+    }
     function addNotification(kind, heading, detail) {
         const next = notifications.slice()
         next.unshift({
@@ -517,82 +522,14 @@ Kirigami.ApplicationWindow {
                         Layout.fillWidth: true
                     }
                 }
-                Controls.ToolButton {
-                    id: navigationButton
-                    objectName: "topNavigationButton"
-                    Layout.preferredWidth: 174
-                    icon.name: "application-menu"
-                    text: window.currentSection
-                    display: Controls.AbstractButton.TextBesideIcon
-                    Accessible.name: window.loc("Menu nawigacji — ", "Navigation menu — ") + window.currentSection
-                    Controls.ToolTip.visible: hovered
-                    Controls.ToolTip.text: window.loc("Wybierz ekran lub język", "Select a page or language")
-                    onClicked: navigationMenu.open()
-
-                    Controls.Menu {
-                        id: navigationMenu
-                        x: navigationButton.width - width
-                        y: navigationButton.height
-                        width: 235
-
-                        Controls.MenuItem {
-                            text: window.loc("Pulpit", "Dashboard")
-                            icon.name: "view-dashboard"
-                            checkable: true
-                            checked: window.section === 0
-                            onTriggered: window.section = 0
-                        }
-                        Controls.MenuItem {
-                            text: window.loc("Dodatki Plasma", "Plasma add-ons")
-                            icon.name: "preferences-desktop-plasma"
-                            checkable: true
-                            checked: window.section === 1
-                            onTriggered: window.section = 1
-                        }
-                        Controls.MenuItem {
-                            text: window.loc("Automatyzacja", "Automation")
-                            icon.name: "chronometer"
-                            checkable: true
-                            checked: window.section === 2
-                            onTriggered: window.section = 2
-                        }
-                        Controls.MenuItem {
-                            text: window.loc("Dziennik", "Journal")
-                            icon.name: "view-list-text"
-                            checkable: true
-                            checked: window.section === 3
-                            onTriggered: window.section = 3
-                        }
-                        Controls.MenuItem {
-                            text: window.loc("O programie", "About")
-                            icon.name: "help-about"
-                            checkable: true
-                            checked: window.section === 4
-                            onTriggered: window.section = 4
-                        }
-                        Controls.MenuSeparator {}
-                        Controls.Menu {
-                            title: window.loc("Język interfejsu", "Interface language")
-                            icon.name: "preferences-desktop-locale"
-                            Controls.MenuItem {
-                                text: window.loc("Automatycznie", "Automatic")
-                                checkable: true
-                                checked: window.languageChoice === "auto"
-                                onTriggered: window.languageChoice = "auto"
-                            }
-                            Controls.MenuItem {
-                                text: "Polski"
-                                checkable: true
-                                checked: window.languageChoice === "pl"
-                                onTriggered: window.languageChoice = "pl"
-                            }
-                            Controls.MenuItem {
-                                text: "English"
-                                checkable: true
-                                checked: window.languageChoice === "en"
-                                onTriggered: window.languageChoice = "en"
-                            }
-                        }
+                Controls.ComboBox {
+                    id: languageSelector
+                    model: ["Auto", "Polski", "English"]
+                    implicitWidth: 115
+                    currentIndex: ["auto", "pl", "en"].indexOf(window.languageChoice)
+                    Accessible.name: window.loc("Język interfejsu", "Interface language")
+                    onActivated: function(index) {
+                        window.languageChoice = ["auto", "pl", "en"][index]
                     }
                 }
                 Controls.ToolButton {
@@ -602,6 +539,119 @@ Kirigami.ApplicationWindow {
                     display: Controls.AbstractButton.TextBesideIcon
                     Accessible.name: window.loc("Pokaż powiadomienia", "Show notifications")
                     onClicked: notificationDrawer.open()
+                }
+            }
+
+            Rectangle {
+                objectName: "horizontalNavigation"
+                Layout.fillWidth: true
+                Layout.preferredHeight: 82
+                radius: 12
+                color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g,
+                               Kirigami.Theme.textColor.b, 0.035)
+                border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g,
+                                      Kirigami.Theme.textColor.b, 0.10)
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 6
+                    spacing: 6
+
+                    Controls.ToolButton {
+                        id: dashboardTab
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        text: window.loc("Pulpit", "Dashboard")
+                        icon.name: "view-dashboard"
+                        icon.width: 26
+                        icon.height: 26
+                        font.pixelSize: 12
+                        display: Controls.AbstractButton.TextUnderIcon
+                        Accessible.name: text
+                        onClicked: window.section = 0
+                        background: Rectangle {
+                            radius: 8
+                            color: window.navBackground(0, dashboardTab.hovered)
+                            border.width: window.section === 0 ? 1 : 0
+                            border.color: Kirigami.Theme.highlightColor
+                        }
+                    }
+                    Controls.ToolButton {
+                        id: addonsTab
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        text: window.loc("Dodatki Plasma", "Plasma add-ons")
+                        icon.name: "preferences-desktop-plasma"
+                        icon.width: 26
+                        icon.height: 26
+                        font.pixelSize: 12
+                        display: Controls.AbstractButton.TextUnderIcon
+                        Accessible.name: text
+                        onClicked: window.section = 1
+                        background: Rectangle {
+                            radius: 8
+                            color: window.navBackground(1, addonsTab.hovered)
+                            border.width: window.section === 1 ? 1 : 0
+                            border.color: Kirigami.Theme.highlightColor
+                        }
+                    }
+                    Controls.ToolButton {
+                        id: automationTab
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        text: window.loc("Automatyzacja", "Automation")
+                        icon.name: "chronometer"
+                        icon.width: 26
+                        icon.height: 26
+                        font.pixelSize: 12
+                        display: Controls.AbstractButton.TextUnderIcon
+                        Accessible.name: text
+                        onClicked: window.section = 2
+                        background: Rectangle {
+                            radius: 8
+                            color: window.navBackground(2, automationTab.hovered)
+                            border.width: window.section === 2 ? 1 : 0
+                            border.color: Kirigami.Theme.highlightColor
+                        }
+                    }
+                    Controls.ToolButton {
+                        id: journalTab
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        text: window.loc("Dziennik", "Journal")
+                        icon.name: "view-list-text"
+                        icon.width: 26
+                        icon.height: 26
+                        font.pixelSize: 12
+                        display: Controls.AbstractButton.TextUnderIcon
+                        Accessible.name: text
+                        onClicked: window.section = 3
+                        background: Rectangle {
+                            radius: 8
+                            color: window.navBackground(3, journalTab.hovered)
+                            border.width: window.section === 3 ? 1 : 0
+                            border.color: Kirigami.Theme.highlightColor
+                        }
+                    }
+                    Controls.ToolButton {
+                        id: aboutTab
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        text: window.loc("O programie", "About")
+                        icon.name: "help-about"
+                        icon.width: 26
+                        icon.height: 26
+                        font.pixelSize: 12
+                        display: Controls.AbstractButton.TextUnderIcon
+                        Accessible.name: text
+                        onClicked: window.section = 4
+                        background: Rectangle {
+                            radius: 8
+                            color: window.navBackground(4, aboutTab.hovered)
+                            border.width: window.section === 4 ? 1 : 0
+                            border.color: Kirigami.Theme.highlightColor
+                        }
+                    }
                 }
             }
 

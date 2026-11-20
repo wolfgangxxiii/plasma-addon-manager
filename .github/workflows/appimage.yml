@@ -68,7 +68,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=v0.4.5-appimage-preview.4
+          tag=v0.4.5-appimage-preview.5
           appimage=dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
           test -s "$appimage"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
@@ -76,6 +76,6 @@ jobs:
           else
             gh release create "$tag" "$appimage" \
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 4 · Górne menu i ikona' \
-              --notes 'Odświeżono nawigację: zamiast wysuwanego menu bocznego jest rozwijane menu górne z pionową listą sekcji. W podmenu Język interfejsu zachowano wybór Auto/Polski/English. Na ekranie O programie i w nagłówku jest teraz prawdziwa ikona PNG aplikacji, ładowana bez zależności od obsługi SVG. Dodano test obecności obu elementów w QML. Zachowano naprawę ikony KDE Wayland oraz powiadomienia z pełnym dziennikiem z poprzedniego wydania.'
+              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 5 · Pozioma nawigacja' \
+              --notes 'Zgodnie z sugestią użytkownika zastąpiono rozwijane menu stałym poziomym paskiem pięciu sekcji: Pulpit, Dodatki Plasma, Automatyzacja, Dziennik i O programie. Ikony umieszczono nad podpisami, a aktywną sekcję wyróżniono kolorem motywu KDE. Wybór języka Auto/Polski/English wrócił do prawego górnego rogu. Zachowano działającą ikonę PNG w nagłówku i O programie, integrację z KDE Wayland, panel powiadomień i dziennik sesji. Testy QML obejmują obraz i nawigację.'
           fi
