@@ -64,11 +64,15 @@ jobs:
           test -s build/package-appimage-AppDir/usr/share/icons/hicolor/scalable/apps/io.github.wolfgangxxiii.PlasmaAddonManager.svg
           test -s build/package-appimage-AppDir/usr/share/icons/hicolor/256x256/apps/io.github.wolfgangxxiii.PlasmaAddonManager.png
           sha256sum dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
+          (cd dist && sha256sum Plasma-Addon-Manager-v0.4.5-x86_64.AppImage > Plasma-Addon-Manager-v0.4.5-x86_64.AppImage.sha256)
+          test -s dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage.sha256
       - name: Upload tested AppImage for download
         uses: actions/upload-artifact@v4
         with:
           name: Plasma-Addon-Manager-v0.4.5-x86_64-${{ github.run_id }}
-          path: dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
+          path: |
+            dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
+            dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage.sha256
           if-no-files-found: error
           retention-days: 30
       - name: Publish AppImage directly in Releases
@@ -76,14 +80,46 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=v0.4.5-appimage-preview.15
+          tag=v0.4.5
           appimage=dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
+          checksum=dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage.sha256
           test -s "$appimage"
+          test -s "$checksum"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo 'This preview was already published; leaving its download unchanged.'
+            echo 'The stable release already exists; leaving its downloads unchanged.'
           else
-            gh release create "$tag" "$appimage" \
-              --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 15 · Czyszczenie na Pulpicie' \
-              --notes 'PL: Przeniesiono przycisk „Usuń instalacje i zmiany…” z Automatyzacji do Pulpitu. Zachowano podgląd plików, potwierdzenie usunięcia i ochronę współdzielonych narzędzi. Dodatki KDE, pakiety systemowe i kopie migracji pozostają bez zmian. EN: Moved the guarded „Remove installations and changes…” action from Automation to Dashboard. File preview, explicit confirmation and safeguards remain unchanged. KDE add-ons, system packages and migration backups are preserved.'
+            gh release create "$tag" "$appimage" "$checksum" \
+              --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title 'Plasma Addon Manager v0.4.5 — Stable AppImage' \
+              --notes 'PL: Pierwsze stabilne wydanie AppImage dla KDE Plasma 6 (Linux x86_64). Natywny interfejs Qt6/Kirigami, ręczne i automatyczne aktualizacje dodatków KDE Store, instalacja i weryfikacja plasmoid-updater, diagnostyka, dziennik, motyw Auto/Jasny/Ciemny oraz bezpieczne usuwanie zmian z Pulpitu po potwierdzeniu. Do pobrania AppImage i suma SHA-256. Automatyczne aktualizacje są opcjonalne. Testy CI obejmują Rust, Fedora/Qt6 i testowy Wayland; kompatybilność ze wszystkimi konfiguracjami dystrybucji nie jest gwarantowana.
+
+          EN: First stable AppImage release for KDE Plasma 6 on Linux x86_64. Native Qt6/Kirigami interface, manual and scheduled KDE Store add-on updates, verified plasmoid-updater setup, diagnostics, journal, Auto/Light/Dark themes, and guarded cleanup on Dashboard. Includes AppImage and SHA-256 checksum. Background updates are opt-in. CI covers Rust, Fedora/Qt6 and headless Wayland; compatibility with every distribution configuration is not guaranteed.'
           fi
+      - name: Retire old preview releases (one-time)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[retire-v0.4.5-previews]')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          stable=v0.4.5
+          test "$(gh release view "$stable" --repo "$GITHUB_REPOSITORY" --json isPrerelease --jq '.isPrerelease')" = false
+          gh release view "$stable" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | grep -Fx 'Plasma-Addon-Manager-v0.4.5-x86_64.AppImage'
+          gh release view "$stable" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | grep -Fx 'Plasma-Addon-Manager-v0.4.5-x86_64.AppImage.sha256'
+          for old in \
+            v0.1.0-appimage-preview.1 v0.1.1-appimage-preview.1 \
+            v0.2.0-appimage-preview.1 v0.3.0-appimage-preview.1 \
+            v0.4.0-appimage-preview.1 v0.4.1-appimage-preview.1 \
+            v0.4.2-appimage-preview.1 v0.4.3-appimage-preview.1 \
+            v0.4.4-appimage-preview.1 \
+            v0.4.5-appimage-preview.1 v0.4.5-appimage-preview.2 \
+            v0.4.5-appimage-preview.3 v0.4.5-appimage-preview.4 \
+            v0.4.5-appimage-preview.5 v0.4.5-appimage-preview.6 \
+            v0.4.5-appimage-preview.7 v0.4.5-appimage-preview.8 \
+            v0.4.5-appimage-preview.9 v0.4.5-appimage-preview.10 \
+            v0.4.5-appimage-preview.11 v0.4.5-appimage-preview.12 \
+            v0.4.5-appimage-preview.13 v0.4.5-appimage-preview.14 \
+            v0.4.5-appimage-preview.15
+          do
+            if gh release view "$old" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              gh release delete "$old" --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes
+            fi
+          done

@@ -8,7 +8,7 @@
   <strong>Wszystkie dodatki KDE Plasma 6 w jednym miejscu.</strong></p>
 
   <p>
-    <a href="https://github.com/wolfgangxxiii/plasma-addon-manager/releases"><img src="https://img.shields.io/badge/version-0.4.5%20preview-7559d9?style=for-the-badge" alt="Version 0.4.5 preview" /></a>
+    <a href="https://github.com/wolfgangxxiii/plasma-addon-manager/releases/tag/v0.4.5"><img src="https://img.shields.io/badge/version-v0.4.5%20stable-2ea043?style=for-the-badge" alt="Version 0.4.5 stable" /></a>
     <img src="https://img.shields.io/badge/KDE-Plasma%206-1d99f3?style=for-the-badge&logo=kde" alt="KDE Plasma 6" />
     <img src="https://img.shields.io/badge/Qt%206-Kirigami-20b4e6?style=for-the-badge" alt="Qt 6 and Kirigami" />
     <img src="https://img.shields.io/badge/backend-Rust-dd6a38?style=for-the-badge&logo=rust&logoColor=white" alt="Rust backend" />
@@ -21,7 +21,7 @@
   </p>
 
   <p>
-    <a href="https://github.com/wolfgangxxiii/plasma-addon-manager/releases"><strong>⬇️ Download AppImage / Pobierz AppImage</strong></a>
+    <a href="https://github.com/wolfgangxxiii/plasma-addon-manager/releases/download/v0.4.5/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage"><strong>⬇️ Download AppImage / Pobierz AppImage</strong></a>
     &nbsp;·&nbsp;
     <a href="https://github.com/wolfgangxxiii/plasma-addon-manager/issues">🐛 Issues / Zgłoś problem</a>
     &nbsp;·&nbsp;
@@ -43,21 +43,27 @@
 Sprawdzaj dostępne aktualizacje, przeglądaj zainstalowane dodatki, uruchamiaj aktualizację ręcznie albo skonfiguruj ją raz, aby działała w tle.
 
 > [!IMPORTANT]
-> **Wersja 0.4.5 jest wydaniem rozwojowym (preview), a nie stabilnym wydaniem 1.0.**
-> Obsługuje automatyczne aktualizacje po włączeniu ich przez użytkownika. Zgodność AppImage ze wszystkimi wymienionymi dystrybucjami nie została jeszcze w pełni zweryfikowana.
+> **Wersja stabilna v0.4.5 — AppImage dla Linuksa x86_64 i KDE Plasma 6.**
+> Kompilacja i testy Rust, Fedora/Qt6 oraz uruchomienie AppImage w testowej sesji Wayland są sprawdzane w GitHub Actions. Zgodność ze wszystkimi konfiguracjami wymienionych dystrybucji nadal wymaga testów na rzeczywistych komputerach. Aktualizacje w tle włączasz samodzielnie.
 
 ### ✨ Najważniejsze możliwości
 
 | Sekcja | Co umożliwia? |
 | :-- | :-- |
-| 🏠 **Pulpit** | Stan środowiska i narzędzi, wersja aktualizatora i agenta, stan harmonogramu, następny termin oraz wskazówki dotyczące kolejnego kroku. |
+| 🏠 **Pulpit** | Stan środowiska, instalacja narzędzi, stan harmonogramu, następny termin i bezpieczne usuwanie zmian programu po potwierdzeniu. |
 | 🧩 **Dodatki Plasma** | Lista zainstalowanych dodatków, informacje o wersjach i typach, dostępne aktualizacje oraz problemy wykryte podczas skanowania. |
 | 🔄 **Aktualizacje** | Sprawdzanie nowych wersji, symulacja zmian i ręczne aktualizowanie dodatków po potwierdzeniu. |
 | ⏱️ **Automatyzacja** | Harmonogram co **6, 12 lub 24 godziny**, wykluczenia dodatków, opcjonalny restart Plasma i powiadomienia KDE. |
 | 📋 **Dziennik** | Historia operacji z godzinami, wynikami i komunikatami pomocnika. Dziennik sesji pozostaje dostępny do zamknięcia okna. |
 | ℹ️ **O programie** | Dane aplikacji, autor, licencja oraz wygodne odnośniki do kodu, wydań i zgłaszania błędów. |
 
-**Dopracowany interfejs:** **nieruchomy poziomy pasek nawigacji** z pięcioma przyciskami o **jednakowej szerokości i wysokości**. Menu znajduje się poza obszarem przewijanym — nawet na długiej karcie „O programie” przewija się tylko zawartość poniżej menu, podobnie jak dolny pasek stanu pozostaje na miejscu. Każda sekcja ma własną kolorową ikonę **PNG wbudowaną bezpośrednio w AppImage**, niezależną od ikon motywu KDE, i czytelny podpis. Dotyczy to również ikon kart Pulpitu, statusów, ostrzeżeń i powiadomień: brakujący motyw systemowy nie zostawia pustych pól. Aktywna sekcja jest podświetlana. Panel powiadomień po prawej ma stałą szerokość przy przełączaniu zakładek; poniżej znajduje się karta z nazwą programu, ikoną oraz ustawieniami **Język: Auto / Polski / English** i **Motyw: Auto / Jasny / Ciemny**. Motyw zmienia kolory całego interfejsu bez ponownego uruchamiania, a wybór jest zapamiętywany. „Auto” podąża za kolorami i akcentem Plasma; opcje jasna i ciemna wykorzystują dołączone schematy Breeze, zachowując wybrany w systemie kolor akcentu. Przycisk czyszczenia powiadomień ma **stały, kompaktowy rozmiar 32 × 32 px**. W węższych oknach powiadomienia otwierają się w wysuwanym panelu. Cztery przyciski operacji w „Dodatkach Plasma” mają **własne ikony 16 × 16 px** i są wyrównane w jednym rzędzie, a lista dodatków ma **własny pasek przewijania i możliwość zwinięcia**. Nawet kilkadziesiąt dodatków nie przesuwa przycisków aktualizacji. Długie opisy i nazwy są zawijane wewnątrz ramek. Pasek stanu na dole oddziela od zawartości cienka linia.
+**Interfejs dopasowany do KDE Plasma:**
+
+- **Stała nawigacja:** pięć równych przycisków nad przewijaną treścią oraz nieruchomy pasek stanu u dołu.
+- **Czytelne ikony:** własne grafiki PNG wbudowane w AppImage, niezależne od dostępności ikon motywu KDE.
+- **Motywy i języki:** Auto / Jasny / Ciemny, zgodność z systemowym kolorem akcentu oraz Auto / Polski / English; wybór jest zapamiętywany.
+- **Powiadomienia:** stały panel po prawej lub wysuwana szuflada w wąskim oknie; przycisk czyszczenia ma 32 × 32 px.
+- **Wygodne dodatki:** wyrównane przyciski aktualizacji z ikonami 16 × 16 px oraz osobno przewijana i zwijana lista dodatków. Długie opisy mieszczą się w kartach.
 
 ### 🐧 Dystrybucje i zależności
 
@@ -75,7 +81,7 @@ Na tradycyjnych dystrybucjach instalacja brakującego pakietu systemowego może 
 
 ### 📥 Pobieranie i instalacja
 
-1. Otwórz **[GitHub Releases](https://github.com/wolfgangxxiii/plasma-addon-manager/releases)** i pobierz plik <code>Plasma-Addon-Manager-v0.4.5-x86_64.AppImage</code>. To samodzielny plik wykonywalny — nie archiwum ZIP.
+1. **[Pobierz stabilny AppImage v0.4.5](https://github.com/wolfgangxxiii/plasma-addon-manager/releases/download/v0.4.5/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage)** lub przejdź do [strony wydania](https://github.com/wolfgangxxiii/plasma-addon-manager/releases/tag/v0.4.5). Pobierz plik wykonywalny, nie archiwum ZIP z Actions.
 2. W Dolphin wybierz **Właściwości → Uprawnienia** i zaznacz możliwość uruchamiania pliku jako programu.
 3. Otwórz AppImage dwukrotnym kliknięciem.
 4. Na **Pulpicie** wybierz **Zainstaluj / sprawdź wersję**, aby zainstalować lub sprawdzić <code>plasmoid-updater</code> i niezbędne zależności.
@@ -83,7 +89,13 @@ Na tradycyjnych dystrybucjach instalacja brakującego pakietu systemowego może 
 
 **Bazzite KDE:** możesz zainstalować [Gear Lever](https://github.com/mijorus/gearlever) z Bazaar, otworzyć nim pobrany AppImage i wybrać **Integruj**. Aplikacja pojawi się wtedy w menu KDE. Gear Lever nie jest wymagany do uruchomienia programu.
 
-**Ikona KDE/Wayland — od Preview 3:** przy pierwszym uruchomieniu AppImage na Wayland program automatycznie zapisuje ikonę PNG i ukryty wpis identyfikacyjny <code>io.github.wolfgangxxiii.PlasmaAddonManager.desktop</code> w katalogu danych bieżącego użytkownika (<code>~/.local/share/</code> przy ustawieniach domyślnych). Dzięki temu KWin może skojarzyć uruchomione okno z ikoną programu zamiast wyświetlać pomarańczowe „W”. Nie wymaga to <code>sudo</code> i nie tworzy dodatkowej pozycji w menu. Istniejące wpisy użytkownika i systemu nie są nadpisywane.
+**Kontrola pobranego pliku:** pobierz również [sumę SHA-256](https://github.com/wolfgangxxiii/plasma-addon-manager/releases/download/v0.4.5/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage.sha256) i wykonaj w katalogu z obiema pobranymi pozycjami:
+
+~~~bash
+sha256sum -c Plasma-Addon-Manager-v0.4.5-x86_64.AppImage.sha256
+~~~
+
+**Ikona KDE/Wayland:** przy pierwszym uruchomieniu AppImage na Wayland program automatycznie zapisuje ikonę PNG i ukryty wpis identyfikacyjny <code>io.github.wolfgangxxiii.PlasmaAddonManager.desktop</code> w katalogu danych bieżącego użytkownika (<code>~/.local/share/</code> przy ustawieniach domyślnych). Dzięki temu KWin może skojarzyć uruchomione okno z ikoną programu zamiast wyświetlać pomarańczowe „W”. Nie wymaga to <code>sudo</code> i nie tworzy dodatkowej pozycji w menu. Istniejące wpisy użytkownika i systemu nie są nadpisywane.
 
 Jeśli poprzednia wersja była zintegrowana przez Gear Lever, zastąp ją nowym plikiem AppImage i odśwież integrację. Pełny dziennik otworzysz z prawego panelu **Powiadomienia**; usunięto powielony przycisk z dolnego paska.
 
@@ -134,7 +146,7 @@ Po zakończeniu usuń plik AppImage lub pakiet programu osobno. Ta funkcja nie o
 | Problem | Co sprawdzić? |
 | :-- | :-- |
 | AppImage nie uruchamia się | Uprawnienie wykonywania pliku, architekturę x86_64 i sesję Plasma 6. |
-| Pomarańczowa ikona „W” w KDE Wayland | Uruchom AppImage Preview 3 — samodzielnie rejestruje ikonę i identyfikator okna w katalogu XDG użytkownika. Zamknij i ponownie uruchom program, jeśli KWin pamięta poprzednią ikonę. |
+| Pomarańczowa ikona „W” w KDE Wayland | Uruchom aktualną wersję AppImage — rejestruje ikonę i identyfikator okna w katalogu XDG użytkownika. Zamknij i ponownie uruchom program, jeśli KWin pamięta poprzednią ikonę. |
 | Brakuje <code>plasmoid-updater</code> lub <code>bsdtar</code> | Na Pulpicie kliknij **Zainstaluj / sprawdź wersję**. |
 | Nie widać wszystkich dodatków systemowych | Odczyt elementów systemowych jest opcjonalny; dodatki użytkownika pozostają dostępne bez hasła administratora. |
 | Harmonogram lub agent nie działa | Na karcie **Automatyzacja** uruchom test, a następnie skorzystaj z naprawy agenta i dziennika usługi. |
@@ -177,20 +189,27 @@ Wynik zostanie zapisany w katalogu <code>dist/</code>. Skrypt sprawdza sumy kont
 Browse installed add-ons, check for updates, review changes before applying them, and optionally schedule automatic updates in the background.
 
 > [!IMPORTANT]
-> **Version 0.4.5 is a development preview, not a stable 1.0 release.** Automatic updates are opt-in. The AppImage has not yet been fully validated on every listed Linux distribution.
+> **Stable v0.4.5 — AppImage for Linux x86_64 and KDE Plasma 6.**
+> GitHub Actions checks Rust tests, Fedora/Qt6 builds and AppImage startup in a headless Wayland session. Not every distribution and hardware configuration has been validated in the field. Background updates are opt-in.
 
 ### ✨ Features
 
 | Page | What it does |
 | :-- | :-- |
-| 🏠 **Dashboard** | Environment and prerequisite checks, updater/agent versions, timer health, next run and suggested next action. |
+| 🏠 **Dashboard** | Environment checks, tool installation, timer status, next run and guarded cleanup of app changes with confirmation. |
 | 🧩 **Plasma add-ons** | Installed add-on inventory, types, versions, available updates and per-add-on issues. |
 | 🔄 **Updates** | Read-only update checks, dry-run preview and confirmed manual updates. |
 | ⏱️ **Automation** | **6/12/24-hour** schedules, exclusions, optional Plasma restart and KDE desktop notifications. |
 | 📋 **Journal** | Time-stamped session actions and output; separate access to the user service journal. |
 | ℹ️ **About** | App identity, project links, author, credits and license. |
 
-The adaptive interface provides **Auto / Light / Dark** themes, with Auto following Plasma's colors and accent, while Light/Dark use bundled Breeze schemes without losing the system accent color. The selection is applied immediately throughout Qt/Kirigami and saved between launches. It has a **fixed horizontal navigation bar** of five **equally sized buttons**. The navigation is outside the scroll view, so long pages such as **About** scroll underneath it without moving the menu, just like the persistent bottom status bar. Every major interface icon — including dashboard cards, notifications and warning banners — uses a **PNG embedded in the AppImage**, so a missing host KDE icon theme no longer leaves empty slots. The notification sidebar retains the same width when switching pages, and its clear-notifications control is a compact **32 × 32 px** button. The app identity card (logo, short description, version, language selector and theme selector) sits **below notifications**. In narrower windows notifications become a drawer. The four Plasma add-on action buttons now have **bundled 16 × 16 px icons** and are evenly aligned in one row, while the **add-on list scrolls independently and can be collapsed**, keeping update controls accessible even with large inventories. Long descriptions wrap within their cards. A thin separator divides the persistent operation status footer from the main interface.
+**A Plasma-native interface:**
+
+- **Fixed navigation:** five equally sized buttons outside the scrollable content, with a persistent status footer.
+- **Reliable icons:** bundled PNG assets rather than relying on the host's KDE icon theme.
+- **Themes and languages:** Auto / Light / Dark with the system accent color, plus Auto / Polski / English; selections persist between launches.
+- **Notifications:** a stable right sidebar or a drawer on narrow windows, with a compact 32 × 32 px clear button.
+- **Add-on management:** aligned actions with bundled 16 × 16 px icons, a collapsible independently scrolling list, and wrapped descriptions.
 
 ### 🐧 Linux support
 
@@ -208,7 +227,7 @@ Installing a missing system prerequisite on a mutable distribution may request g
 
 ### 📥 Download and first run
 
-1. Download **<code>Plasma-Addon-Manager-v0.4.5-x86_64.AppImage</code>** from [GitHub Releases](https://github.com/wolfgangxxiii/plasma-addon-manager/releases). Download the executable itself, not an Actions ZIP.
+1. **[Download stable v0.4.5 AppImage](https://github.com/wolfgangxxiii/plasma-addon-manager/releases/download/v0.4.5/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage)** or open its [release page](https://github.com/wolfgangxxiii/plasma-addon-manager/releases/tag/v0.4.5). Download the executable itself, not an Actions ZIP.
 2. In Dolphin, use **Properties → Permissions** to allow executing the file.
 3. Open the AppImage.
 4. On **Dashboard**, select **Install / check version** to set up <code>plasmoid-updater</code> and prerequisites.
@@ -216,7 +235,13 @@ Installing a missing system prerequisite on a mutable distribution may request g
 
 **Bazzite KDE:** optionally use [Gear Lever](https://github.com/mijorus/gearlever) from Bazaar to integrate the AppImage with your KDE application menu. Gear Lever is not required for direct execution.
 
-**KDE/Wayland icon — fixed since Preview 3:** on first launch in a Wayland session, the AppImage automatically installs a PNG icon and a hidden identity file named <code>io.github.wolfgangxxiii.PlasmaAddonManager.desktop</code> in the current user's XDG data directory (<code>~/.local/share/</code> by default). KWin can then associate the actual window with the program icon instead of the orange "W". This requires no root permissions, adds no duplicate menu item and preserves user-managed launchers.
+**Verify the download:** also get the [SHA-256 checksum file](https://github.com/wolfgangxxiii/plasma-addon-manager/releases/download/v0.4.5/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage.sha256) and run this command in the directory containing both files:
+
+~~~bash
+sha256sum -c Plasma-Addon-Manager-v0.4.5-x86_64.AppImage.sha256
+~~~
+
+**KDE/Wayland icon:** on first launch in a Wayland session, the AppImage automatically installs a PNG icon and a hidden identity file named <code>io.github.wolfgangxxiii.PlasmaAddonManager.desktop</code> in the current user's XDG data directory (<code>~/.local/share/</code> by default). KWin can then associate the actual window with the program icon instead of the orange "W". This requires no root permissions, adds no duplicate menu item and preserves user-managed launchers.
 
 If you previously used Gear Lever, replace the AppImage and refresh its integration. The full session journal remains accessible through the right-side **Notifications** panel; the redundant footer button has been removed.
 
@@ -267,7 +292,7 @@ Remove the AppImage file or application package separately afterward. This actio
 | Symptom | Suggested action |
 | :-- | :-- |
 | AppImage will not launch | Check executable permission, x86_64 architecture and your Plasma 6 session. |
-| Orange "W" icon on KDE Wayland | Launch AppImage Preview 3 to register the user-local icon and desktop identity. Close and reopen the app if KWin still shows a cached placeholder. |
+| Orange "W" icon on KDE Wayland | Launch the current AppImage to register the user-local icon and desktop identity. Close and reopen the app if KWin still shows a cached placeholder. |
 | Updater or <code>bsdtar</code> is missing | Use **Install / check version** on the Dashboard. |
 | Some system-wide add-ons are absent | System-wide inventory may be omitted when reading it would require interactive administrator access. |
 | Agent or timer is unhealthy | Run the **Automation** test, inspect the journal and use **Repair agent** if indicated. |
@@ -319,9 +344,9 @@ The GUI handles interaction while the helper performs allow-listed operations; s
 | Version / Wersja | Goal / Cel | Status |
 | :-- | :-- | :-- |
 | **0.1–0.3** | Qt/Kirigami foundations, installer, systemd automation / Podstawy, instalator, harmonogram | ✅ |
-| **0.4.0–0.4.5** | Add-on inventory, status, logs, notifications, About page / Dodatki, stan, dziennik, powiadomienia, O programie | ✅ Preview |
+| **0.4.0–0.4.5** | Add-on inventory, status, logs, notifications, About page, guarded cleanup / Dodatki, stan, dziennik, powiadomienia, O programie, bezpieczne czyszczenie | ✅ v0.4.5 stable |
 | **0.5.0** | Reliability, migration/rollback and interface tests / Niezawodność, testy migracji i interfejsu | 🔜 |
-| **1.0.0** | Cross-distribution validation and stable AppImage / Testy wielu dystrybucji i stabilna wersja | 🔜 |
+| **1.0.0** | Broader cross-distribution validation and release maturity / Szersze testy dystrybucji i dojrzałość wydania | 🔜 |
 
 ## 🎨 Branding / Grafiki projektu
 
@@ -338,7 +363,7 @@ The new application icon and README banner use a consistent blue-violet palette 
 
 - **Author / Autor:** [Szymon Bławat (wolfgangxxiii)](https://github.com/wolfgangxxiii)
 - **Upstream updater / Silnik aktualizacji:** [uwuclxdy/plasmoid-updater](https://github.com/uwuclxdy/plasmoid-updater) — independent project with its own authors and license.
-- **Earlier GUI projects / Wcześniejsze interfejsy:** [Bazzite GUI](https://github.com/wolfgangxxiii/bazzite-kde-installer-plasmoid-updater-gui) · [Debian/Ubuntu GUI](https://github.com/wolfgangxxiii/deb-kde-installer-plasmoid-updater-gui)
+- **Earlier GUI project / Wcześniejszy interfejs:** [Bazzite GUI](https://github.com/wolfgangxxiii/bazzite-kde-installer-plasmoid-updater-gui) (archival reference / projekt historyczny)
 - **Desktop ecosystem / Środowisko graficzne:** [KDE Plasma](https://kde.org/plasma-desktop/) · [Kirigami](https://develop.kde.org/frameworks/kirigami/)
 
 ## 📜 License / Licencja
