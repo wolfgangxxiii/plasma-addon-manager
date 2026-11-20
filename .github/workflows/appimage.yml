@@ -64,12 +64,19 @@ jobs:
           test -s build/package-appimage-AppDir/usr/share/icons/hicolor/scalable/apps/io.github.wolfgangxxiii.PlasmaAddonManager.svg
           test -s build/package-appimage-AppDir/usr/share/icons/hicolor/256x256/apps/io.github.wolfgangxxiii.PlasmaAddonManager.png
           sha256sum dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
+      - name: Upload tested AppImage for download
+        uses: actions/upload-artifact@v4
+        with:
+          name: Plasma-Addon-Manager-v0.4.5-x86_64-${{ github.run_id }}
+          path: dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
+          if-no-files-found: error
+          retention-days: 30
       - name: Publish AppImage directly in Releases
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=v0.4.5-appimage-preview.13
+          tag=v0.4.5-appimage-preview.14
           appimage=dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
           test -s "$appimage"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
@@ -77,6 +84,6 @@ jobs:
           else
             gh release create "$tag" "$appimage" \
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 13 · Kolor akcentu Plasma' \
-              --notes 'Naprawiono korzystanie z wybranego w KDE Plasma koloru akcentu. Auto nie zastępuje już systemowej palety domyślnym Breeze. Tryby Jasny i Ciemny nadal wymuszają odpowiednie tło, ale zachowują wybrany przez użytkownika systemowy kolor zaznaczeń i aktywnych elementów. Powrót do Auto przywraca oryginalną paletę i schemat środowiska. Rozszerzono testy AppImage o własny, niestandardowy kolor akcentu i zmianę motywów.'
+              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 14 · Bezpieczne usuwanie' \
+              --notes 'PL: Dodano w Automatyzacji przycisk usuwania instalacji i zmian programu z podglądem oraz potwierdzeniem. Własne pliki użytkownika mogą być usunięte, a współdzielone narzędzia tylko po zaznaczeniu opcji. Dodatki KDE, pakiety systemowe i kopie migracji pozostają bez zmian. Zachowano poprawki wyglądu i systemowego koloru akcentu. EN: Added guarded cleanup with preview and confirmation, preserving KDE add-ons, distribution packages, migration backups and shared tools by default. The AppImage is also available as a downloadable Actions artifact.'
           fi
