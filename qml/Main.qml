@@ -323,15 +323,31 @@ Kirigami.ApplicationWindow {
                     text: window.loc("Powiadomienia", "Notifications")
                 }
                 Controls.ToolButton {
+                    id: clearNotificationsButton
+                    objectName: "clearNotificationsButton"
+                    Layout.preferredWidth: 32
+                    Layout.preferredHeight: 32
+                    Layout.minimumWidth: 32
+                    Layout.maximumWidth: 32
+                    implicitWidth: 32
+                    implicitHeight: 32
+                    padding: 4
                     enabled: window.notifications.length > 0
                     display: Controls.AbstractButton.IconOnly
-                    contentItem: Image {
-                        objectName: "clearNotificationIcon"
-                        source: "qrc:/images/ui-clear.png"
-                        sourceSize: Qt.size(64, 64)
-                        fillMode: Image.PreserveAspectFit
-                        smooth: true
-                        opacity: parent.enabled ? 1 : 0.45
+                    contentItem: Item {
+                        implicitWidth: 20
+                        implicitHeight: 20
+                        Image {
+                            objectName: "clearNotificationIcon"
+                            anchors.centerIn: parent
+                            width: 20
+                            height: 20
+                            source: "qrc:/images/ui-clear.png"
+                            sourceSize: Qt.size(64, 64)
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            opacity: clearNotificationsButton.enabled ? 1 : 0.45
+                        }
                     }
                     Controls.ToolTip.visible: hovered
                     Controls.ToolTip.text: window.loc("Wyczyść powiadomienia (dziennik zostanie zachowany)",
@@ -986,6 +1002,9 @@ Kirigami.ApplicationWindow {
                         Controls.Button {
                             objectName: "actionInstalled"
                             width: addonsActionRow.buttonWidth
+                            icon.source: "qrc:/images/nav-addons.png"
+                            icon.width: 16
+                            icon.height: 16
                             text: window.loc("Zainstalowane dodatki", "Installed add-ons")
                             Controls.ToolTip.text: text
                             Controls.ToolTip.visible: hovered
@@ -995,6 +1014,9 @@ Kirigami.ApplicationWindow {
                         Controls.Button {
                             objectName: "actionUpdates"
                             width: addonsActionRow.buttonWidth
+                            icon.source: "qrc:/images/ui-refresh.png"
+                            icon.width: 16
+                            icon.height: 16
                             text: window.loc("Dostępne aktualizacje", "Available updates")
                             Controls.ToolTip.text: text
                             Controls.ToolTip.visible: hovered
@@ -1004,6 +1026,9 @@ Kirigami.ApplicationWindow {
                         Controls.Button {
                             objectName: "actionPreview"
                             width: addonsActionRow.buttonWidth
+                            icon.source: "qrc:/images/nav-automation.png"
+                            icon.width: 16
+                            icon.height: 16
                             text: window.loc("Symulacja aktualizacji", "Preview update")
                             Controls.ToolTip.text: text
                             Controls.ToolTip.visible: hovered
@@ -1013,6 +1038,9 @@ Kirigami.ApplicationWindow {
                         Controls.Button {
                             objectName: "actionApply"
                             width: addonsActionRow.buttonWidth
+                            icon.source: "qrc:/images/ui-success.png"
+                            icon.width: 16
+                            icon.height: 16
                             text: window.loc("Aktualizuj dodatki…", "Update add-ons…")
                             Controls.ToolTip.text: text
                             Controls.ToolTip.visible: hovered

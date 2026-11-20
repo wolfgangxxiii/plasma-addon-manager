@@ -68,7 +68,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=v0.4.5-appimage-preview.10
+          tag=v0.4.5-appimage-preview.11
           appimage=dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
           test -s "$appimage"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
@@ -76,6 +76,6 @@ jobs:
           else
             gh release create "$tag" "$appimage" \
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 10 · Ikony w całym interfejsie' \
-              --notes 'Naprawiono puste miejsca po ikonach KDE w kartach Pulpitu, przy statusach, nagłówku Powiadomień, komunikatach i działaniach. Elementy korzystają teraz z własnych ikon PNG osadzonych w AppImage oraz nowego komponentu NoticeBanner z renderowaną bezpośrednio grafiką. Dodano test QML sprawdzający faktyczne wczytanie ikon kart i powiadomień. Zachowano równy rozmiar przycisków, stałe menu, przewijalną listę dodatków oraz poprawki KDE Wayland.'
+              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 11 · Kompaktowe czyszczenie i ikony aktualizacji' \
+              --notes 'Dodano brakujące kolorowe ikony do wszystkich czterech przycisków operacji w zakładce Dodatki Plasma (zainstalowane, dostępne aktualizacje, symulacja i aktualizowanie), zachowując jednakowe szerokości. Zmniejszono przycisk czyszczenia powiadomień do 32 × 32 px, a jego ikonę do 20 × 20 px; rozmiary weryfikuje test QML. Zachowano nowe ikony PNG w całym programie, stałe menu, panel powiadomień i przewijalną listę dodatków.'
           fi

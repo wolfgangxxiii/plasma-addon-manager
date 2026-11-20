@@ -290,6 +290,16 @@ int main(int argc, char *argv[]) {
                 return 3;
             }
         }
+        QObject *clearButton = root->findChild<QObject *>(QStringLiteral("clearNotificationsButton"));
+        QObject *clearIcon = root->findChild<QObject *>(QStringLiteral("clearNotificationIcon"));
+        if (!clearButton || !clearIcon
+                || clearButton->property("width").toDouble() > 34
+                || clearButton->property("height").toDouble() > 34
+                || clearIcon->property("width").toDouble() > 22
+                || clearIcon->property("height").toDouble() > 22) {
+            qCritical() << "QML smoke test: clear notifications icon is oversized";
+            return 3;
+        }
         // The whole navigation bar must be a sibling of the scroll view,
         // never a child of its Flickable content on long pages such as About.
         auto *navigationItem = qobject_cast<QQuickItem *>(topNavigation);
