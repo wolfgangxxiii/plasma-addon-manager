@@ -278,6 +278,18 @@ int main(int argc, char *argv[]) {
             qCritical() << "QML smoke test: About icon, navigation, sidebar, status line or language control is missing";
             return 3;
         }
+        // All visible decoration must use bundled images. Icon theme lookup
+        // can silently draw an empty slot in an AppImage's KDE desktop style.
+        for (const char *name : {"notificationHeaderIcon", "clearNotificationIcon",
+                                 "dashboardStatusIcon", "systemStatusIcon",
+                                 "updaterStatusIcon", "agentStatusIcon", "timerStatusIcon",
+                                 "noticeBannerIcon"}) {
+            QObject *icon = root->findChild<QObject *>(QString::fromLatin1(name));
+            if (!icon || icon->property("status").toInt() != 1) {
+                qCritical() << "QML smoke test: bundled interface icon is not loaded" << name;
+                return 3;
+            }
+        }
         // The whole navigation bar must be a sibling of the scroll view,
         // never a child of its Flickable content on long pages such as About.
         auto *navigationItem = qobject_cast<QQuickItem *>(topNavigation);

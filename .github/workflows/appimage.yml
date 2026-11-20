@@ -68,7 +68,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=v0.4.5-appimage-preview.9
+          tag=v0.4.5-appimage-preview.10
           appimage=dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
           test -s "$appimage"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
@@ -76,6 +76,6 @@ jobs:
           else
             gh release create "$tag" "$appimage" \
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 9 · Przewijana lista dodatków i poprawione ramki' \
-              --notes 'Naprawiono długie opisy ucinane na Pulpicie, w Dodatkach Plasma, Automatyzacji i Dzienniku: szerokości zawartości kart są powiązane z ramkami, a tekst jest prawidłowo zawijany. Lista dodatków ma własny obszar przewijania z ograniczoną wysokością oraz przycisk Zwiń/Rozwiń listę. Nawet przy 80 dodatkach przyciski aktualizacji pozostają w jednym rzędzie u góry. Rozszerzono test QML o szerokości ramek, dużą listę dodatków i zwijanie listy. Zachowano stałe poziome menu z ikonami, panel powiadomień i poprawki KDE Wayland.'
+              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 10 · Ikony w całym interfejsie' \
+              --notes 'Naprawiono puste miejsca po ikonach KDE w kartach Pulpitu, przy statusach, nagłówku Powiadomień, komunikatach i działaniach. Elementy korzystają teraz z własnych ikon PNG osadzonych w AppImage oraz nowego komponentu NoticeBanner z renderowaną bezpośrednio grafiką. Dodano test QML sprawdzający faktyczne wczytanie ikon kart i powiadomień. Zachowano równy rozmiar przycisków, stałe menu, przewijalną listę dodatków oraz poprawki KDE Wayland.'
           fi

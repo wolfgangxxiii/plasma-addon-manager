@@ -88,14 +88,14 @@ ColumnLayout {
             }
             Controls.Button {
                 highlighted: true
-                icon.name: "go-jump"
+                icon.source: "qrc:/images/nav-about.png"
                 Layout.alignment: Qt.AlignLeft
                 text: about.loc("Repozytorium projektu na GitHub", "Project repository on GitHub")
                 onClicked: Qt.openUrlExternally("https://github.com/wolfgangxxiii/plasma-addon-manager")
             }
             Controls.Button {
                 highlighted: true
-                icon.name: "go-jump"
+                icon.source: "qrc:/images/nav-about.png"
                 Layout.alignment: Qt.AlignLeft
                 text: about.loc("Wydania i pliki AppImage", "Releases and AppImage downloads")
                 onClicked: Qt.openUrlExternally("https://github.com/wolfgangxxiii/plasma-addon-manager/releases")
@@ -114,7 +114,7 @@ ColumnLayout {
             }
             Controls.Button {
                 highlighted: true
-                icon.name: "go-jump"
+                icon.source: "qrc:/images/nav-about.png"
                 Layout.alignment: Qt.AlignLeft
                 text: about.loc("Zgłoś błąd lub zaproponuj funkcję", "Report an issue or request a feature")
                 onClicked: Qt.openUrlExternally("https://github.com/wolfgangxxiii/plasma-addon-manager/issues")
@@ -138,7 +138,7 @@ ColumnLayout {
             }
             Controls.Button {
                 highlighted: true
-                icon.name: "go-jump"
+                icon.source: "qrc:/images/nav-about.png"
                 Layout.alignment: Qt.AlignLeft
                 text: about.loc("Przeczytaj licencję", "Read the license")
                 onClicked: Qt.openUrlExternally("https://github.com/wolfgangxxiii/plasma-addon-manager/blob/main/LICENSE")
@@ -157,7 +157,7 @@ ColumnLayout {
             }
             Controls.Button {
                 highlighted: true
-                icon.name: "go-jump"
+                icon.source: "qrc:/images/nav-about.png"
                 Layout.alignment: Qt.AlignLeft
                 text: about.loc("wolfgangxxiii · autor aplikacji", "wolfgangxxiii · application author")
                 onClicked: Qt.openUrlExternally("https://github.com/wolfgangxxiii")
@@ -183,7 +183,7 @@ ColumnLayout {
             }
             Controls.Button {
                 highlighted: true
-                icon.name: "go-jump"
+                icon.source: "qrc:/images/nav-about.png"
                 Layout.alignment: Qt.AlignLeft
                 text: about.loc("uwuclxdy · autor narzędzia plasmoid-updater",
                                 "uwuclxdy · author of the plasmoid-updater tool")

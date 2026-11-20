@@ -308,8 +308,12 @@ Kirigami.ApplicationWindow {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing
-                Kirigami.Icon {
-                    source: "dialog-information"
+                Image {
+                    objectName: "notificationHeaderIcon"
+                    source: "qrc:/images/nav-notifications.png"
+                    sourceSize: Qt.size(64, 64)
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
                     Layout.preferredWidth: 24
                     Layout.preferredHeight: 24
                 }
@@ -319,9 +323,16 @@ Kirigami.ApplicationWindow {
                     text: window.loc("Powiadomienia", "Notifications")
                 }
                 Controls.ToolButton {
-                    icon.name: "edit-clear"
                     enabled: window.notifications.length > 0
                     display: Controls.AbstractButton.IconOnly
+                    contentItem: Image {
+                        objectName: "clearNotificationIcon"
+                        source: "qrc:/images/ui-clear.png"
+                        sourceSize: Qt.size(64, 64)
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        opacity: parent.enabled ? 1 : 0.45
+                    }
                     Controls.ToolTip.visible: hovered
                     Controls.ToolTip.text: window.loc("Wyczyść powiadomienia (dziennik zostanie zachowany)",
                                                       "Clear notifications (keep the journal)")
@@ -383,10 +394,15 @@ Kirigami.ApplicationWindow {
                         anchors.margins: 11
                         spacing: Kirigami.Units.smallSpacing
 
-                        Kirigami.Icon {
-                            source: modelData.kind === "success" ? "dialog-ok-apply"
-                                    : modelData.kind === "error" ? "dialog-error"
-                                    : modelData.kind === "warning" ? "dialog-warning" : "dialog-information"
+                        Image {
+                            objectName: "notificationStatusIcon"
+                            source: modelData.kind === "success" ? "qrc:/images/ui-success.png"
+                                    : modelData.kind === "error" ? "qrc:/images/ui-error.png"
+                                    : modelData.kind === "warning" ? "qrc:/images/ui-warning.png"
+                                    : "qrc:/images/nav-notifications.png"
+                            sourceSize: Qt.size(64, 64)
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
                             Layout.preferredWidth: 22
                             Layout.preferredHeight: 22
                             Layout.alignment: Qt.AlignTop
@@ -423,7 +439,7 @@ Kirigami.ApplicationWindow {
 
             Controls.Button {
                 Layout.fillWidth: true
-                icon.name: "view-list-text"
+                icon.source: "qrc:/images/nav-journal.png"
                 text: window.loc("Otwórz pełny dziennik", "Open full journal")
                 onClicked: {
                     window.section = 3
@@ -517,7 +533,7 @@ Kirigami.ApplicationWindow {
 
                 Controls.Button {
                     visible: backend.running
-                    icon.name: "process-stop"
+                    icon.source: "qrc:/images/ui-error.png"
                     text: window.loc("Anuluj", "Cancel")
                     onClicked: backend.cancel()
                 }
@@ -656,10 +672,10 @@ Kirigami.ApplicationWindow {
                     width: mainScroll.availableWidth
                     spacing: Kirigami.Units.largeSpacing
 
-            Kirigami.InlineMessage {
+            NoticeBanner {
                 Layout.fillWidth: true
                 visible: window.section <= 2 && window.bsdtarMissing
-                type: Kirigami.MessageType.Warning
+                kind: "warning"
                 text: window.loc("Brakuje bsdtar. Przejdź do Pulpitu i kliknij «Zainstaluj / sprawdź wersję». Program doinstaluje potrzebną zależność razem z aktualizatorem; na niektórych dystrybucjach poprosi o autoryzację administratora.",
                                  "bsdtar is missing. Open Dashboard and choose Install / check version. The app will install the required utility as part of the same action; some distributions require graphical administrator authorization.")
             }
@@ -682,9 +698,13 @@ Kirigami.ApplicationWindow {
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.largeSpacing
-                        Kirigami.Icon {
+                        Image {
+                            objectName: "dashboardStatusIcon"
                             source: window.dashboard.updater_version && !window.bsdtarMissing
-                                    ? "security-high" : "software-update-available"
+                                    ? "qrc:/images/ui-success.png" : "qrc:/images/ui-warning.png"
+                            sourceSize: Qt.size(64, 64)
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
                             Layout.preferredWidth: 36
                             Layout.preferredHeight: 36
                         }
@@ -712,8 +732,8 @@ Kirigami.ApplicationWindow {
                     Controls.Button {
                         highlighted: true
                         enabled: !backend.running
-                        icon.name: window.dashboard.updater_version && !window.bsdtarMissing
-                                   ? "view-refresh" : "download"
+                        icon.source: window.dashboard.updater_version && !window.bsdtarMissing
+                                     ? "qrc:/images/ui-refresh.png" : "qrc:/images/nav-addons.png"
                         text: window.dashboard.updater_version && !window.bsdtarMissing
                               ? window.loc("Sprawdź aktualizacje", "Check for updates")
                               : window.loc("Przygotuj narzędzia…", "Set up tools…")
@@ -743,7 +763,7 @@ Kirigami.ApplicationWindow {
                     ColumnLayout {
                         width: parent.width
                         RowLayout {
-                            Kirigami.Icon { source: "computer"; Layout.preferredWidth: 20; Layout.preferredHeight: 20 }
+                            Image { objectName: "systemStatusIcon"; source: "qrc:/images/nav-dashboard.png"; sourceSize: Qt.size(64, 64); fillMode: Image.PreserveAspectFit; Layout.preferredWidth: 20; Layout.preferredHeight: 20 }
                             Kirigami.Heading { Layout.fillWidth: true; level: 3; wrapMode: Text.WordWrap; text: window.loc("System", "System") }
                         }
                         Controls.Label {
@@ -760,7 +780,7 @@ Kirigami.ApplicationWindow {
                     ColumnLayout {
                         width: parent.width
                         RowLayout {
-                            Kirigami.Icon { source: "download"; Layout.preferredWidth: 20; Layout.preferredHeight: 20 }
+                            Image { objectName: "updaterStatusIcon"; source: "qrc:/images/nav-addons.png"; sourceSize: Qt.size(64, 64); fillMode: Image.PreserveAspectFit; Layout.preferredWidth: 20; Layout.preferredHeight: 20 }
                             Kirigami.Heading { Layout.fillWidth: true; level: 3; wrapMode: Text.WrapAnywhere; text: "plasmoid-updater" }
                         }
                         Controls.Label {
@@ -781,7 +801,7 @@ Kirigami.ApplicationWindow {
                     ColumnLayout {
                         width: parent.width
                         RowLayout {
-                            Kirigami.Icon { source: "system-run"; Layout.preferredWidth: 20; Layout.preferredHeight: 20 }
+                            Image { objectName: "agentStatusIcon"; source: "qrc:/images/nav-automation.png"; sourceSize: Qt.size(64, 64); fillMode: Image.PreserveAspectFit; Layout.preferredWidth: 20; Layout.preferredHeight: 20 }
                             Kirigami.Heading { Layout.fillWidth: true; level: 3; wrapMode: Text.WordWrap; text: window.loc("Agent", "Agent") }
                         }
                         Controls.Label {
@@ -804,7 +824,7 @@ Kirigami.ApplicationWindow {
                     ColumnLayout {
                         width: parent.width
                         RowLayout {
-                            Kirigami.Icon { source: "chronometer"; Layout.preferredWidth: 20; Layout.preferredHeight: 20 }
+                            Image { objectName: "timerStatusIcon"; source: "qrc:/images/nav-automation.png"; sourceSize: Qt.size(64, 64); fillMode: Image.PreserveAspectFit; Layout.preferredWidth: 20; Layout.preferredHeight: 20 }
                             Kirigami.Heading { Layout.fillWidth: true; level: 3; wrapMode: Text.WordWrap; text: window.loc("Harmonogram", "Schedule") }
                         }
                         Controls.Label {
@@ -823,10 +843,10 @@ Kirigami.ApplicationWindow {
                 }
             }
 
-            Kirigami.InlineMessage {
+            NoticeBanner {
                 visible: window.section === 0 && window.dashboard.agent_needs_repair === true
                 Layout.fillWidth: true
-                type: Kirigami.MessageType.Warning
+                kind: "warning"
                 text: window.loc("Wykryto nieaktualnego lub uszkodzonego agenta. Możesz naprawić go jednym przyciskiem.",
                                  "The update agent is outdated or broken. You can repair it with one click.")
             }
@@ -841,7 +861,7 @@ Kirigami.ApplicationWindow {
                 }
                 Controls.Button {
                     text: window.loc("Odśwież stan", "Refresh status")
-                    icon.name: "view-refresh"
+                    icon.source: "qrc:/images/ui-refresh.png"
                     enabled: !backend.running
                     onClicked: backend.runAction("status-json")
                 }
@@ -879,7 +899,7 @@ Kirigami.ApplicationWindow {
                         }
                         Controls.Button {
                             text: window.loc("Sprawdź środowisko", "Run diagnostics")
-                            icon.name: "system-search"
+                            icon.source: "qrc:/images/nav-dashboard.png"
                             enabled: !backend.running
                             onClicked: backend.runAction("diagnose")
                         }
@@ -904,7 +924,7 @@ Kirigami.ApplicationWindow {
                         }
                         Controls.Button {
                             text: window.loc("Sprawdź dostępność", "Check availability")
-                            icon.name: "view-refresh"
+                            icon.source: "qrc:/images/ui-refresh.png"
                             enabled: !backend.running && !window.bsdtarMissing
                             onClicked: {
                                 window.section = 1
@@ -933,7 +953,7 @@ Kirigami.ApplicationWindow {
                     }
                     Controls.Button {
                         text: window.loc("Zainstaluj / sprawdź wersję…", "Install / check version…")
-                        icon.name: "download"
+                        icon.source: "qrc:/images/nav-addons.png"
                         enabled: !backend.running
                         onClicked: confirmInstall.open()
                     }
@@ -1037,10 +1057,10 @@ Kirigami.ApplicationWindow {
                             onClicked: window.addonListExpanded = !window.addonListExpanded
                         }
                     }
-                    Kirigami.InlineMessage {
+                    NoticeBanner {
                         Layout.fillWidth: true
                         visible: window.inventoryReady && window.inventoryWarning.length > 0 && window.addonView === 0
-                        type: Kirigami.MessageType.Information
+                        kind: "information"
                         text: window.loc("Wyświetlono dodatki użytkownika. Dodatki systemowe pominięto, ponieważ nie można ich bezpiecznie odczytać bez dodatkowych uprawnień.",
                                          "User add-ons are shown. System add-ons were omitted because they cannot be read safely without additional permissions.")
                     }
@@ -1104,10 +1124,10 @@ Kirigami.ApplicationWindow {
                             }
                             Repeater {
                                 model: window.addonView === 1 ? window.updateIssues : []
-                                delegate: Kirigami.InlineMessage {
+                                delegate: NoticeBanner {
                                     Layout.fillWidth: true
                                     visible: true
-                                    type: Kirigami.MessageType.Warning
+                                    kind: "warning"
                                     text: modelData.name + ": " + modelData.reason
                                 }
                             }
@@ -1137,10 +1157,10 @@ Kirigami.ApplicationWindow {
                         text: window.loc("Automatyczne aktualizacje", "Automatic updates")
                         level: 2
                     }
-                    Kirigami.InlineMessage {
+                    NoticeBanner {
                         Layout.fillWidth: true
                         visible: !window.automationConfigLoaded
-                        type: Kirigami.MessageType.Warning
+                        kind: "warning"
                         text: window.automationLoadError.length > 0 ? window.automationLoadError
                               : window.loc("Wczytywanie ustawień automatyzacji…", "Loading automation settings…")
                     }
@@ -1205,10 +1225,10 @@ Kirigami.ApplicationWindow {
                         text: window.excludedPackages
                         onTextChanged: window.excludedPackages = text
                     }
-                    Kirigami.InlineMessage {
+                    NoticeBanner {
                         Layout.fillWidth: true
                         visible: true
-                        type: Kirigami.MessageType.Warning
+                        kind: "warning"
                         text: window.loc("Jeśli masz harmonogram z wcześniejszego programu Bazzite/Debian, domyślnie pozostanie nietknięty. Przejęcie wymaga zaznaczenia poniższej zgody; stare jednostki zostaną zachowane w kopii.",
                                          "An older Bazzite/Debian schedule is preserved by default. Taking it over requires the checkbox below; existing unit files will be backed up.")
                     }
@@ -1224,31 +1244,31 @@ Kirigami.ApplicationWindow {
                         spacing: Kirigami.Units.smallSpacing
                         Controls.Button {
                             text: window.loc("Zapisz i zastosuj", "Save and apply")
-                            icon.name: "document-save"
+                            icon.source: "qrc:/images/ui-success.png"
                             enabled: window.automationConfigLoaded && !backend.running && !window.bsdtarMissing
                             onClicked: window.saveAutomation()
                         }
                         Controls.Button {
                             text: window.loc("Pokaż stan timera", "Show timer status")
-                            icon.name: "chronometer"
+                            icon.source: "qrc:/images/nav-automation.png"
                             enabled: !backend.running
                             onClicked: backend.runAction("timer")
                         }
                         Controls.Button {
                             text: window.loc("Uruchom teraz", "Run now")
-                            icon.name: "media-playback-start"
+                            icon.source: "qrc:/images/ui-success.png"
                             enabled: !backend.running && window.dashboard.agent_managed === true
                             onClicked: backend.runAction("run-service")
                         }
                         Controls.Button {
                             text: window.loc("Napraw agenta", "Repair agent")
-                            icon.name: "tools-wizard"
+                            icon.source: "qrc:/images/ui-refresh.png"
                             enabled: !backend.running && window.dashboard.agent_managed === true
                             onClicked: backend.runAction("repair-agent")
                         }
                         Controls.Button {
                             text: window.loc("Testuj zapisaną konfigurację", "Test saved configuration")
-                            icon.name: "system-search"
+                            icon.source: "qrc:/images/nav-dashboard.png"
                             enabled: !backend.running && window.dashboard.automatic_configured === true
                                      && !window.bsdtarMissing
                             onClicked: backend.runAction("test-config")
@@ -1278,7 +1298,7 @@ Kirigami.ApplicationWindow {
                     }
                     Controls.Button {
                         text: window.loc("Dołącz historię agenta systemd", "Append systemd agent history")
-                        icon.name: "view-list-text"
+                        icon.source: "qrc:/images/nav-journal.png"
                         enabled: !backend.running
                         onClicked: backend.runAction("journal")
                     }

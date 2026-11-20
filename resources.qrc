@@ -3,6 +3,7 @@
         <file alias="Main.qml">qml/Main.qml</file>
         <file alias="AboutPage.qml">qml/AboutPage.qml</file>
         <file alias="NavTile.qml">qml/NavTile.qml</file>
+        <file alias="NoticeBanner.qml">qml/NoticeBanner.qml</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="app.svg">assets/plasma-addon-manager-icon-v2.svg</file>
@@ -13,5 +14,10 @@
         <file alias="nav-journal.png">assets/nav-journal.png</file>
         <file alias="nav-about.png">assets/nav-about.png</file>
         <file alias="nav-notifications.png">assets/nav-notifications.png</file>
+        <file alias="ui-success.png">assets/ui-success.png</file>
+        <file alias="ui-warning.png">assets/ui-warning.png</file>
+        <file alias="ui-error.png">assets/ui-error.png</file>
+        <file alias="ui-refresh.png">assets/ui-refresh.png</file>
+        <file alias="ui-clear.png">assets/ui-clear.png</file>
     </qresource>
 </RCC>
