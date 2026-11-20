@@ -958,14 +958,14 @@ Kirigami.ApplicationWindow {
                         text: window.loc("Sprawdź dodatki, zasymuluj lub ręcznie zastosuj aktualizacje. Zmiany wymagają potwierdzenia.",
                                          "Inspect add-ons, preview or manually install updates. Changes require confirmation.")
                     }
-                    RowLayout {
+                    Row {
+                        id: addonsActionRow
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing
+                        readonly property real buttonWidth: (width - spacing * 3) / 4
                         Controls.Button {
                             objectName: "actionInstalled"
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: 0
-                            Layout.minimumWidth: 0
+                            width: addonsActionRow.buttonWidth
                             text: window.loc("Zainstalowane dodatki", "Installed add-ons")
                             Controls.ToolTip.text: text
                             Controls.ToolTip.visible: hovered
@@ -974,9 +974,7 @@ Kirigami.ApplicationWindow {
                         }
                         Controls.Button {
                             objectName: "actionUpdates"
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: 0
-                            Layout.minimumWidth: 0
+                            width: addonsActionRow.buttonWidth
                             text: window.loc("Dostępne aktualizacje", "Available updates")
                             Controls.ToolTip.text: text
                             Controls.ToolTip.visible: hovered
@@ -985,9 +983,7 @@ Kirigami.ApplicationWindow {
                         }
                         Controls.Button {
                             objectName: "actionPreview"
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: 0
-                            Layout.minimumWidth: 0
+                            width: addonsActionRow.buttonWidth
                             text: window.loc("Symulacja aktualizacji", "Preview update")
                             Controls.ToolTip.text: text
                             Controls.ToolTip.visible: hovered
@@ -996,9 +992,7 @@ Kirigami.ApplicationWindow {
                         }
                         Controls.Button {
                             objectName: "actionApply"
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: 0
-                            Layout.minimumWidth: 0
+                            width: addonsActionRow.buttonWidth
                             text: window.loc("Aktualizuj dodatki…", "Update add-ons…")
                             Controls.ToolTip.text: text
                             Controls.ToolTip.visible: hovered
