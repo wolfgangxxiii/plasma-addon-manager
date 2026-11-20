@@ -109,6 +109,17 @@ Osobny <code>plasma-addon-manager-agent</code> wykonuje zaplanowane zadania **r�
 > [!CAUTION]
 > Jeśli korzystasz ze starszego harmonogramu aplikacji Bazzite/Debian, jego przejęcie **wymaga osobnej, wyraźnej zgody**. Program tworzy kopie zapasowe i w razie niepowodzenia próbuje przywrócić wcześniejszy stan. Bez tej zgody nie wyłącza istniejących timerów.
 
+### 🧹 Usuwanie zmian aplikacji
+
+W zakładce **Automatyzacja** znajduje się przycisk **„Usuń instalacje i zmiany…”**. Wyświetla podgląd konkretnych plików i wymaga potwierdzenia przed usunięciem. Funkcja działa na Bazzite, openSUSE, Debianie/Ubuntu, Fedorze i Archu — bez uprawnień roota.
+
+- Zatrzymuje i wyłącza **własny** timer oraz usługę `systemd --user`, jeżeli mają znacznik Plasma Addon Manager.
+- Usuwa własnego agenta, ustawienia automatyzacji, preferencje wyglądu i wygenerowany skrót/ikonę AppImage, jeśli należą do programu.
+- Opcjonalnie pozwala usunąć lokalny plik `~/.local/bin/plasmoid-updater` i dowiązanie `~/.local/bin/bsdtar` — **te pliki mogły istnieć przed instalacją aplikacji**, dlatego ich usunięcie wymaga osobnego zaznaczenia.
+- **Zachowuje** zainstalowane dodatki KDE, współdzielone pakiety APT/DNF/Zypper/Pacman/Homebrew, kopie migracji i konfigurację `plasmoid-updater.toml`. Starsze wersje aplikacji nie zapisywały pierwotnego stanu wszystkich tych elementów, więc ich automatyczne usunięcie mogłoby skasować cudze zmiany.
+
+Po zakończeniu usuń plik AppImage lub pakiet programu osobno. Ta funkcja nie odinstalowuje aplikacji z Gear Lever ani nie usuwa obrazów systemu.
+
 ### 🛡️ Zakres działania i bezpieczeństwo
 
 - Aktualizuje **dodatki KDE Store**, nie cały system operacyjny.
@@ -230,6 +241,17 @@ The independent <code>plasma-addon-manager-agent</code> performs scheduled work 
 
 > [!CAUTION]
 > Existing schedules from the earlier Bazzite or Debian GUI are not silently replaced. Migration requires **explicit consent**, creates backups and includes rollback behavior if configuration fails.
+
+### 🧹 Remove application changes
+
+The **Automation** page includes a **“Remove installations and changes…”** button. It shows an exact file preview and asks for confirmation before removing anything. It works across Bazzite, openSUSE, Debian/Ubuntu, Fedora and Arch without root access.
+
+- Stops and disables **app-owned** `systemd --user` timer and service units when they carry the Plasma Addon Manager marker.
+- Removes the app's background agent, automation settings, appearance preferences and generated AppImage launcher/icon when recognized as app-owned.
+- Optionally removes `~/.local/bin/plasmoid-updater` and the `~/.local/bin/bsdtar` symlink. **These may predate the app**, so their removal requires a separate opt-in.
+- **Preserves** installed KDE add-ons, shared APT/DNF/Zypper/Pacman/Homebrew packages, migration backups and the shared `plasmoid-updater.toml` configuration. Older versions did not record the original state of all these resources; deleting them automatically could destroy unrelated user changes.
+
+Remove the AppImage file or application package separately afterward. This action does not uninstall Gear Lever integrations or modify the system image.
 
 ### 🛡️ Safety and scope
 

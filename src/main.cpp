@@ -458,6 +458,14 @@ int main(int argc, char *argv[]) {
         }
         root->setProperty("addonListExpanded", true);
         QCoreApplication::processEvents();
+        root->setProperty("section", 2);
+        QCoreApplication::processEvents();
+        QObject *cleanupButton = root->findChild<QObject *>(QStringLiteral("cleanupButton"));
+        if (!cleanupButton || !cleanupButton->property("visible").toBool()
+                || !cleanupButton->property("enabled").toBool()) {
+            qCritical() << "QML smoke test: cleanup preview action is missing from Automation";
+            return 3;
+        }
         root->setProperty("section", 3);
         QCoreApplication::processEvents();
         QObject *journalFrame = root->findChild<QObject *>(QStringLiteral("journalSectionFrame"));

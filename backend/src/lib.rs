@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 
 pub mod addons;
 pub mod automation;
+pub mod cleanup;
 pub mod updater_installer;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

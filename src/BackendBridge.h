@@ -30,6 +30,7 @@ public:
 
     Q_INVOKABLE void runAction(const QString &action);
     Q_INVOKABLE void saveSettings(const QString &json, bool migrateLegacy);
+    Q_INVOKABLE void runCleanup(bool removeUserTools);
     Q_INVOKABLE void cancel();
 
 signals:
@@ -44,6 +45,7 @@ signals:
     void dashboardLoaded(const QString &json);
     void inventoryLoaded(const QString &json);
     void updatesLoaded(const QString &json);
+    void cleanupPreviewLoaded(const QString &json);
 
 private:
     QString helperPath() const;
