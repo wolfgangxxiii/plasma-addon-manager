@@ -1,58 +1,49 @@
 import QtQuick
 import QtQuick.Controls as Controls
-import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
-// Explicit content instead of ToolButton's platform-specific TextUnderIcon
-// rendering, which can produce blank buttons with the bundled KDE style.
+// Render a bundled PNG directly. KDE icon theme lookups can return a valid
+// name while drawing nothing in an AppImage, so navigation never depends on it.
 Controls.ToolButton {
     id: tile
-    property string iconName: ""
-    property string fallbackGlyph: "•"
+    property url imageSource: ""
     property bool selected: false
 
     implicitHeight: 70
     Accessible.name: text
 
-    contentItem: ColumnLayout {
-        spacing: 3
-        Item { Layout.fillHeight: true }
-
-        Item {
-            Layout.alignment: Qt.AlignHCenter
-            Layout.preferredWidth: 28
-            Layout.preferredHeight: 28
-
-            Kirigami.Icon {
-                id: tileIcon
-                anchors.fill: parent
-                source: tile.iconName
-                fallback: "applications-system"
-                active: tile.hovered
-                selected: tile.selected
+    contentItem: Item {
+        Column {
+            width: parent.width
+            anchors.centerIn: parent
+            spacing: 5
+            Item {
+                width: parent.width
+                height: 34
+                Image {
+                    objectName: "navigationImage"
+                    anchors.centerIn: parent
+                    width: 34
+                    height: 34
+                    source: tile.imageSource
+                    sourceSize: Qt.size(64, 64)
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    asynchronous: false
+                }
             }
             Controls.Label {
-                anchors.centerIn: parent
-                visible: !tileIcon.valid
-                text: tile.fallbackGlyph
-                font.pixelSize: 23
-                font.bold: true
+                objectName: "navigationLabel"
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
+                elide: Text.ElideRight
+                maximumLineCount: 2
+                text: tile.text
+                font.pixelSize: 12
                 color: Kirigami.Theme.textColor
             }
         }
-
-        Controls.Label {
-            objectName: "navigationLabel"
-            Layout.fillWidth: true
-            Layout.minimumWidth: 0
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.WordWrap
-            elide: Text.ElideRight
-            text: tile.text
-            font.pixelSize: 12
-            color: Kirigami.Theme.textColor
-        }
-        Item { Layout.fillHeight: true }
     }
 
     background: Rectangle {

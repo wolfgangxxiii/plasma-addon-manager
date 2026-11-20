@@ -7,5 +7,11 @@
     <qresource prefix="/images">
         <file alias="app.svg">assets/plasma-addon-manager-icon-v2.svg</file>
         <file alias="app.png">assets/plasma-addon-manager-icon-256.png</file>
+        <file alias="nav-dashboard.png">assets/nav-dashboard.png</file>
+        <file alias="nav-addons.png">assets/nav-addons.png</file>
+        <file alias="nav-automation.png">assets/nav-automation.png</file>
+        <file alias="nav-journal.png">assets/nav-journal.png</file>
+        <file alias="nav-about.png">assets/nav-about.png</file>
+        <file alias="nav-notifications.png">assets/nav-notifications.png</file>
     </qresource>
 </RCC>

@@ -448,6 +448,18 @@ Kirigami.ApplicationWindow {
 
     footer: Controls.ToolBar {
         padding: Kirigami.Units.smallSpacing
+        background: Rectangle {
+            color: Kirigami.Theme.backgroundColor
+            Rectangle {
+                objectName: "statusSeparator"
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                height: 1
+                color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g,
+                               Kirigami.Theme.textColor.b, 0.25)
+            }
+        }
         contentItem: ColumnLayout {
             spacing: Kirigami.Units.smallSpacing
 
@@ -540,15 +552,18 @@ Kirigami.ApplicationWindow {
 
             Controls.ScrollView {
                 id: mainScroll
+                objectName: "mainContentScroll"
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.minimumWidth: 380
+                Layout.preferredWidth: 0
+                Layout.minimumWidth: 0
                 clip: true
                 leftPadding: Kirigami.Units.largeSpacing
                 rightPadding: Kirigami.Units.largeSpacing
                 topPadding: Kirigami.Units.largeSpacing
                 bottomPadding: Kirigami.Units.largeSpacing
                 Controls.ScrollBar.horizontal.policy: Controls.ScrollBar.AlwaysOff
+                Controls.ScrollBar.vertical.policy: Controls.ScrollBar.AlwaysOn
 
                 ColumnLayout {
                     width: mainScroll.availableWidth
@@ -564,69 +579,66 @@ Kirigami.ApplicationWindow {
                 border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g,
                                       Kirigami.Theme.textColor.b, 0.10)
 
-                RowLayout {
+                Row {
+                    id: navRow
                     anchors.fill: parent
                     anchors.margins: 6
                     spacing: 6
+                    readonly property int tileCount: window.showNotificationSidebar ? 5 : 6
+                    readonly property real tileWidth: (width - spacing * (tileCount - 1)) / tileCount
 
                     NavTile {
                         objectName: "navDashboard"
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                        width: navRow.tileWidth
+                        height: navRow.height
                         text: window.loc("Pulpit", "Dashboard")
-                        iconName: "view-dashboard"
-                        fallbackGlyph: "▦"
+                        imageSource: "qrc:/images/nav-dashboard.png"
                         selected: window.section === 0
                         onClicked: window.section = 0
                     }
                     NavTile {
                         objectName: "navAddons"
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                        width: navRow.tileWidth
+                        height: navRow.height
                         text: window.loc("Dodatki Plasma", "Plasma add-ons")
-                        iconName: "preferences-desktop-plasma"
-                        fallbackGlyph: "◇"
+                        imageSource: "qrc:/images/nav-addons.png"
                         selected: window.section === 1
                         onClicked: window.section = 1
                     }
                     NavTile {
                         objectName: "navAutomation"
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                        width: navRow.tileWidth
+                        height: navRow.height
                         text: window.loc("Automatyzacja", "Automation")
-                        iconName: "chronometer"
-                        fallbackGlyph: "⏱"
+                        imageSource: "qrc:/images/nav-automation.png"
                         selected: window.section === 2
                         onClicked: window.section = 2
                     }
                     NavTile {
                         objectName: "navJournal"
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                        width: navRow.tileWidth
+                        height: navRow.height
                         text: window.loc("Dziennik", "Journal")
-                        iconName: "view-list-text"
-                        fallbackGlyph: "≡"
+                        imageSource: "qrc:/images/nav-journal.png"
                         selected: window.section === 3
                         onClicked: window.section = 3
                     }
                     NavTile {
                         objectName: "navAbout"
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                        width: navRow.tileWidth
+                        height: navRow.height
                         text: window.loc("O programie", "About")
-                        iconName: "help-about"
-                        fallbackGlyph: "ⓘ"
+                        imageSource: "qrc:/images/nav-about.png"
                         selected: window.section === 4
                         onClicked: window.section = 4
                     }
                     NavTile {
                         visible: !window.showNotificationSidebar
-                        Layout.preferredWidth: 82
-                        Layout.fillHeight: true
+                        width: navRow.tileWidth
+                        height: navRow.height
                         text: window.loc("Alerty", "Alerts")
                               + (window.notifications.length ? " (" + window.notifications.length + ")" : "")
-                        iconName: "dialog-information"
-                        fallbackGlyph: "!"
+                        imageSource: "qrc:/images/nav-notifications.png"
                         selected: false
                         onClicked: notificationDrawer.open()
                     }
@@ -915,30 +927,50 @@ Kirigami.ApplicationWindow {
                         text: window.loc("Sprawdź dodatki, zasymuluj lub ręcznie zastosuj aktualizacje. Zmiany wymagają potwierdzenia.",
                                          "Inspect add-ons, preview or manually install updates. Changes require confirmation.")
                     }
-                    Flow {
+                    RowLayout {
                         Layout.fillWidth: true
                         spacing: Kirigami.Units.smallSpacing
                         Controls.Button {
+                            objectName: "actionInstalled"
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: 0
+                            Layout.minimumWidth: 0
                             text: window.loc("Zainstalowane dodatki", "Installed add-ons")
-                            icon.name: "view-list-details"
+                            Controls.ToolTip.text: text
+                            Controls.ToolTip.visible: hovered
                             enabled: !backend.running
                             onClicked: backend.runAction("inventory-json")
                         }
                         Controls.Button {
+                            objectName: "actionUpdates"
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: 0
+                            Layout.minimumWidth: 0
                             text: window.loc("Dostępne aktualizacje", "Available updates")
-                            icon.name: "view-refresh"
+                            Controls.ToolTip.text: text
+                            Controls.ToolTip.visible: hovered
                             enabled: !backend.running && !window.bsdtarMissing
                             onClicked: backend.runAction("updates-json")
                         }
                         Controls.Button {
+                            objectName: "actionPreview"
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: 0
+                            Layout.minimumWidth: 0
                             text: window.loc("Symulacja aktualizacji", "Preview update")
-                            icon.name: "document-preview"
+                            Controls.ToolTip.text: text
+                            Controls.ToolTip.visible: hovered
                             enabled: !backend.running && !window.bsdtarMissing
                             onClicked: backend.runAction("dry-run")
                         }
                         Controls.Button {
+                            objectName: "actionApply"
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: 0
+                            Layout.minimumWidth: 0
                             text: window.loc("Aktualizuj dodatki…", "Update add-ons…")
-                            icon.name: "software-update-available"
+                            Controls.ToolTip.text: text
+                            Controls.ToolTip.visible: hovered
                             enabled: !backend.running && !window.bsdtarMissing
                             onClicked: confirmUpdate.open()
                         }
@@ -1235,8 +1267,11 @@ Kirigami.ApplicationWindow {
             }
 
             ColumnLayout {
+                objectName: "notificationSidebar"
                 visible: window.showNotificationSidebar
                 Layout.preferredWidth: 304
+                Layout.minimumWidth: 304
+                Layout.maximumWidth: 304
                 Layout.fillHeight: true
                 Layout.margins: Kirigami.Units.smallSpacing
                 spacing: Kirigami.Units.smallSpacing

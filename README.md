@@ -57,7 +57,7 @@ Sprawdzaj dostępne aktualizacje, przeglądaj zainstalowane dodatki, uruchamiaj 
 | 📋 **Dziennik** | Historia operacji z godzinami, wynikami i komunikatami pomocnika. Dziennik sesji pozostaje dostępny do zamknięcia okna. |
 | ℹ️ **O programie** | Dane aplikacji, autor, licencja oraz wygodne odnośniki do kodu, wydań i zgłaszania błędów. |
 
-**Dopracowany interfejs:** stały **poziomy pasek nawigacji** z pięcioma przyciskami (jawna ikona nad czytelnym podpisem, z symbolem zapasowym), podświetleniem aktywnej sekcji w kolorze motywu KDE oraz osobnym wyborem języka (Auto / Polski / English). Po prawej, pod panelem kolorowych powiadomień, znajduje się karta z nazwą programu, jego ikoną, opisem i wyborem języka. W węższych oknach powiadomienia otwierają się jako wysuwany panel, a karta informacji znajduje się na dole przewijanej zawartości. Dół okna zajmuje pasek postępu z czasem operacji.
+**Dopracowany interfejs:** stały **poziomy pasek nawigacji** z pięcioma przyciskami o **jednakowej szerokości i wysokości**. Każda sekcja ma własną kolorową ikonę **PNG wbudowaną bezpośrednio w AppImage**, niezależną od dostępności ikon motywu KDE, i czytelny podpis. Aktywna sekcja jest podświetlana. Panel powiadomień po prawej ma stałą szerokość przy przełączaniu zakładek; poniżej znajduje się karta z nazwą programu, ikoną i wyborem języka (Auto / Polski / English). W węższych oknach powiadomienia otwierają się w wysuwanym panelu. Cztery przyciski operacji w „Dodatkach Plasma” są wyrównane w jednym rzędzie. Pasek stanu na dole oddziela od zawartości cienka linia.
 
 ### 🐧 Dystrybucje i zależności
 
@@ -179,7 +179,7 @@ Browse installed add-ons, check for updates, review changes before applying them
 | 📋 **Journal** | Time-stamped session actions and output; separate access to the user service journal. |
 | ℹ️ **About** | App identity, project links, author, credits and license. |
 
-The adaptive interface follows the active Plasma theme, with a **permanent horizontal navigation bar** showing five buttons with explicitly rendered icons and labels, a fallback symbol, and a theme-colored active page. The app identity card (logo, short description, version and language selector: Auto / Polski / English) now sits **below the notifications panel in the right column**. In narrower windows notifications become a drawer, and the identity card moves to the bottom of the scrollable content. A persistent operation footer shows elapsed time.
+The adaptive interface follows the active Plasma theme, with a **permanent horizontal navigation bar** of five **equally sized buttons**. Each uses its own colorful **PNG icon embedded into the AppImage**, so icons render without relying on the host's KDE icon theme. The notification sidebar retains the same width when switching pages. The app identity card (logo, short description, version and language selector: Auto / Polski / English) sits **below notifications**. In narrower windows notifications become a drawer. The four Plasma add-on action buttons are evenly aligned in one row. A thin separator divides the persistent operation status footer from the main interface.
 
 ### 🐧 Linux support
 

@@ -269,19 +269,57 @@ int main(int argc, char *argv[]) {
         QObject *aboutLogo = root->findChild<QObject *>(QStringLiteral("aboutBrandIcon"));
         QObject *topNavigation = root->findChild<QObject *>(QStringLiteral("horizontalNavigation"));
         QObject *languageSelector = root->findChild<QObject *>(QStringLiteral("interfaceLanguageSelector"));
+        QObject *mainScroll = root->findChild<QObject *>(QStringLiteral("mainContentScroll"));
+        QObject *sidebar = root->findChild<QObject *>(QStringLiteral("notificationSidebar"));
+        QObject *statusSeparator = root->findChild<QObject *>(QStringLiteral("statusSeparator"));
         if (!aboutLogo || aboutLogo->property("status").toInt() != 1
-                || !topNavigation || !languageSelector) {
-            qCritical() << "QML smoke test: About icon, navigation or language control is missing";
+                || !topNavigation || !languageSelector || !mainScroll || !sidebar || !statusSeparator) {
+            qCritical() << "QML smoke test: About icon, navigation, sidebar, status line or language control is missing";
             return 3;
         }
+        const double referenceSidebarWidth = sidebar->property("width").toDouble();
+        const double referenceContentWidth = mainScroll->property("width").toDouble();
+        double referenceTileWidth = -1;
         for (const char *name : {"navDashboard", "navAddons", "navAutomation", "navJournal", "navAbout"}) {
             QObject *tile = root->findChild<QObject *>(QString::fromLatin1(name));
             QObject *label = tile ? tile->findChild<QObject *>(QStringLiteral("navigationLabel")) : nullptr;
-            if (!tile || tile->property("iconName").toString().isEmpty()
+            QObject *icon = tile ? tile->findChild<QObject *>(QStringLiteral("navigationImage")) : nullptr;
+            if (!tile || tile->property("imageSource").toUrl().isEmpty()
+                    || !icon || icon->property("status").toInt() != 1
                     || !label || label->property("text").toString().trimmed().isEmpty()) {
-                qCritical() << "QML smoke test: navigation tile has no icon or label" << name;
+                qCritical() << "QML smoke test: navigation tile icon was not loaded or label is missing" << name;
                 return 3;
             }
+            const double tileWidth = tile->property("width").toDouble();
+            if (referenceTileWidth < 0) referenceTileWidth = tileWidth;
+            if (tileWidth < 70 || qAbs(tileWidth - referenceTileWidth) > 0.5) {
+                qCritical() << "QML smoke test: navigation tile widths are not uniform" << name << tileWidth;
+                return 3;
+            }
+        }
+        if (referenceSidebarWidth < 280 || referenceContentWidth < 500) {
+            qCritical() << "QML smoke test: desktop main/sidebar geometry is invalid"
+                        << referenceContentWidth << referenceSidebarWidth;
+            return 3;
+        }
+        root->setProperty("section", 1);
+        QCoreApplication::processEvents();
+        double referenceActionWidth = -1;
+        for (const char *name : {"actionInstalled", "actionUpdates", "actionPreview", "actionApply"}) {
+            QObject *button = root->findChild<QObject *>(QString::fromLatin1(name));
+            const double width = button ? button->property("width").toDouble() : 0;
+            if (referenceActionWidth < 0) referenceActionWidth = width;
+            if (width < 100 || qAbs(width - referenceActionWidth) > 0.5) {
+                qCritical() << "QML smoke test: add-on action buttons are not aligned" << name << width;
+                return 3;
+            }
+        }
+        root->setProperty("section", 4);
+        QCoreApplication::processEvents();
+        if (qAbs(sidebar->property("width").toDouble() - referenceSidebarWidth) > 0.5
+                || qAbs(mainScroll->property("width").toDouble() - referenceContentWidth) > 0.5) {
+            qCritical() << "QML smoke test: sidebar or content width changed between pages";
+            return 3;
         }
         root->setProperty("section", 0);
         QCoreApplication::processEvents();
