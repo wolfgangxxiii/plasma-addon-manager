@@ -64,8 +64,7 @@ impl CleanupPlan {
 }
 
 fn plain_file(path: &Path) -> bool {
-    fs::symlink_metadata(path)
-        .is_ok_and(|metadata| metadata.file_type().is_file())
+    fs::symlink_metadata(path).is_ok_and(|metadata| metadata.file_type().is_file())
 }
 
 fn manager_unit(path: &Path) -> bool {
@@ -110,8 +109,18 @@ fn make_plan(home: &Path, include_optional: bool) -> CleanupPlan {
     let service = units.join(automation::SERVICE);
 
     for (path, kind, pl, en) in [
-        (&timer, CleanupKind::Timer, "Harmonogram systemd", "Systemd schedule"),
-        (&service, CleanupKind::Service, "Usługa systemd", "Systemd service"),
+        (
+            &timer,
+            CleanupKind::Timer,
+            "Harmonogram systemd",
+            "Systemd schedule",
+        ),
+        (
+            &service,
+            CleanupKind::Service,
+            "Usługa systemd",
+            "Systemd service",
+        ),
     ] {
         if manager_unit(path) {
             plan.add(path, kind, pl, en, false);
@@ -125,24 +134,50 @@ fn make_plan(home: &Path, include_optional: bool) -> CleanupPlan {
 
     let agent = home.join(".local/bin/plasma-addon-manager-agent");
     if plain_file(&agent) {
-        plan.add(&agent, CleanupKind::Agent, "Agent aktualizacji", "Update agent", false);
+        plan.add(
+            &agent,
+            CleanupKind::Agent,
+            "Agent aktualizacji",
+            "Update agent",
+            false,
+        );
     }
     let settings = home.join(".config/plasma-addon-manager/settings.toml");
     if plain_file(&settings) {
-        plan.add(&settings, CleanupKind::Settings, "Ustawienia automatyzacji", "Automation settings", false);
+        plan.add(
+            &settings,
+            CleanupKind::Settings,
+            "Ustawienia automatyzacji",
+            "Automation settings",
+            false,
+        );
     }
     let lock = home.join(".local/state/plasma-addon-manager/update.lock");
     if plain_file(&lock) {
-        plan.add(&lock, CleanupKind::Lock, "Blokada aktualizacji", "Update lock file", false);
+        plan.add(
+            &lock,
+            CleanupKind::Lock,
+            "Blokada aktualizacji",
+            "Update lock file",
+            false,
+        );
     }
     if let Some(config) = config_home(home) {
         let preferences = config.join("wolfgangxxiii/Plasma Addon Manager.conf");
         if plain_file(&preferences) {
-            plan.add(&preferences, CleanupKind::Preferences, "Preferencje wyglądu", "Appearance preferences", false);
+            plan.add(
+                &preferences,
+                CleanupKind::Preferences,
+                "Preferencje wyglądu",
+                "Appearance preferences",
+                false,
+            );
         }
     } else {
-        plan.preserve("Niestandardowy XDG_CONFIG_HOME poza katalogiem domowym pominięto.",
-                      "XDG_CONFIG_HOME outside the home directory was skipped.");
+        plan.preserve(
+            "Niestandardowy XDG_CONFIG_HOME poza katalogiem domowym pominięto.",
+            "XDG_CONFIG_HOME outside the home directory was skipped.",
+        );
     }
 
     if let Some(data) = data_home(home) {
@@ -150,34 +185,66 @@ fn make_plan(home: &Path, include_optional: bool) -> CleanupPlan {
         if manager_launcher(&launcher) {
             let icon = data.join(format!("icons/hicolor/256x256/apps/{APP_ID}.png"));
             if plain_file(&icon) {
-                plan.add(&icon, CleanupKind::Icon, "Ikona AppImage", "AppImage icon", false);
+                plan.add(
+                    &icon,
+                    CleanupKind::Icon,
+                    "Ikona AppImage",
+                    "AppImage icon",
+                    false,
+                );
             }
-            plan.add(&launcher, CleanupKind::Launcher, "Wpis identyfikacyjny AppImage", "AppImage launcher", false);
+            plan.add(
+                &launcher,
+                CleanupKind::Launcher,
+                "Wpis identyfikacyjny AppImage",
+                "AppImage launcher",
+                false,
+            );
         } else if fs::symlink_metadata(&launcher).is_ok() {
-            plan.preserve("Obcy lub zmieniony skrót AppImage pozostanie nietknięty.",
-                          "An unmanaged or modified AppImage launcher will be preserved.");
+            plan.preserve(
+                "Obcy lub zmieniony skrót AppImage pozostanie nietknięty.",
+                "An unmanaged or modified AppImage launcher will be preserved.",
+            );
         }
     } else {
-        plan.preserve("Niestandardowy XDG_DATA_HOME poza katalogiem domowym pominięto.",
-                      "XDG_DATA_HOME outside the home directory was skipped.");
+        plan.preserve(
+            "Niestandardowy XDG_DATA_HOME poza katalogiem domowym pominięto.",
+            "XDG_DATA_HOME outside the home directory was skipped.",
+        );
     }
 
     let updater = home.join(".local/bin/plasmoid-updater");
     if plain_file(&updater) && valid_updater_version(&updater) {
         if include_optional {
-            plan.add(&updater, CleanupKind::Updater, "Lokalny plasmoid-updater", "User-local plasmoid-updater", true);
+            plan.add(
+                &updater,
+                CleanupKind::Updater,
+                "Lokalny plasmoid-updater",
+                "User-local plasmoid-updater",
+                true,
+            );
         } else {
-            plan.preserve("Lokalny plasmoid-updater pozostanie zainstalowany (opcjonalny do usunięcia).",
-                          "User-local plasmoid-updater will stay installed (optional removal).");
+            plan.preserve(
+                "Lokalny plasmoid-updater pozostanie zainstalowany (opcjonalny do usunięcia).",
+                "User-local plasmoid-updater will stay installed (optional removal).",
+            );
         }
     }
     let bsdtar = home.join(".local/bin/bsdtar");
     if fs::symlink_metadata(&bsdtar).is_ok_and(|metadata| metadata.file_type().is_symlink()) {
         if include_optional {
-            plan.add(&bsdtar, CleanupKind::BsdtarLink, "Dowiązanie bsdtar użytkownika", "User-local bsdtar symlink", true);
+            plan.add(
+                &bsdtar,
+                CleanupKind::BsdtarLink,
+                "Dowiązanie bsdtar użytkownika",
+                "User-local bsdtar symlink",
+                true,
+            );
         } else {
-            plan.preserve("Dowiązanie bsdtar pozostanie (opcjonalne do usunięcia).",
-                          "The bsdtar symlink will remain (optional removal).");
+            plan.preserve(
+                "Dowiązanie bsdtar pozostanie (opcjonalne do usunięcia).",
+                "The bsdtar symlink will remain (optional removal).",
+            );
         }
     }
 
@@ -185,8 +252,10 @@ fn make_plan(home: &Path, include_optional: bool) -> CleanupPlan {
     // not recorded by older releases. Guessing would destroy user changes.
     plan.preserve("Zachowano dodatki KDE, pakiety systemowe (APT/DNF/Zypper/Pacman/Homebrew), kopie migracji i współdzielone ustawienia plasmoid-updater.",
                   "KDE add-ons, system packages (APT/DNF/Zypper/Pacman/Homebrew), migration backups and shared plasmoid-updater settings are preserved.");
-    plan.preserve("Sam plik AppImage lub pakiet aplikacji usuń osobno po zamknięciu programu.",
-                  "Remove the AppImage file or application package separately after closing the app.");
+    plan.preserve(
+        "Sam plik AppImage lub pakiet aplikacji usuń osobno po zamknięciu programu.",
+        "Remove the AppImage file or application package separately after closing the app.",
+    );
     plan
 }
 
@@ -202,8 +271,11 @@ fn systemctl(args: &[&str]) -> Result<()> {
         .output()
         .context("Cannot launch systemctl --user")?;
     if !output.status.success() {
-        bail!("systemctl --user {} failed: {}",
-              args.join(" "), String::from_utf8_lossy(&output.stderr).trim());
+        bail!(
+            "systemctl --user {} failed: {}",
+            args.join(" "),
+            String::from_utf8_lossy(&output.stderr).trim()
+        );
     }
     Ok(())
 }
@@ -214,8 +286,14 @@ pub fn remove(remove_optional_tools: bool) -> Result<()> {
     // Re-check all paths immediately before removal: the displayed preview
     // might be outdated if another program modified the files meanwhile.
     let plan = make_plan(&home, remove_optional_tools);
-    let has_timer = plan.items.iter().any(|item| item.kind == CleanupKind::Timer);
-    let has_service = plan.items.iter().any(|item| item.kind == CleanupKind::Service);
+    let has_timer = plan
+        .items
+        .iter()
+        .any(|item| item.kind == CleanupKind::Timer);
+    let has_service = plan
+        .items
+        .iter()
+        .any(|item| item.kind == CleanupKind::Service);
 
     if has_timer {
         systemctl(&["disable", "--now", automation::TIMER])?;
@@ -255,7 +333,10 @@ pub fn remove(remove_optional_tools: bool) -> Result<()> {
     ] {
         let _ = fs::remove_dir(path);
     }
-    println!("✓ Removed {} Plasma Addon Manager-owned item(s).", plan.items.len());
+    println!(
+        "✓ Removed {} Plasma Addon Manager-owned item(s).",
+        plan.items.len()
+    );
     println!("Shared packages, KDE add-ons and migration backups were not removed.");
     Ok(())
 }
@@ -271,15 +352,36 @@ mod tests {
         let home = dir.path();
         let units = home.join(".config/systemd/user");
         fs::create_dir_all(&units).unwrap();
-        fs::write(units.join(automation::TIMER), format!("{MANAGED_UNIT_MARKER}\n[Timer]\n")).unwrap();
-        fs::write(units.join(automation::SERVICE), "[Service]\nExecStart=/tmp/foreign\n").unwrap();
+        fs::write(
+            units.join(automation::TIMER),
+            format!("{MANAGED_UNIT_MARKER}\n[Timer]\n"),
+        )
+        .unwrap();
+        fs::write(
+            units.join(automation::SERVICE),
+            "[Service]\nExecStart=/tmp/foreign\n",
+        )
+        .unwrap();
         let app_dir = home.join(".local/share/applications");
         fs::create_dir_all(&app_dir).unwrap();
-        fs::write(app_dir.join(format!("{APP_ID}.desktop")), format!("[Desktop Entry]\nName=Plasma Addon Manager\n{DESKTOP_MARKER}\n")).unwrap();
+        fs::write(
+            app_dir.join(format!("{APP_ID}.desktop")),
+            format!("[Desktop Entry]\nName=Plasma Addon Manager\n{DESKTOP_MARKER}\n"),
+        )
+        .unwrap();
         let plan = make_plan(home, false);
-        assert!(plan.items.iter().any(|item| item.kind == CleanupKind::Timer));
-        assert!(plan.items.iter().any(|item| item.kind == CleanupKind::Launcher));
-        assert!(!plan.items.iter().any(|item| item.kind == CleanupKind::Service));
+        assert!(plan
+            .items
+            .iter()
+            .any(|item| item.kind == CleanupKind::Timer));
+        assert!(plan
+            .items
+            .iter()
+            .any(|item| item.kind == CleanupKind::Launcher));
+        assert!(!plan
+            .items
+            .iter()
+            .any(|item| item.kind == CleanupKind::Service));
     }
 
     #[test]
@@ -292,8 +394,14 @@ mod tests {
         fs::create_dir_all(target.parent().unwrap()).unwrap();
         fs::write(&target, b"tool").unwrap();
         symlink(&target, bin.join("bsdtar")).unwrap();
-        assert!(!make_plan(home, false).items.iter().any(|item| item.kind == CleanupKind::BsdtarLink));
-        assert!(make_plan(home, true).items.iter().any(|item| item.kind == CleanupKind::BsdtarLink));
+        assert!(!make_plan(home, false)
+            .items
+            .iter()
+            .any(|item| item.kind == CleanupKind::BsdtarLink));
+        assert!(make_plan(home, true)
+            .items
+            .iter()
+            .any(|item| item.kind == CleanupKind::BsdtarLink));
     }
 
     #[test]
@@ -309,6 +417,9 @@ mod tests {
         fs::create_dir_all(settings.parent().unwrap()).unwrap();
         symlink(&source, &settings).unwrap();
         let plan = make_plan(home, false);
-        assert!(!plan.items.iter().any(|item| item.kind == CleanupKind::Timer || item.kind == CleanupKind::Settings));
+        assert!(!plan
+            .items
+            .iter()
+            .any(|item| item.kind == CleanupKind::Timer || item.kind == CleanupKind::Settings));
     }
 }

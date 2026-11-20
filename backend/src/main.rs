@@ -1,10 +1,10 @@
 //! Explicit allow-list of commands invoked by the Qt frontend.
 
 use plasma_addon_helper::{
-    addons, cleanup,
+    addons,
     automation::{self, Settings},
-    executable_on_path, find_plasmoid_updater, in_flatpak, is_plasma_session, read_distribution,
-    updater_installer, updater_path,
+    cleanup, executable_on_path, find_plasmoid_updater, in_flatpak, is_plasma_session,
+    read_distribution, updater_installer, updater_path,
 };
 use std::env;
 use std::io::{self, Write};
@@ -255,21 +255,32 @@ fn execute(action: &str, extra: &[String]) -> Result<(), String> {
         "run-service" => automation::start_service().map_err(|error| format!("{error:#}")),
         "cleanup-preview" => {
             if in_flatpak() {
-                return Err("Cleanup requires the native application or AppImage, not Flatpak".into());
+                return Err(
+                    "Cleanup requires the native application or AppImage, not Flatpak".into(),
+                );
             }
             let plan = cleanup::preview().map_err(|error| format!("{error:#}"))?;
-            println!("{}", serde_json::to_string(&plan).map_err(|error| error.to_string())?);
+            println!(
+                "{}",
+                serde_json::to_string(&plan).map_err(|error| error.to_string())?
+            );
             Ok(())
         }
         "cleanup" => {
             if in_flatpak() {
-                return Err("Cleanup requires the native application or AppImage, not Flatpak".into());
+                return Err(
+                    "Cleanup requires the native application or AppImage, not Flatpak".into(),
+                );
             }
-            let remove_optional = match extra {
-                [choice] if choice.as_str() == "remove-user-tools" => true,
-                [choice] if choice.as_str() == "keep-user-tools" => false,
-                _ => return Err("Explicit cleanup choice is required: remove-user-tools or keep-user-tools".into()),
-            };
+            let remove_optional =
+                match extra {
+                    [choice] if choice.as_str() == "remove-user-tools" => true,
+                    [choice] if choice.as_str() == "keep-user-tools" => false,
+                    _ => return Err(
+                        "Explicit cleanup choice is required: remove-user-tools or keep-user-tools"
+                            .into(),
+                    ),
+                };
             cleanup::remove(remove_optional).map_err(|error| format!("{error:#}"))
         }
         "--help" | "help" => {
