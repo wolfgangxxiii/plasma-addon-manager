@@ -13,7 +13,7 @@ include(ECMFindQmlModule)
 ecm_find_qmlmodule(org.kde.kirigami REQUIRED)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2)
-find_package(KF6 REQUIRED COMPONENTS QQC2DesktopStyle ColorScheme)
+find_package(KF6 REQUIRED COMPONENTS QQC2DesktopStyle ColorScheme Config)
 
 qt_add_executable(plasma-addon-manager
     src/main.cpp
@@ -31,7 +31,7 @@ set_target_properties(plasma-addon-manager PROPERTIES
 )
 target_link_libraries(plasma-addon-manager PRIVATE
     Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::QuickControls2
-    KF6::ColorScheme
+    KF6::ColorScheme KF6::ConfigCore
 )
 
 find_program(CARGO_EXECUTABLE cargo REQUIRED)

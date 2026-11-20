@@ -1,4 +1,5 @@
 import QtQuick
+import QtQml
 import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
@@ -10,6 +11,18 @@ Kirigami.ApplicationWindow {
     minimumWidth: 690
     minimumHeight: 540
     title: "Plasma Addon Manager"
+
+    // In Auto, leave Kirigami's system palette alone so Plasma's accent and
+    // live color changes keep working. Only override highlights when forcing
+    // one of the bundled light/dark Breeze backgrounds.
+    Binding {
+        target: window.Kirigami.Theme
+        property: "highlightColor"
+        value: themeBridge.accentColor
+        when: themeBridge.choice !== "auto"
+    }
+
+    readonly property color effectiveAccentColor: Kirigami.Theme.highlightColor
 
     property int section: 0
     property string languageChoice: "auto"

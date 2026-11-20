@@ -69,7 +69,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=v0.4.5-appimage-preview.12
+          tag=v0.4.5-appimage-preview.13
           appimage=dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
           test -s "$appimage"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
@@ -77,6 +77,6 @@ jobs:
           else
             gh release create "$tag" "$appimage" \
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 12 · Wybór motywu' \
-              --notes 'W dolnej karcie pod wyborem języka dodano wybór motywu: Auto (zgodny z kolorami KDE Plasma), Jasny (Breeze Light) i Ciemny (Breeze Dark). Zmiana działa od razu w interfejsie Qt/Kirigami i jest zapamiętywana na następne uruchomienia. AppImage zawiera schematy Breeze Light/Dark, dzięki czemu nie zależy od ich obecności na komputerze. Powiększono kartę ustawień, zachowano niezmienne szerokości panelu i menu, przewijalne listy dodatków oraz dotychczasowe ikony.'
+              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 13 · Kolor akcentu Plasma' \
+              --notes 'Naprawiono korzystanie z wybranego w KDE Plasma koloru akcentu. Auto nie zastępuje już systemowej palety domyślnym Breeze. Tryby Jasny i Ciemny nadal wymuszają odpowiednie tło, ale zachowują wybrany przez użytkownika systemowy kolor zaznaczeń i aktywnych elementów. Powrót do Auto przywraca oryginalną paletę i schemat środowiska. Rozszerzono testy AppImage o własny, niestandardowy kolor akcentu i zmianę motywów.'
           fi

@@ -3,6 +3,7 @@
 #include "ThemeBridge.h"
 
 #include <QDir>
+#include <QColor>
 #include <QEventLoop>
 #include <QFile>
 #include <QFileInfo>
@@ -193,6 +194,17 @@ int main(int argc, char *argv[]) {
     }
 
     BackendBridge backend;
+    const QColor smokeAccent(143, 44, 191);
+    if (smokeTest) {
+        // A non-Breeze accent catches regressions where the theme manager
+        // unexpectedly swaps out the original system-selected highlight.
+        QPalette nativePalette = QGuiApplication::palette();
+        nativePalette.setColor(QPalette::Active, QPalette::Highlight, smokeAccent);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+        nativePalette.setColor(QPalette::Active, QPalette::Accent, smokeAccent);
+#endif
+        QGuiApplication::setPalette(nativePalette);
+    }
     ThemeBridge themeBridge(smokeTest);
     QQmlApplicationEngine engine;
     bool qmlBindingError = false;
@@ -287,14 +299,17 @@ int main(int argc, char *argv[]) {
         // Light/Dark must recolor the actual Qt application, not just change
         // the selector's label. The test is transient and never saves settings.
         if (themeBridge.choice() != QStringLiteral("auto")
+                || QGuiApplication::palette().color(QPalette::Active, QPalette::Highlight) != smokeAccent
                 || !themeBridge.setChoice(QStringLiteral("light"))) {
-            qCritical() << "QML smoke test: cannot select light appearance";
+            qCritical() << "QML smoke test: Auto lost system accent or cannot select light appearance";
             return 3;
         }
         QCoreApplication::processEvents();
         if (QGuiApplication::palette().color(QPalette::Window).lightness() <= 128
+                || QGuiApplication::palette().color(QPalette::Active, QPalette::Highlight) != smokeAccent
+                || root->property("effectiveAccentColor").value<QColor>() != smokeAccent
                 || themeSelector->property("currentIndex").toInt() != 1) {
-            qCritical() << "QML smoke test: light scheme did not update the palette or selector";
+            qCritical() << "QML smoke test: light scheme lost accent, palette or selector";
             return 3;
         }
         if (!themeBridge.setChoice(QStringLiteral("dark"))) {
@@ -303,8 +318,10 @@ int main(int argc, char *argv[]) {
         }
         QCoreApplication::processEvents();
         if (QGuiApplication::palette().color(QPalette::Window).lightness() >= 128
+                || QGuiApplication::palette().color(QPalette::Active, QPalette::Highlight) != smokeAccent
+                || root->property("effectiveAccentColor").value<QColor>() != smokeAccent
                 || themeSelector->property("currentIndex").toInt() != 2) {
-            qCritical() << "QML smoke test: dark scheme did not update the palette or selector";
+            qCritical() << "QML smoke test: dark scheme lost accent, palette or selector";
             return 3;
         }
         if (themeBridge.setChoice(QStringLiteral("invalid"))
@@ -314,8 +331,9 @@ int main(int argc, char *argv[]) {
             return 3;
         }
         QCoreApplication::processEvents();
-        if (themeSelector->property("currentIndex").toInt() != 0) {
-            qCritical() << "QML smoke test: Auto is not reflected in theme selector";
+        if (themeSelector->property("currentIndex").toInt() != 0
+                || QGuiApplication::palette().color(QPalette::Active, QPalette::Highlight) != smokeAccent) {
+            qCritical() << "QML smoke test: Auto did not restore the system accent or selector";
             return 3;
         }
         // All visible decoration must use bundled images. Icon theme lookup
