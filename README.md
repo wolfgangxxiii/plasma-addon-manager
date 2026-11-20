@@ -83,6 +83,8 @@ Na tradycyjnych dystrybucjach instalacja brakującego pakietu systemowego może 
 
 **Bazzite KDE:** możesz zainstalować [Gear Lever](https://github.com/mijorus/gearlever) z Bazaar, otworzyć nim pobrany AppImage i wybrać **Integruj**. Aplikacja pojawi się wtedy w menu KDE. Gear Lever nie jest wymagany do uruchomienia programu.
 
+**Nowa ikona w AppImage Preview 2:** jeśli poprzednia wersja była już zintegrowana przez Gear Lever, zastąp ją nowo pobranym AppImage i ponownie zintegruj. Dzięki temu menu i pasek zadań KDE będą korzystać z aktualnej ikony zamiast starszej kopii zapisanej w systemie.
+
 **Opcjonalnie z terminala:**
 
 ~~~bash
@@ -199,6 +201,8 @@ Installing a missing system prerequisite on a mutable distribution may request g
 5. Open **Plasma add-ons** to inspect installed items and check for updates.
 
 **Bazzite KDE:** optionally use [Gear Lever](https://github.com/mijorus/gearlever) from Bazaar to integrate the AppImage with your KDE application menu. Gear Lever is not required for direct execution.
+
+**New icon in AppImage Preview 2:** if an earlier AppImage was integrated with Gear Lever, replace it with the new download and integrate it again. This refreshes the KDE launcher/taskbar icon instead of keeping the older installed copy.
 
 **Terminal alternative:**
 

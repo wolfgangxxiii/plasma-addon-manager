@@ -58,20 +58,22 @@ jobs:
       - name: Verify binary and checksum
         run: |
           test -s dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
+          test -s build/package-appimage-AppDir/usr/share/icons/hicolor/scalable/apps/io.github.wolfgangxxiii.PlasmaAddonManager.svg
+          test -s build/package-appimage-AppDir/usr/share/icons/hicolor/256x256/apps/io.github.wolfgangxxiii.PlasmaAddonManager.png
           sha256sum dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
       - name: Publish AppImage directly in Releases
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tag=v0.4.5-appimage-preview.1
+          tag=v0.4.5-appimage-preview.2
           appimage=dist/Plasma-Addon-Manager-v0.4.5-x86_64.AppImage
           test -s "$appimage"
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo 'Preview already published; leaving the existing download unchanged.'
+            echo 'This preview was already published; leaving its download unchanged.'
           else
             gh release create "$tag" "$appimage" \
               --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease \
-              --title 'Plasma Addon Manager 0.4.5 — nowa karta O programie' \
-              --notes 'AppImage x86_64 dla KDE Plasma 6. Karta O programie wzorowana na wersji dla Bazzite: logo, nazwa, wersja, informacje o autorze, czytelne przyciski do repozytorium, wydań, zgłoszeń błędów i licencji oraz podziękowanie dla autora plasmoid-updater. Interfejs Qt6/Kirigami z poprzedniej wersji 0.4.4 zachowuje stały pasek postępu, prawy panel powiadomień, responsywny układ i kompletny dziennik sesji. Tylko jeden samodzielny .AppImage bez ZIP/DEB/Flatpak.'
+              --title 'Plasma Addon Manager 0.4.5 — AppImage Preview 2 · Nowa ikona' \
+              --notes 'Nowy AppImage x86_64 dla KDE Plasma 6. Nowa grafika widoczna w menu KDE, panelu nawigacji, pasku zadań oraz w dekoracji okna, jeśli motyw KDE wyświetla ikony okien. Dodano osobne ustawienie QWindow::setIcon, zgodność identyfikatora .desktop z Wayland oraz skalowalne SVG i ikony PNG hicolor. Zachowano funkcje programu 0.4.5: automatyzację, aktualizację dodatków, powiadomienia i dziennik. Po aktualizacji ponownie zintegruj AppImage w Gear Lever, aby odświeżyć ikonę launchera.'
           fi

@@ -6,6 +6,7 @@ Comment=Manage KDE Plasma 6 add-on updates across Linux distributions
 Comment[pl]=Zarządzaj aktualizacjami dodatków KDE Plasma 6 w wielu dystrybucjach
 Exec=plasma-addon-manager
 Icon=io.github.wolfgangxxiii.PlasmaAddonManager
+StartupWMClass=plasma-addon-manager
 Terminal=false
 StartupNotify=true
 Categories=Qt;KDE;Utility;Settings;

@@ -15,6 +15,7 @@
 #include <QDebug>
 #include <QVariantList>
 #include <QVariantMap>
+#include <QWindow>
 
 // Exercise the real asynchronous bridge with a local fake helper. No system
 // settings or KDE add-ons are touched: this is a pure session-log regression test.
@@ -106,7 +107,12 @@ int main(int argc, char *argv[]) {
     QGuiApplication app(argc, argv);
     // The embedded PNG guarantees the new icon even when the app is launched
     // directly from an AppImage before its desktop entry has been integrated.
-    QGuiApplication::setWindowIcon(QIcon(QStringLiteral(":/images/app.png")));
+    const QIcon appIcon(QStringLiteral(":/images/app.png"));
+    if (appIcon.isNull()) {
+        qCritical() << "Application icon resource is missing";
+        return 5;
+    }
+    QGuiApplication::setWindowIcon(appIcon);
     QCoreApplication::setOrganizationName(QStringLiteral("wolfgangxxiii"));
     QCoreApplication::setApplicationName(QStringLiteral("Plasma Addon Manager"));
     QGuiApplication::setDesktopFileName(
@@ -157,6 +163,22 @@ int main(int argc, char *argv[]) {
     engine.load(QUrl(QStringLiteral("qrc:/qml/Main.qml")));
     if (engine.rootObjects().isEmpty()) {
         return 1;
+    }
+    // Set the icon on the actual top-level QWindow as well as on the
+    // application. This supplies window decorations and task switchers even
+    // when the .desktop launcher has not yet been integrated.
+    auto *mainWindow = qobject_cast<QWindow *>(engine.rootObjects().first());
+    if (!mainWindow) {
+        qCritical() << "The Kirigami root object is not a window";
+        return 5;
+    }
+    mainWindow->setIcon(appIcon);
+    if (smokeTest &&
+            (mainWindow->icon().isNull() ||
+             QGuiApplication::desktopFileName() !=
+                 QStringLiteral("io.github.wolfgangxxiii.PlasmaAddonManager"))) {
+        qCritical() << "Application icon or desktop identity smoke test failed";
+        return 5;
     }
     // Package smoke tests verify that all QML imports and the window load.
     // No host state is changed, and the diagnostic helper is not started.
